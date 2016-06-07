@@ -1,14 +1,6 @@
 classdef WidgetImageBrowser < handle
     
     properties
-        image
-        width
-        height
-        stacks
-        channels
-        bits
-        xResolution
-        yResolution
         channelIndex
         stackIndex
         fileName
@@ -160,6 +152,8 @@ classdef WidgetImageBrowser < handle
         end
         
         function obj = loadImage(obj, fileName)
+            
+            % assign new file name
             obj.fileName = fileName;
             
             % close previous image
@@ -167,6 +161,7 @@ classdef WidgetImageBrowser < handle
                 close(obj.ui_imageFigure);
             end
             
+            % update new image
             obj.updateImage();
         end
         
@@ -184,6 +179,10 @@ classdef WidgetImageBrowser < handle
         end
         
         function obj = readImage(obj)
+            
+            iobj = Tiff(
+            
+            %{
             % read Image
             stack = tiffread(obj.fileName, obj.stackIndex,...
                              'ReadUnknownTags', true,...
@@ -198,10 +197,11 @@ classdef WidgetImageBrowser < handle
             obj.yResolution = stack.lsm.VoxelSizeY * 1e6;
             obj.bits = stack.bits;
             obj.image = stack.data{obj.channelIndex};
+            %}
         end
         
         function obj = updateUI(obj)
-            
+            %{
             % update meta data message
             set(obj.ui_text_imageResolution,...
                 'String',sprintf('%d bits, H x W %d x %d\n(%.2f x %.2f um)',...
@@ -236,10 +236,12 @@ classdef WidgetImageBrowser < handle
                 set(obj.ui_pushButton_prevChannel,'Enable','on');
                 set(obj.ui_pushButton_nextChannel,'Enable','on');
             end
-            
+            %}
         end
         
         function obj = showImage(obj)
+            
+            %{
             % create new axes
             if isempty(obj.ui_imageAxis) || ~isgraphics(obj.ui_imageAxis)
                 
@@ -282,6 +284,8 @@ classdef WidgetImageBrowser < handle
             else % update CData of old image
                 set(obj.ui_imageHandle,'CData', obj.image);
             end
+            %}
+            
         end
         
         %%% --- Callback functions --- %%%
@@ -320,11 +324,13 @@ classdef WidgetImageBrowser < handle
         function obj = callbackFcn_applyProjection(obj, ~, ~)
             
             % read full stack
+            %{
             stack = tiffread(obj.fileName, [],...
                              'ReadUnknownTags', true,...
                              'DistributeMetaData', true);
                          
-            imgfull = zeros(             
+            imgfull = zeros(
+             %}
             
         end
     end
