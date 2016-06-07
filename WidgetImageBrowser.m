@@ -4,6 +4,8 @@ classdef WidgetImageBrowser < handle
         channelIndex
         stackIndex
         fileName
+        metaData
+        image
     end
     
     properties %(Access=protected)
@@ -129,7 +131,6 @@ classdef WidgetImageBrowser < handle
                 'String', 'Projection',...
                 'Enable', 'off',...
                 'Callback', @obj.callbackFcn_applyProjection,...
-                'Callback', [],...
                 'Units', 'normalized',...
                 'Position', GridLayout([4,4],[0.01,0.01],4,1:2));
             
@@ -138,6 +139,7 @@ classdef WidgetImageBrowser < handle
                 'Style', 'PopUp',...
                 'String', {'Max';'Sum';'Std'},...
                 'BackgroundColor', obj.BackgroundColor,...
+                'Callback', [],...
                 'Units', 'normalized',...
                 'Position', GridLayout([4,4],[0.01,0.01],4,3:4));
             
@@ -161,6 +163,9 @@ classdef WidgetImageBrowser < handle
                 close(obj.ui_imageFigure);
             end
             
+            % read image file meta data
+            obj.metaData = readLSMInfo(obj.fileName);
+            
             % update new image
             obj.updateImage();
         end
@@ -180,45 +185,34 @@ classdef WidgetImageBrowser < handle
         
         function obj = readImage(obj)
             
-            iobj = Tiff(
-            
-            %{
-            % read Image
-            stack = tiffread(obj.fileName, obj.stackIndex,...
-                             'ReadUnknownTags', true,...
-                             'DistributeMetaData', true);
-            
-            % update metadata
-            obj.width = stack.width;
-            obj.height = stack.height;
-            obj.stacks = stack.lsm.DimensionZ;
-            obj.channels = stack.lsm.DimensionChannels;
-            obj.xResolution = stack.lsm.VoxelSizeX * 1e6;
-            obj.yResolution = stack.lsm.VoxelSizeY * 1e6;
-            obj.bits = stack.bits;
-            obj.image = stack.data{obj.channelIndex};
-            %}
+            % read image
+            obj.image = readLSMImage(obj.fileName,...
+                                     obj.metaData,...
+                                     obj.stackIndex,...
+                                     obj.channelIndex);
         end
         
         function obj = updateUI(obj)
-            %{
+            
             % update meta data message
             set(obj.ui_text_imageResolution,...
                 'String',sprintf('%d bits, H x W %d x %d\n(%.2f x %.2f um)',...
-                obj.bits, obj.height, obj.width,...
-                obj.height * obj.yResolution,...
-                obj.width * obj.xResolution));
+                obj.metaData.bitsPerSample,...
+                obj.metaData.height,...
+                obj.metaData.width,...
+                obj.metaData.height * obj.metaData.yResolution,...
+                obj.metaData.width * obj.metaData.xResolution));
             
             set(obj.ui_text_channelCounter,...
                 'String',sprintf('channel %d / %d',...
-                obj.channelIndex, obj.channels));
+                obj.channelIndex, obj.metaData.channels));
             
             set(obj.ui_text_stackCounter,...
                 'String',sprintf('stack %d / %d',...
-                obj.stackIndex, obj.stacks));
+                obj.stackIndex, obj.metaData.stacks));
             
             % update stack buttons callbacks
-            if obj.stacks == 1
+            if obj.metaData.stacks == 1
                 set(obj.ui_pushButton_prevStack,'Enable','off');
                 set(obj.ui_pushButton_nextStack,'Enable','off');
                 set(obj.ui_pushButton_applyProjection,'Enable','off');
@@ -229,7 +223,7 @@ classdef WidgetImageBrowser < handle
             end
             
             % update channel buttons callbacks
-            if obj.channels == 1
+            if obj.metaData.channels == 1
                 set(obj.ui_pushButton_prevChannel,'Enable','off');
                 set(obj.ui_pushButton_nextChannel,'Enable','off');
             else
@@ -241,12 +235,11 @@ classdef WidgetImageBrowser < handle
         
         function obj = showImage(obj)
             
-            %{
             % create new axes
             if isempty(obj.ui_imageAxis) || ~isgraphics(obj.ui_imageAxis)
                 
                 % calculate figure resize ratio
-                sizeImage = [obj.height, obj.width];
+                sizeImage = [obj.metaData.height, obj.metaData.width];
                 sizeScrn = get(0, 'ScreenSize');
                 ratioResize = floor(100*0.8*min(sizeScrn(3:4))/max(sizeImage(1:2)))/100;
                 if ratioResize > 1
@@ -284,7 +277,7 @@ classdef WidgetImageBrowser < handle
             else % update CData of old image
                 set(obj.ui_imageHandle,'CData', obj.image);
             end
-            %}
+            
             
         end
         
@@ -292,14 +285,14 @@ classdef WidgetImageBrowser < handle
         function obj = callbackFcn_prevChannel(obj, ~, ~)
             obj.channelIndex = obj.channelIndex - 1;
             if (obj.channelIndex < 1)
-                obj.channelIndex = obj.channels;
+                obj.channelIndex = obj.metaData.channels;
             end
             obj.updateImage();
         end
         
         function obj = callbackFcn_nextChannel(obj, ~, ~)
             obj.channelIndex = obj.channelIndex + 1;
-            if (obj.channelIndex > obj.channels)
+            if (obj.channelIndex > obj.metaData.channels)
                 obj.channelIndex = 1;
             end
             obj.updateImage();
@@ -308,14 +301,14 @@ classdef WidgetImageBrowser < handle
         function obj = callbackFcn_prevStack(obj, ~, ~)
             obj.stackIndex = obj.stackIndex - 1;
             if (obj.stackIndex < 1)
-                obj.stackIndex = obj.stacks;
+                obj.stackIndex = obj.metaData.stacks;
             end
             obj.updateImage();
         end
         
         function obj = callbackFcn_nextStack(obj, ~, ~)
             obj.stackIndex = obj.stackIndex + 1;
-            if (obj.stackIndex > obj.stacks)
+            if (obj.stackIndex > obj.metaData.stacks)
                 obj.stackIndex = 1;
             end
             obj.updateImage();
@@ -323,14 +316,30 @@ classdef WidgetImageBrowser < handle
         
         function obj = callbackFcn_applyProjection(obj, ~, ~)
             
+            
             % read full stack
-            %{
-            stack = tiffread(obj.fileName, [],...
-                             'ReadUnknownTags', true,...
-                             'DistributeMetaData', true);
-                         
-            imgfull = zeros(
-             %}
+            img = readLSMImage(obj.fileName,...
+                               obj.metaData,...
+                               (1:obj.metaData.stacks)',...
+                               obj.channelIndex);
+            
+            % get value from pop up
+            
+            switch obj.ui_popup_chooseProjection.Value
+                case 1
+                    obj.image = max(img,[],3);
+                case 2
+                    % fix data range
+                    obj.image = sum(img, 3);
+                    
+                case 3
+                    % fix data range
+                    obj.image = std(double(img),[],3);
+            end
+            
+            % show image
+            obj.showImage();
+            
             
         end
     end

@@ -1,4 +1,19 @@
 function [lsm, iTIFF, iLSM] = readLSMInfo(filename)
+% LSM meta data
+%
+% -- width
+% -- height
+% -- channels
+% -- ifdIndex
+% -- stacks
+% -- stripOffset
+% -- stripByteCount
+% -- bitsPerSample
+% -- readSize
+% -- byteOrder
+% -- xResolution
+% -- yResolution
+% -- unitResolution
 
     % read TIFF info
     iTIFF = imfinfo(filename);
