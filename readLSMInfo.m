@@ -1,19 +1,4 @@
 function [lsm, iTIFF, iLSM] = readLSMInfo(filename)
-% LSM meta data
-%
-% -- width
-% -- height
-% -- channels
-% -- ifdIndex
-% -- stacks
-% -- stripOffset
-% -- stripByteCount
-% -- bitsPerSample
-% -- readSize
-% -- byteOrder
-% -- xResolution
-% -- yResolution
-% -- unitResolution
 
     % read TIFF info
     iTIFF = imfinfo(filename);
@@ -23,10 +8,15 @@ function [lsm, iTIFF, iLSM] = readLSMInfo(filename)
     lsm.height = iTIFF(1).Height;
     lsm.channels = iTIFF(1).SamplesPerPixel;
     ifdCount = size(iTIFF,1);
-    lsm.ifdIndex = (1:ifdCount)';
     iconIndex = cat(1, iTIFF.NewSubFileType);
+    lsm.stacks = sum(~iconIndex);
+    
+    % IFD index
+    lsm.ifdIndex = (1:ifdCount)';
     lsm.ifdIndex(iconIndex == 1) = [];
-    lsm.stacks = size(lsm.ifdIndex, 1);
+    
+    % Planner configuration
+    lsm.planarConfig = iTIFF(1).PlanarConfiguration;
     
     % set image offset
     lsm.stripOffset = cat(1,iTIFF.StripOffsets);

@@ -8,7 +8,7 @@ classdef WidgetImageBrowser < handle
         image
     end
     
-    properties %(Access=protected)
+    properties (Access = protected)
         ui_imageFigure
         ui_imageAxis
         ui_imageHandle
