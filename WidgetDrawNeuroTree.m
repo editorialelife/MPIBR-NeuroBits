@@ -8,7 +8,10 @@ classdef WidgetDrawNeuroTree < handle
     end
     
     properties (Hidden)
+        filePath
         fileName
+        fileExt
+        
         state
         
         idxROI
@@ -36,12 +39,26 @@ classdef WidgetDrawNeuroTree < handle
         function obj = WidgetDrawNeuroTree(varargin)
             
             p = inputParser;
+            addRequired(p, 'FileName', [], @isFileName);
             addParameter(p, 'Parent', [], @isgraphics);
-            addParameter(p, 'ImageHandle', [], @isgraphics);
-            addParameter(p, 'ImageMatrix', [], @isImageMatrix);
-            addParameter(p, 'FileName', [], @ischar);
+            addParameter(p, 'Figure', [], @isgraphics);
+            addParameter(p, 'Image', [], @isImageMatrix);
             
             parse(p, varargin{:});
+            
+            % assign fileName
+            [fPath, fName, fExt] = fileparts(p.Results.fileName);
+            if ~any(strcmp(fExt,{'.tif','.lsm'}))
+                error('WidgetDrawNeuroTree:required input file to be TIFF or LSM');
+            end
+            obj.filePath = fPath;
+            obj.fileName = fName;
+            obj.fileExt = fExt;
+            
+            
+            
+            
+            
             
             if isempty(p.Results.Parent)
                 obj.ui_parent = figure;
@@ -60,9 +77,27 @@ end
 
 
 %%% --- validate image matrix --- %%%
+function value = isFileName(filename)
+
+    % default return
+    value = true;
+    
+    % check for char class
+    if ~ischar(filename)
+        value = false;
+    end
+    
+    % check for valid file
+    if ~(exist(filename, 'file') == 2)
+        value = false;
+    end
+    
+end
+
+
 function value = isImageMatrix(mtx)
 
-    % default return;
+    % default return
     value = true;
     
     % check image class
