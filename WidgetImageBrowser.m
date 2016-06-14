@@ -1,50 +1,88 @@
 classdef WidgetImageBrowser < handle
+    %
+    % WidgetImageBrowser
+    %
+    % GUI Widget for browsing stack multichannel LSM/TIFF image
+    % user loads an image file
+    % browser either stacks or channels
+    % visualize Max, Sum or Std projections
+    %
+    % requires:
+    %    readLSMInfo.m
+    %    readLSMImage.m
+    %
+    % Georgi Tushev
+    % sciclist@brain.mpg.de
+    % Max-Planck Institute For Brain Research
+    %
+    
     
     properties
-        channelIndex
-        stackIndex
+        
+        indexChannel
+        indexStack
         fileName
         metaData
         image
+        
     end
     
     properties (Access = protected)
-        ui_imageFigure
-        ui_imageAxis
-        ui_imageHandle
+        
+        %%% --- image handlers --- %%%
+        ui_figure
+        ui_axes
+        ui_image
+        
+        %%% --- ui handlers --- %%%
         ui_parent
         ui_panel
-        ui_pushButton_prevChannel
-        ui_pushButton_nextChannel
-        ui_pushButton_prevStack
-        ui_pushButton_nextStack
-        ui_text_imageResolution
-        ui_text_channelCounter
-        ui_text_stackCounter
-        ui_pushButton_applyProjection
-        ui_popup_chooseProjection
+        
+        ui_pushButton_PrevChannel
+        ui_pushButton_NextChannel
+        ui_pushButton_PrevStack
+        ui_pushButton_NextStack
+        ui_pushButton_ApplyProjection
+        
+        ui_text_ImageResolution
+        ui_text_ChannelCounter
+        ui_text_StackCounter
+        
+        ui_popup_PickProjection
+        
+    end
+    
+    properties (Constant = true, Access = private, Hidden = true)
+        
+        BORDER_WIDTH = 0.015;
+        BORDER_HEIGHT = 0.015;
+        
     end
     
     methods
+        
+        % method :: WidgetImageBrowser
+        %  input :: varargin
+        % action :: class constructor
         function obj = WidgetImageBrowser(varargin)
             
-            p = inputParser;
-            addParameter(p, 'Parent', [], @isgraphics);
-            addParameter(p, 'FileName', [], @ischar);
-            addParameter(p, 'Axes', [], @isgraphics);
-            parse(p, varargin{:});
+            parserObj = inputParser;
+            addParameter(parserObj, 'Parent', [], @isgraphics);
+            addParameter(parserObj, 'FileName', [], @ischar);
+            addParameter(parserObj, 'Axes', [], @isgraphics);
+            parse(parserObj, varargin{:});
             
-            if isempty(p.Results.Parent)
+            if isempty(parserObj.Results.Parent)
                 obj.ui_parent = figure;
             else
-                obj.ui_parent = p.Results.Parent;
+                obj.ui_parent = parserObj.Results.Parent;
             end
-            obj.fileName = p.Results.FileName;
+            obj.fileName = parserObj.Results.FileName;
             
             
             % set defaults
-            obj.channelIndex = 1;
-            obj.stackIndex = 1;
+            obj.indexChannel = 1;
+            obj.indexStack = 1;
             
             % render user interface
             obj.renderUI();
@@ -56,111 +94,141 @@ classdef WidgetImageBrowser < handle
             
         end
         
+        
+        % method :: renderUI
+        %  input :: class object
+        % action :: render user interface
         function obj = renderUI(obj)
             
             obj.ui_panel = uipanel(...
                 'Parent', obj.ui_parent,...
                 'BorderType', 'none',...
-                'BackgroundColor', obj.BackgroundColor,...
+                'BackgroundColor', obj.getParentColor(),...
                 'Unit', 'normalized',...
                 'Position', [0,0,1,1]);
             
-            obj.ui_text_channelCounter = uicontrol(...
+            obj.ui_text_ChannelCounter = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'text',...
                 'String', 'channel 0 / 0',...
-                'BackgroundColor', obj.BackgroundColor,...
+                'BackgroundColor', obj.getParentColor(),...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,4],[0.01,0.01],1,1:2));
+                'Position', uiGridLayout([4, 4],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         1, 1:2));
             
-            obj.ui_pushButton_prevChannel = uicontrol(...
+            obj.ui_pushButton_PrevChannel = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'PushButton',...
                 'String', '<<',...
                 'Enable', 'off',...
-                'Callback', @obj.callbackFcn_prevChannel,...
+                'Callback', @obj.fcnCallback_PrevChannel,...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,4],[0.01,0.01],1,3));
+                'Position', uiGridLayout([4, 4],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         1, 3));
             
-            obj.ui_pushButton_nextChannel = uicontrol(...
+            obj.ui_pushButton_NextChannel = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'PushButton',...
                 'String', '>>',...
                 'Enable', 'off',...
-                'Callback', @obj.callbackFcn_nextChannel,...
+                'Callback', @obj.fcnCallback_NextChannel,...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,4],[0.01,0.01],1,4));
+                'Position', uiGridLayout([4, 4],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         1, 4));
             
-            obj.ui_text_stackCounter = uicontrol(...
+            obj.ui_text_StackCounter = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'text',...
                 'String', 'stack 0 / 0',...
-                'BackgroundColor', obj.BackgroundColor,...
+                'BackgroundColor', obj.getParentColor(),...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,4],[0.01,0.01],2,1:2));
+                'Position', uiGridLayout([4, 4],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         2, 1:2));
             
-            obj.ui_pushButton_prevStack = uicontrol(...
+            obj.ui_pushButton_PrevStack = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'PushButton',...
                 'String', '<<',...
                 'Enable', 'off',...
-                'Callback', @obj.callbackFcn_prevStack,...
+                'Callback', @obj.fcnCallback_PrevStack,...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,4],[0.01,0.01],2,3));
+                'Position', uiGridLayout([4, 4],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         2, 3));
             
-            obj.ui_pushButton_nextStack = uicontrol(...
+            obj.ui_pushButton_NextStack = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'PushButton',...
                 'String', '>>',...
                 'Enable', 'off',...
-                'Callback', @obj.callbackFcn_nextStack,...
+                'Callback', @obj.fcnCallback_NextStack,...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,4],[0.01,0.01],2,4));
+                'Position', uiGridLayout([4, 4],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         2, 4));
             
-            obj.ui_text_imageResolution = uicontrol(...
+            obj.ui_text_ImageResolution = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'text',...
                 'String', 'load image',...
-                'BackgroundColor', obj.BackgroundColor,...
+                'BackgroundColor', obj.getParentColor(),...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,4],[0.01,0.01],3,1:4));
+                'Position', uiGridLayout([4, 4],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         3, 1:4));
             
-            obj.ui_pushButton_applyProjection = uicontrol(...
+            obj.ui_pushButton_ApplyProjection = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'PushButton',...
                 'String', 'Projection',...
                 'Enable', 'off',...
-                'Callback', @obj.callbackFcn_applyProjection,...
+                'Callback', @obj.fcnCallback_ApplyProjection,...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,4],[0.01,0.01],4,1:2));
+                'Position', uiGridLayout([4, 4],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         4, 1:2));
             
-            obj.ui_popup_chooseProjection = uicontrol(...
+            obj.ui_popup_PickProjection = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'PopUp',...
                 'String', {'Max';'Sum';'Std'},...
-                'BackgroundColor', obj.BackgroundColor,...
+                'BackgroundColor', obj.getParentColor(),...
                 'Callback', [],...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,4],[0.01,0.01],4,3:4));
+                'Position', uiGridLayout([4, 4],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         4, 3:4));
             
         end
         
-        function value = BackgroundColor(obj)
-            if isa(obj.ui_parent, 'matlab.ui.Figure')
+        
+        % method :: getParentColor
+        %  input :: class object
+        % action :: returns value of Parent Color/BackgroundColor property
+        function value = getParentColor(obj)
+            if isgraphics(obj.ui_parent, 'figure')
                 value = get(obj.ui_parent, 'Color');
-            elseif isa(obj.ui_parent, 'matlab.ui.container.Panel')
+            elseif isgraphics(obj.ui_parent, 'uipanel')
                 value = get(obj.ui_parent, 'BackgroundColor');
             end
         end
         
+        
+        % method :: loadImage
+        %  input :: class object, fileName
+        % action :: load image from file name
         function obj = loadImage(obj, fileName)
             
             % assign new file name
             obj.fileName = fileName;
             
             % close previous image
-            if ~isempty(obj.ui_imageFigure) && isgraphics(obj.ui_imageFigure)
-                close(obj.ui_imageFigure);
+            if ~isempty(obj.ui_figure) && isgraphics(obj.ui_figure)
+                close(obj.ui_figure);
             end
             
             % read image file meta data
@@ -168,34 +236,46 @@ classdef WidgetImageBrowser < handle
             
             % update new image
             obj.updateImage();
+            
         end
         
+        
+        % method :: updateImage
+        %  input :: class object
+        % action :: reads and shows image
         function obj = updateImage(obj)
             
             % read image
             obj.readImage();
                                   
             % update user interface
-            obj.updateUI();
+            obj.updateStatus();
             
             % show image
             obj.showImage();
             
         end
         
+        % method :: readImage
+        %  input :: class object
+        % action :: read image from current name
         function obj = readImage(obj)
             
             % read image
             obj.image = readLSMImage(obj.fileName,...
                                      obj.metaData,...
-                                     obj.stackIndex,...
-                                     obj.channelIndex);
+                                     obj.indexStack,...
+                                     obj.indexChannel);
         end
         
-        function obj = updateUI(obj)
+        
+        % method :: updateStatus
+        %  input :: class object
+        % action :: update status message
+        function obj = updateStatus(obj)
             
             % update meta data message
-            set(obj.ui_text_imageResolution,...
+            set(obj.ui_text_ImageResolution,...
                 'String',sprintf('%d bits, H x W %d x %d\n(%.2f x %.2f um)',...
                 obj.metaData.bitsPerSample,...
                 obj.metaData.height,...
@@ -203,40 +283,44 @@ classdef WidgetImageBrowser < handle
                 obj.metaData.height * obj.metaData.yResolution,...
                 obj.metaData.width * obj.metaData.xResolution));
             
-            set(obj.ui_text_channelCounter,...
+            set(obj.ui_text_ChannelCounter,...
                 'String',sprintf('channel %d / %d',...
-                obj.channelIndex, obj.metaData.channels));
+                obj.indexChannel, obj.metaData.channels));
             
-            set(obj.ui_text_stackCounter,...
+            set(obj.ui_text_StackCounter,...
                 'String',sprintf('stack %d / %d',...
-                obj.stackIndex, obj.metaData.stacks));
+                obj.indexStack, obj.metaData.stacks));
             
             % update stack buttons callbacks
             if obj.metaData.stacks == 1
-                set(obj.ui_pushButton_prevStack,'Enable','off');
-                set(obj.ui_pushButton_nextStack,'Enable','off');
-                set(obj.ui_pushButton_applyProjection,'Enable','off');
+                set(obj.ui_pushButton_PrevStack,'Enable','off');
+                set(obj.ui_pushButton_NextStack,'Enable','off');
+                set(obj.ui_pushButton_ApplyProjection,'Enable','off');
             else
-                set(obj.ui_pushButton_prevStack,'Enable','on');
-                set(obj.ui_pushButton_nextStack,'Enable','on');
-                set(obj.ui_pushButton_applyProjection,'Enable','on');
+                set(obj.ui_pushButton_PrevStack,'Enable','on');
+                set(obj.ui_pushButton_NextStack,'Enable','on');
+                set(obj.ui_pushButton_ApplyProjection,'Enable','on');
             end
             
             % update channel buttons callbacks
             if obj.metaData.channels == 1
-                set(obj.ui_pushButton_prevChannel,'Enable','off');
-                set(obj.ui_pushButton_nextChannel,'Enable','off');
+                set(obj.ui_pushButton_PrevChannel,'Enable','off');
+                set(obj.ui_pushButton_NextChannel,'Enable','off');
             else
-                set(obj.ui_pushButton_prevChannel,'Enable','on');
-                set(obj.ui_pushButton_nextChannel,'Enable','on');
+                set(obj.ui_pushButton_PrevChannel,'Enable','on');
+                set(obj.ui_pushButton_NextChannel,'Enable','on');
             end
-            %}
+            
         end
         
+        
+        % method :: showImage
+        %  input :: class object
+        % action :: render image on figure
         function obj = showImage(obj)
             
             % create new axes
-            if isempty(obj.ui_imageAxis) || ~isgraphics(obj.ui_imageAxis)
+            if isempty(obj.ui_axes) || ~isgraphics(obj.ui_axes)
                 
                 % calculate figure resize ratio
                 sizeImage = [obj.metaData.height, obj.metaData.width];
@@ -252,7 +336,7 @@ classdef WidgetImageBrowser < handle
                 figX = round(0.5*(sizeScrn(3) - figW));
                 figY = sizeScrn(4) - figH;
                 
-                obj.ui_imageFigure = figure(...
+                obj.ui_figure = figure(...
                        'Color','w',...
                        'Visible','on',...
                        'MenuBar','none',...
@@ -261,71 +345,93 @@ classdef WidgetImageBrowser < handle
                        'NumberTitle','off',...
                        'Units','pixels',...
                        'Position', [figX, figY, figW, figH]);
-                obj.ui_imageAxis = axes(...
-                    'Parent', obj.ui_imageFigure,...
+                obj.ui_axes = axes(...
+                    'Parent', obj.ui_figure,...
                     'Units','normalized',...
                     'XTick',[],...
                     'YTick',[],...
                     'Position',[0,0,1,1]);
                 
-                obj.ui_imageHandle = imshow(...
+                obj.ui_image = imshow(...
                     obj.image,[],...
-                    'Parent', obj.ui_imageAxis,...
+                    'Parent', obj.ui_axes,...
                     'Border','tight',...
                     'InitialMagnification','fit');
                 
             else % update CData of old image
-                set(obj.ui_imageHandle,'CData', obj.image);
+                set(obj.ui_image,'CData', obj.image);
             end
             
             
         end
         
-        %%% --- Callback functions --- %%%
-        function obj = callbackFcn_prevChannel(obj, ~, ~)
-            obj.channelIndex = obj.channelIndex - 1;
-            if (obj.channelIndex < 1)
-                obj.channelIndex = obj.metaData.channels;
+        
+        %%% -------------------------- %%%
+        %%% --- CALLBACK FUNCTIONS --- %%%
+        %%% -------------------------- %%%
+        
+        % callback :: PrevChannel
+        %    event :: on PrevChannel button click
+        %   action :: decrement channel index
+        function obj = fcnCallback_PrevChannel(obj, ~, ~)
+            obj.indexChannel = obj.indexChannel - 1;
+            if (obj.indexChannel < 1)
+                obj.indexChannel = obj.metaData.channels;
             end
             obj.updateImage();
         end
         
-        function obj = callbackFcn_nextChannel(obj, ~, ~)
-            obj.channelIndex = obj.channelIndex + 1;
-            if (obj.channelIndex > obj.metaData.channels)
-                obj.channelIndex = 1;
+        
+        % callback :: NrevChannel
+        %    event :: on NrevChannel button click
+        %   action :: increment channel index
+        function obj = fcnCallback_NextChannel(obj, ~, ~)
+            obj.indexChannel = obj.indexChannel + 1;
+            if (obj.indexChannel > obj.metaData.channels)
+                obj.indexChannel = 1;
             end
             obj.updateImage();
         end
         
-        function obj = callbackFcn_prevStack(obj, ~, ~)
-            obj.stackIndex = obj.stackIndex - 1;
-            if (obj.stackIndex < 1)
-                obj.stackIndex = obj.metaData.stacks;
+        
+        % callback :: PrevStack
+        %    event :: on PrevStack button click
+        %   action :: decrement stack index
+        function obj = fcnCallback_PrevStack(obj, ~, ~)
+            obj.indexStack = obj.indexStack - 1;
+            if (obj.indexStack < 1)
+                obj.indexStack = obj.metaData.stacks;
             end
             obj.updateImage();
         end
         
-        function obj = callbackFcn_nextStack(obj, ~, ~)
-            obj.stackIndex = obj.stackIndex + 1;
-            if (obj.stackIndex > obj.metaData.stacks)
-                obj.stackIndex = 1;
+        
+        % callback :: NextStack
+        %    event :: on NextStack button click
+        %   action :: increment stack index
+        function obj = fcnCallback_NextStack(obj, ~, ~)
+            obj.indexStack = obj.indexStack + 1;
+            if (obj.indexStack > obj.metaData.stacks)
+                obj.indexStack = 1;
             end
             obj.updateImage();
         end
         
-        function obj = callbackFcn_applyProjection(obj, ~, ~)
-            
+        
+        % callback :: ApplyProjection
+        %    event :: on Projection button click
+        %   action :: generate required image projection
+        function obj = fcnCallback_ApplyProjection(obj, ~, ~)
             
             % read full stack
             img = readLSMImage(obj.fileName,...
                                obj.metaData,...
                                (1:obj.metaData.stacks)',...
-                               obj.channelIndex);
+                               obj.indexChannel);
             
             % get value from pop up
             
-            switch obj.ui_popup_chooseProjection.Value
+            switch obj.ui_popup_PickProjection.Value
                 case 1
                     obj.image = max(img,[],3);
                 case 2
@@ -339,36 +445,9 @@ classdef WidgetImageBrowser < handle
             
             % show image
             obj.showImage();
-            
-            
+             
         end
+        
     end
-    
-end
-
-
-%%% --- Calculates Grid Layout --- %%%
-function [uiGrid] = GridLayout(gridSize, margins, spanH, spanW)
-    % function :: GridLayout
-    %    input :: gridSize (HxW)
-    %    input :: margins (HxW)
-    %    input :: spanH
-    %    input :: spanW
-    %   method :: calculates GridLayout
-    
-    % calculate grid size
-    gridHSize = (1 - margins(1) * (gridSize(1) + 1)) / gridSize(1);
-    gridWSize = (1 - margins(2) * (gridSize(2) + 1)) / gridSize(2);
-
-    % calculate box position
-    gridHPos = flipud(cumsum([margins(1); repmat(gridHSize + margins(1), gridSize(1) - 1, 1)]));
-    gridWPos = cumsum([margins(2); repmat(gridWSize + margins(2), gridSize(2) - 1, 1)]);
-
-    % extract grid
-    uiGrid = zeros(1,4);
-    uiGrid(1) = gridWPos(spanW(1));
-    uiGrid(2) = gridHPos(spanH(end));
-    uiGrid(3) = length(spanW) * gridWSize + (length(spanW) - 1) * margins(2);
-    uiGrid(4) = length(spanH) * gridHSize + (length(spanH) - 1) * margins(1);
     
 end

@@ -1,148 +1,197 @@
-% Class WidgetFolderBrowser
-% 
-% user loads a file or a folder and emits
-% event_fileUpdated
-% 
-%
 classdef WidgetFolderBrowser < handle
+    %
+    % WidgetFolderBrowser
+    %
+    % GUI Widget for browsing a folder
+    % user loads a file or a folder
+    % emits event on each updated file
+    %
+    % Friedrich Kretschmer
+    % Georgi Tushev
+    % sciclist@brain.mpg.de
+    % Max-Planck Institute For Brain Research
+    %
     
     properties
+        folder
+        file
         ext
-        folderName
-        fileName
-        fileList
-        fileIndex
+        list
+        index
     end
     
-    properties (Access=protected)
+    properties (Access = protected)
         ui_parent
         ui_panel
-        ui_pushButton_loadFile
-        ui_pushButton_loadFolder
-        ui_pushButton_prevFile
-        ui_pushButton_nextFile
-        ui_text_fileName
-        ui_text_fileCounter
+        ui_pushButton_LoadFile
+        ui_pushButton_LoadFolder
+        ui_pushButton_PrevFile
+        ui_pushButton_NextFile
+        ui_text_FileName
+        ui_text_FileCounter
     end
     
-    events (NotifyAccess=protected)
-        event_fileUpdated;
+    properties (Constant = true, Access = private, Hidden = true)
+        
+        BORDER_WIDTH = 0.015;
+        BORDER_HEIGHT = 0.015;
+        
+    end
+    
+    events (NotifyAccess = protected)
+        event_fileUpdated
     end
     
     methods
+        
+        % method :: WidgetFolderBrowser
+        %  input :: varargin
+        % action :: class constructor
         function obj = WidgetFolderBrowser(varargin)
             
-            p = inputParser;
-            addParameter(p, 'Parent', [], @isgraphics);
-            addParameter(p, 'Extension', '*.*', @isstr);
-            parse(p, varargin{:});
+            % use parser
+            parserObj = inputParser;
+            addParameter(parserObj, 'Parent', [], @isgraphics);
+            addParameter(parserObj, 'Extension', '*.*', @isstr);
+            parse(parserObj, varargin{:});
             
-            if isempty(p.Results.Parent)
+            % set input properties
+            if isempty(parserObj.Results.Parent)
                 obj.ui_parent = figure;
             else
-                obj.ui_parent = p.Results.Parent;
+                obj.ui_parent = parserObj.Results.Parent;
             end
-            obj.ext = p.Results.Extension;
             
+            obj.ext = parserObj.Results.Extension;
+            
+            % render user interface
             obj.renderUI();
             
         end
         
+        
+        % method :: renderUI
+        %  input :: class object
+        % action :: render user interface
         function obj = renderUI(obj)
             
             obj.ui_panel = uipanel(...
                 'Parent', obj.ui_parent,...
                 'BorderType', 'none',...
-                'BackgroundColor', obj.BackgroundColor,...
+                'BackgroundColor', obj.getParentColor(),...
                 'Unit', 'normalized',...
-                'Position', [0,0,1,1]);
+                'Position', [0, 0, 1, 1]);
             
-            obj.ui_pushButton_loadFile = uicontrol(...
+            obj.ui_pushButton_LoadFile = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'PushButton',...
                 'String', 'Load file',...
                 'Enable', 'on',...
-                'Callback', @obj.callbackFcn_loadFile,...
+                'Callback', @obj.fcnCallback_LoadFile,...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,2],[0.01,0.01],3,1));
+                'Position', uiGridLayout([4, 2],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         3, 1));
             
-            obj.ui_pushButton_loadFolder = uicontrol(...
+            obj.ui_pushButton_LoadFolder = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'PushButton',...
                 'String', 'Load folder',...
                 'Enable', 'on',...
-                'Callback', @obj.callbackFcn_loadFolder,...
+                'Callback', @obj.fcnCallback_LoadFolder,...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,2],[0.01,0.01],3,2));
+                'Position', uiGridLayout([4, 2],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         3, 2));
             
-            obj.ui_pushButton_prevFile = uicontrol(...
+            obj.ui_pushButton_PrevFile = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'PushButton',...
                 'String', 'Previous file',...
                 'Enable', 'off',...
-                'Callback', @obj.callbackFcn_prevFile,...
+                'Callback', @obj.fcnCallback_PrevFile,...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,2],[0.01,0.01],4,1));
+                'Position', uiGridLayout([4, 2],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         4, 1));
             
-            obj.ui_pushButton_nextFile = uicontrol(...
+            obj.ui_pushButton_NextFile = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'PushButton',...
                 'String', 'Next file',...
                 'Enable', 'off',...
-                'Callback', @obj.callbackFcn_nextFile,...
+                'Callback', @obj.fcnCallback_NextFile,...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,2],[0.01,0.01],4,2));
+                'Position', uiGridLayout([4, 2],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         4, 2));
             
-            obj.ui_text_fileName = uicontrol(...
+            obj.ui_text_FileName = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'text',...
                 'String', 'load file or folder',...
-                'BackgroundColor', obj.BackgroundColor,...
+                'BackgroundColor', obj.getParentColor(),...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,2],[0.01,0.01],1,1:2));
+                'Position', uiGridLayout([4, 2],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         1, 1:2));
             
-            obj.ui_text_fileCounter = uicontrol(...
+            obj.ui_text_FileCounter = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'text',...
                 'String', '0 / 0',...
-                'BackgroundColor', obj.BackgroundColor,...
+                'BackgroundColor', obj.getParentColor(),...
                 'Units', 'normalized',...
-                'Position', GridLayout([4,2],[0.01,0.01],2,1:2));
-                
+                'Position', uiGridLayout([4, 2],...
+                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
+                                         2, 1:2));
+            
         end
         
-        function value = BackgroundColor(obj)
-            if isa(obj.ui_parent, 'matlab.ui.Figure')
+        
+        % method :: getParentColor
+        %  input :: class object
+        % action :: returns value of Parent Color/BackgroundColor property
+        function value = getParentColor(obj)
+            if isgraphics(obj.ui_parent, 'figure')
                 value = get(obj.ui_parent, 'Color');
-            elseif isa(obj.ui_parent, 'matlab.ui.container.Panel')
+            elseif isgraphics(obj.ui_parent, 'uipanel')
                 value = get(obj.ui_parent, 'BackgroundColor');
             end
         end
         
+        
+        % method :: loadFile
+        %  input :: class object, fileName, pathName
+        % action :: loads file with given name and path
         function obj = loadFile(obj, fileName, pathName)
             
             % update properties
-            obj.folderName = pathName(1:end-1); % uigetfile retunrns pathName with filesep
-            obj.fileName = [pathName,fileName];
-            obj.fileList = {obj.fileName};
-            obj.fileIndex = 1;
+            obj.folder = pathName(1:end-1); % uigetfile retunrns pathName with filesep
+            obj.name = [pathName,fileName];
+            obj.list = {obj.name};
+            obj.index = 1;
             
             % update message
-            [~, fileTag] = fileparts(obj.fileName);
-            set(obj.ui_text_fileName,...
+            [~, fileTag] = fileparts(obj.name);
+            set(obj.ui_text_FileName,...
                 'String', fileTag);
-            set(obj.ui_text_fileCounter,...
-                'String', sprintf('%d / %d',obj.fileIndex, size(obj.fileList,1)));
+            set(obj.ui_text_FileCounter,...
+                'String', sprintf('%d / %d',obj.index, size(obj.list,1)));
             
             % deactivate Next/Prev buttons
-            set(obj.ui_pushButton_prevFile, 'Enable', 'off');
-            set(obj.ui_pushButton_nextFile, 'Enable', 'off');
+            set(obj.ui_pushButton_PrevFile, 'Enable', 'off');
+            set(obj.ui_pushButton_NextFile, 'Enable', 'off');
             
             % evoke event
             notify(obj, 'event_fileUpdated');
             
         end
         
+        
+        % method :: loadFolder
+        %  input :: class object, pathName
+        % action :: loads file list with given extension
         function obj = loadFolder(obj, pathName)
             
             folderInfo = dir([pathName, filesep, obj.ext]);
@@ -151,14 +200,14 @@ classdef WidgetFolderBrowser < handle
             else
                 
                 % update properties
-                obj.folderName = pathName;
-                obj.fileList = cellfun(@(x) {[pathName, filesep, x]},{folderInfo.name}');
-                obj.fileIndex = 1;
+                obj.folder = pathName;
+                obj.list = cellfun(@(x) {[pathName, filesep, x]},{folderInfo.name}');
+                obj.index = 1;
                 
                 % unlock Next/Prev buttons
-                if size(obj.fileList, 1) > 1
-                    set(obj.ui_pushButton_prevFile, 'Enable', 'on');
-                    set(obj.ui_pushButton_nextFile, 'Enable', 'on');
+                if size(obj.list, 1) > 1
+                    set(obj.ui_pushButton_PrevFile, 'Enable', 'on');
+                    set(obj.ui_pushButton_NextFile, 'Enable', 'on');
                 end
                 
                 % update file
@@ -168,75 +217,79 @@ classdef WidgetFolderBrowser < handle
             
         end
         
+        
+        % method :: updateFile
+        %  input :: class object
+        % action :: update current file name and index
         function obj = updateFile(obj)
-            obj.fileName = obj.fileList{obj.fileIndex};
-            [~, fileTag] = fileparts(obj.fileName);
-            set(obj.ui_text_fileName,...
+            
+            % current file from list
+            obj.file = obj.list{obj.index};
+            
+            % update status
+            [~, fileTag] = fileparts(obj.file);
+            set(obj.ui_text_FileName,...
                 'String', fileTag);
-            set(obj.ui_text_fileCounter,...
-                'String', sprintf('%d / %d', obj.fileIndex, size(obj.fileList,1)));
+            set(obj.ui_text_FileCounter,...
+                'String', sprintf('%d / %d', obj.index, size(obj.list,1)));
+            
+            % evoke event
             notify(obj, 'event_fileUpdated');
+            
         end
         
-        %%% --- Callback functions --- %%%
-        function callbackFcn_loadFile(obj, ~, ~)
+        
+        %%% -------------------------- %%%
+        %%% --- CALLBACK FUNCTIONS --- %%%
+        %%% -------------------------- %%%
+        
+        % callback :: LoadFile
+        %    event :: on Load File button click
+        %   action :: loads single file
+        function obj = fcnCallback_LoadFile(obj, ~, ~)
             [file_name, path_name] = uigetfile(obj.ext, 'Pick a file ...');
             if ischar(file_name)
                 obj.loadFile(file_name, path_name);
             end
         end
         
-        function callbackFcn_loadFolder(obj, ~, ~)
+        
+        % callback :: LoadFolder
+        %    event :: on Load Folder button click
+        %   action :: loads file list from folder
+        function obj = fcnCallback_LoadFolder(obj, ~, ~)
             path_name = uigetdir(pwd, 'Pick a dirctory ...');
             if ischar(path_name)
                 obj.loadFolder(path_name);
             end
         end
         
-        function callbackFcn_prevFile(obj, ~, ~)
-            if obj.fileIndex > 1
-                obj.fileIndex = obj.fileIndex - 1;
+        
+        % callback :: PrevFile
+        %    event :: on Prev File button click
+        %   action :: decrement file index
+        function obj = fcnCallback_PrevFile(obj, ~, ~)
+            if obj.index > 1
+                obj.index = obj.index - 1;
             else
-                obj.fileIndex = size(obj.fileList, 1);
+                obj.index = size(obj.list, 1);
             end
             obj.updateFile();
         end
         
-        function callbackFcn_nextFile(obj, ~, ~)
-            if obj.fileIndex < size(obj.fileList, 1)
-                obj.fileIndex = obj.fileIndex + 1;
+        
+        % callback :: NextFile
+        %    event :: on Next File button click
+        %   action :: increment file index
+        function obj = fcnCallback_NextFile(obj, ~, ~)
+            if obj.index < size(obj.list, 1)
+                obj.index = obj.index + 1;
             else
-                obj.fileIndex = 1;
+                obj.index = 1;
             end
             obj.updateFile();
         end
+        
     end
-end
-
-
-%%% --- Calculates Grid Layout --- %%%
-function [uiGrid] = GridLayout(gridSize, margins, spanH, spanW)
-    % function :: GridLayout
-    %    input :: gridSize (HxW)
-    %    input :: margins (HxW)
-    %    input :: spanH
-    %    input :: spanW
-    %   method :: calculates GridLayout
-    
-    % calculate grid size
-    gridHSize = (1 - margins(1) * (gridSize(1) + 1)) / gridSize(1);
-    gridWSize = (1 - margins(2) * (gridSize(2) + 1)) / gridSize(2);
-
-    % calculate box position
-    gridHPos = flipud(cumsum([margins(1); repmat(gridHSize + margins(1), gridSize(1) - 1, 1)]));
-    gridWPos = cumsum([margins(2); repmat(gridWSize + margins(2), gridSize(2) - 1, 1)]);
-
-    % extract grid
-    uiGrid = zeros(1,4);
-    uiGrid(1) = gridWPos(spanW(1));
-    uiGrid(2) = gridHPos(spanH(end));
-    uiGrid(3) = length(spanW) * gridWSize + (length(spanW) - 1) * margins(2);
-    uiGrid(4) = length(spanH) * gridHSize + (length(spanH) - 1) * margins(1);
     
 end
-

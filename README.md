@@ -1,5 +1,16 @@
 # NeuroBits
 user guided neuronal segmentation
 
-Matlab GUI for the user to browse and segment LSM images and manually segment neuronal trees
+Matlab Widget GUI
+
+browse file directory
+
+browse multistack and multichannels LSM/TIFF images
+
+user guided neuronal segmentation
+
+automatic puncta detection
+
+batch processing
+
 
