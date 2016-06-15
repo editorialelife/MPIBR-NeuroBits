@@ -1,5 +1,14 @@
 function [lsm, iTIFF, iLSM] = readLSMInfo(filename)
-
+    % readLSMInfo
+    % reads image file information and LSM Tag from LSM/TIFF file
+    %
+    %  input :: filename - valid LSM/TIFF file
+    %
+    % Georgi Tushev
+    % Max-Planck Institute for Brain Research
+    % sciclist@brain.mpg.de
+    
+    
     % read TIFF info
     iTIFF = imfinfo(filename);
     
@@ -19,8 +28,7 @@ function [lsm, iTIFF, iLSM] = readLSMInfo(filename)
     lsm.planarConfig = iTIFF(1).PlanarConfiguration;
     
     % set image offset
-    lsm.stripOffset = cat(1,iTIFF.StripOffsets);
-    lsm.stripOffset(iconIndex == 1, :) = [];
+    lsm.stripOffset = cat(1,iTIFF(iconIndex == 0).StripOffsets);
     
     % set output type
     lsm.stripByteCount = iTIFF(1).StripByteCounts(1);

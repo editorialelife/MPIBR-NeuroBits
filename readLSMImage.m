@@ -1,5 +1,15 @@
 function img = readLSMImage( filename, lsm, idxStack, idxChannel)
-% read LSM image
+    % readLSMImage
+    % reads LSM/TIFF multi-stack multi-channel file
+    %
+    %  input :: filename - valid LSM/TIFF file
+    %  input :: lsm - image meta info returned from readLSMInfo
+    %  input :: idxStack - index to query stack
+    %  input :: idxChannel - index to query channel
+    %
+    % Georgi Tushev
+    % Max-Planck Institute for Brain Research
+    % sciclist@brain.mpg.de
 
     % set image dimensions
     iH = lsm.height;

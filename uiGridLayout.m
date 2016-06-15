@@ -10,7 +10,7 @@ function [uiGrid] = uiGridLayout(gridSize, margins, spanH, spanW)
     %
     % Georgi Tushev
     % Max-Planck Institute for Brain Research
-    % georgi.tushev@brain.mpg.de
+    % sciclist@brain.mpg.de
     
     % calculate grid size
     gridHSize = (1 - margins(1) * (gridSize(1) + 1)) / gridSize(1);
