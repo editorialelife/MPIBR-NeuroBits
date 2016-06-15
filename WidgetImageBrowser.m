@@ -10,12 +10,12 @@ classdef WidgetImageBrowser < handle
     % requires:
     %    readLSMInfo.m
     %    readLSMImage.m
+    %    uiGridLayout.m
     %
     % Georgi Tushev
     % sciclist@brain.mpg.de
     % Max-Planck Institute For Brain Research
     %
-    
     
     properties
         
@@ -27,7 +27,7 @@ classdef WidgetImageBrowser < handle
         
     end
     
-    properties (Access = protected)
+    properties (Access = public, Hidden = true)
         
         %%% --- image handlers --- %%%
         ui_figure

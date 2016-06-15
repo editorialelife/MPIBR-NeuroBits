@@ -16,6 +16,7 @@ classdef NeuroBits < handle
     %
     
     properties (Access = private, Hidden = true)
+        file
         ui_figure
         widget_FolderBrowser
         widget_ImageBrowser
@@ -41,6 +42,8 @@ classdef NeuroBits < handle
         %  input :: class object
         % action :: class constructor
         function obj = NeuroBits()
+            clc;
+            close all;
             
             % initialize graphical user interface
             obj.renderUI();
@@ -121,7 +124,7 @@ classdef NeuroBits < handle
                 'Position', uiGridLayout([5, 1],...
                                          [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
                                          3, 1));
-            %obj.widget_NeuroTree = WidgetDrawNeuroTree('Parent', hPan_DrawTree, 'ImageHandle', gcf);
+            obj.widget_NeuroTree = WidgetNeuroTree('Parent', hPan_NeuroTree);
             
             
             %%% --- Find Puncta --- %%%
@@ -157,6 +160,35 @@ classdef NeuroBits < handle
         end
         
         
+        % method :: initWidgetImageBrowser
+        %  input :: class object
+        % action :: initialize image browser image
+        function obj = initWidgetImageBrowser(obj)
+            
+            % evoke load method in WidgetImageBrowser
+            obj.file = obj.widget_FolderBrowser.list{obj.widget_FolderBrowser.index};
+            obj.widget_ImageBrowser.loadImage(obj.file);
+            
+        end
+        
+        % method :: initWidgetNeuroTree
+        %  input :: class object
+        % action :: initialize neuro tree
+        function obj = initWidgetNeuroTree(obj)
+            
+            % activate ui
+            set(obj.widget_NeuroTree.ui_pushButton_SegmentTree, 'Enable', 'on');
+            
+            % pass current file name and figure to WidgetNeuroTree
+            [path, name] = fileparts(obj.file);
+            obj.widget_NeuroTree.path = path;
+            obj.widget_NeuroTree.name = name;
+            obj.widget_NeuroTree.ui_figure = obj.widget_ImageBrowser.ui_figure;
+            obj.widget_NeuroTree.ui_axes = obj.widget_ImageBrowser.ui_axes;
+            obj.widget_NeuroTree.ui_image = obj.widget_ImageBrowser.ui_image;
+            
+        end
+        
         %%% -------------------------- %%%
         %%% --- CALLBACK FUNCTIONS --- %%%
         %%% -------------------------- %%%
@@ -178,9 +210,12 @@ classdef NeuroBits < handle
         %   action :: load image in ImageBrowser widget
         function obj = fcnCallback_FileUpdate(obj, ~, ~)
             
-            % evoke load method in WidgetImageBrowser
-            fileNameNow = obj.widget_FolderBrowser.list{obj.widget_FolderBrowser.index};
-            obj.widget_ImageBrowser.loadImage(fileNameNow);
+            % initialize WidgetImageBrowser
+            obj.initWidgetImageBrowser();
+            
+            % initialize WidgetNeuroTree
+            obj.initWidgetNeuroTree();
+            
         end
         
     end

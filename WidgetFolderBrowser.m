@@ -6,6 +6,9 @@ classdef WidgetFolderBrowser < handle
     % user loads a file or a folder
     % emits event on each updated file
     %
+    % requires:
+    %    uiGridLayout.m
+    %
     % Friedrich Kretschmer
     % Georgi Tushev
     % sciclist@brain.mpg.de
@@ -168,12 +171,12 @@ classdef WidgetFolderBrowser < handle
             
             % update properties
             obj.folder = pathName(1:end-1); % uigetfile retunrns pathName with filesep
-            obj.name = [pathName,fileName];
-            obj.list = {obj.name};
+            obj.file = [pathName,fileName];
+            obj.list = {obj.file};
             obj.index = 1;
             
             % update message
-            [~, fileTag] = fileparts(obj.name);
+            [~, fileTag] = fileparts(obj.file);
             set(obj.ui_text_FileName,...
                 'String', fileTag);
             set(obj.ui_text_FileCounter,...
