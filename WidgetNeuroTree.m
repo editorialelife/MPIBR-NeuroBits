@@ -31,6 +31,15 @@ classdef WidgetNeuroTree < handle
     
     properties (Access = public, Hidden = true)
         
+        %%% --- image figure handlers --- %%%
+        ih_figure
+        ih_axes
+        ih_image
+        
+    end
+    
+    properties (Access = private, Hidden = true)
+        
         %%% --- State Machine --- %%%
         state
         dilate
@@ -55,11 +64,6 @@ classdef WidgetNeuroTree < handle
         ui_text_StatusLength
         ui_text_StatusDilate
         ui_text_StatusLinked
-        
-        %%% --- Drawing figure --- %%%
-        ui_figure
-        ui_axes
-        ui_image
         
     end
     
@@ -311,12 +315,60 @@ classdef WidgetNeuroTree < handle
             end
         end
         
+        % mehtod :: unlockUI
+        %  input :: class object
+        % action :: unlocks user interface
+        function obj = unlockUI(obj)
+            set(obj.ui_pushButton_SegmentTree, 'Enable', 'on');
+        end
+        
+        
+        % method :: setFigureCallbacks
+        %  input :: class object, setState
+        % action :: switch on/off figure callbacks
+        function obj = setFigureCallbacks(obj, setState)
+            
+            switch setState
+                
+                case 'on'
+                    
+                    set(obj.ih_figure,...
+                        'WindowButtonMotionFcn', @obj.fcnCallback_MoveMouse,...
+                        'WindowButtonDownFcn', @obj.fcnCallback_ClickDown,...
+                        'WindowButtonUpFcn', @obj.fcnCallback_ClickUp,...
+                        'WindowKeyPressFcn', @obj.fcnCallback_PressKey);
+                    
+                case 'off'
+                    
+                    set(obj.ih_figure,...
+                        'WindowButtonMotionFcn', [],...
+                        'WindowButtonDownFcn', [],...
+                        'WindowButtonUpFcn', [],...
+                        'WindowKeyPressFcn', []);
+                    
+            end
+            
+        end
+        
+        
         % method :: segmentTree
         %  input :: class object
         % action :: setting current figure callbacks
         function obj = segmentTree(obj)
             
-            disp(obj.name);
+           % set callback functions
+           obj.setFigureCallbacks('on');
+            
+        end
+        
+        
+        % method :: clearTree
+        %  input :: class object
+        % action :: clear current tree and figure callbacks
+        function obj = clearTree(obj)
+            
+            % remove callback functions
+            obj.setFigureCallbacks('off');
             
         end
         
@@ -337,6 +389,7 @@ classdef WidgetNeuroTree < handle
         end
         
         
+        
         %%% ----------------------------- %%%
         %%% --- UI CALLBACK FUNCTIONS --- %%%
         %%% ----------------------------- %%%
@@ -346,10 +399,6 @@ classdef WidgetNeuroTree < handle
         %   action :: class destructor
         function obj = fcnCallback_CloseUIWindow(obj, ~, ~)
             
-            if isgraphics(obj.ui_figure)
-                close(obj.ui_figure);
-            end
-            
             if isgraphics(obj.ui_parent)
                 delete(obj.ui_parent);
             end
@@ -358,24 +407,25 @@ classdef WidgetNeuroTree < handle
         end
         
         
-        % callback :: CloseFigureWindow
-        %    event :: on close request
-        %   action :: class destructor
-        function obj = fcnCallback_CloseFigureWindow(obj, ~, ~)
-            delete(obj.ui_figure);
-        end
-        
-        
         % callback :: SegmentTree
         %    event :: on segment button
         %   action :: initialize segmentation with current image
         function obj = fcnCallback_SegmentTree(obj, ~, ~)
             
-            % unlock UI
-            obj.enableButtonGroup('on');
+            switch obj.ui_pushButton_SegmentTree.String
+                
+                case 'Segment'
+                    set(obj.ui_pushButton_SegmentTree, 'String', 'Clear');
+                    obj.enableButtonGroup('on');
+                    obj.segmentTree();
+                    
+                case 'Clear'
+                    set(obj.ui_pushButton_SegmentTree, 'String', 'Segment');
+                    obj.enableButtonGroup('off');
+                    obj.clearTree();
+                    
+            end
             
-            % initialize segmentation
-            obj.segmentTree();
         end
         
         % callback :: SaveTree

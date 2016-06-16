@@ -29,10 +29,14 @@ classdef WidgetImageBrowser < handle
     
     properties (Access = public, Hidden = true)
         
-        %%% --- image handlers --- %%%
-        ui_figure
-        ui_axes
-        ui_image
+        %%% --- image figure handlers --- %%%
+        ih_figure
+        ih_axes
+        ih_image
+        
+    end
+    
+    properties (Access = private, Hidden = true)
         
         %%% --- ui handlers --- %%%
         ui_parent
@@ -227,8 +231,8 @@ classdef WidgetImageBrowser < handle
             obj.fileName = fileName;
             
             % close previous image
-            if ~isempty(obj.ui_figure) && isgraphics(obj.ui_figure)
-                close(obj.ui_figure);
+            if ~isempty(obj.ih_figure) && isgraphics(obj.ih_figure)
+                close(obj.ih_figure);
             end
             
             % read image file meta data
@@ -320,7 +324,7 @@ classdef WidgetImageBrowser < handle
         function obj = showImage(obj)
             
             % create new axes
-            if isempty(obj.ui_axes) || ~isgraphics(obj.ui_axes)
+            if isempty(obj.ih_axes) || ~isgraphics(obj.ih_axes)
                 
                 % calculate figure resize ratio
                 sizeImage = [obj.metaData.height, obj.metaData.width];
@@ -336,7 +340,7 @@ classdef WidgetImageBrowser < handle
                 figX = round(0.5*(sizeScrn(3) - figW));
                 figY = sizeScrn(4) - figH;
                 
-                obj.ui_figure = figure(...
+                obj.ih_figure = figure(...
                        'Color','w',...
                        'Visible','on',...
                        'MenuBar','none',...
@@ -344,31 +348,45 @@ classdef WidgetImageBrowser < handle
                        'Name','',...
                        'NumberTitle','off',...
                        'Units','pixels',...
-                       'Position', [figX, figY, figW, figH]);
-                obj.ui_axes = axes(...
-                    'Parent', obj.ui_figure,...
+                       'Position', [figX, figY, figW, figH],...
+                       'CloseRequestFcn', @obj.fcnCallback_CloseFigure);
+                   
+                obj.ih_axes = axes(...
+                    'Parent', obj.ih_figure,...
                     'Units','normalized',...
                     'XTick',[],...
                     'YTick',[],...
                     'Position',[0,0,1,1]);
                 
-                obj.ui_image = imshow(...
+                obj.ih_image = imshow(...
                     obj.image,[],...
-                    'Parent', obj.ui_axes,...
+                    'Parent', obj.ih_axes,...
                     'Border','tight',...
                     'InitialMagnification','fit');
                 
             else % update CData of old image
-                set(obj.ui_image,'CData', obj.image);
+                
+                set(obj.ih_image,'CData', obj.image);
+                set(obj.ih_figure, 'Visible', 'on');
+                
             end
             
             
         end
         
         
+        
         %%% -------------------------- %%%
         %%% --- CALLBACK FUNCTIONS --- %%%
         %%% -------------------------- %%%
+        
+        % callback :: CloseFigure
+        %    event :: on close request
+        %   action :: dispose image figure
+        function obj = fcnCallback_CloseFigure(obj, ~, ~)
+            set(obj.ih_figure, 'Visible', 'off');
+        end
+        
         
         % callback :: PrevChannel
         %    event :: on PrevChannel button click
