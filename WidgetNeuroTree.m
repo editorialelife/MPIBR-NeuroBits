@@ -97,20 +97,6 @@ classdef WidgetNeuroTree < handle
         
     end
     
-    events (NotifyAccess = private, ListenAccess = private)
-        
-        %%% --- Events --- %%%
-        EVENT_KEY_DIGIT
-        EVENT_KEY_DEL
-        EVENT_CLICK_DOWN
-        EVENT_CLICK_UP
-        EVENT_CLICK_DOUBLE
-        EVENT_OVER_BRANCH
-        EVENT_OVER_NODE
-        EVENT_MOVE_MOUSE
-        
-    end
-    
     methods
         
         % method :: WidgetNeuroTree
@@ -154,9 +140,6 @@ classdef WidgetNeuroTree < handle
             
             % render UI
             obj.renderUI();
-            
-            % add event listeners
-            obj.addListeners();
             
         end
         
@@ -523,11 +506,11 @@ classdef WidgetNeuroTree < handle
             % check to fire event
             if (obj.key >= '0') && (obj.key <= '9')
                 
-                notify(obj, 'EVENT_KEY_DIGIT');
+                obj.fcnRespond_KeyDigit();
                 
             elseif uint8(obj.key) == 8 %(DEL)
                 
-                notify(obj, 'EVENT_KEY_DEL');
+                obj.fcnRespond_KeyDel();
                 
             end
             
@@ -544,15 +527,15 @@ classdef WidgetNeuroTree < handle
             % check if over branch
             if obj.isOverBranch()
                 
-                notify(obj, 'EVENT_OVER_BRANCH');
+                obj.fcnRespond_OverBranch();
                 
             elseif obj.isOverNode()
                 
-                notify(obj, 'EVENT_OVER_NODE');
+                obj.fcnRespond_OverNode();
                 
             else
                 
-                notify(obj, 'EVENT_MOVE_MOUSE');
+                obj.fcnRespond_MouseMove();
                 
             end
             
@@ -574,11 +557,11 @@ classdef WidgetNeuroTree < handle
             
             if strcmp(clickSelection, 'normal')
                 
-                notify(obj, 'EVENT_CLICK_DOWN');
+                obj.fcnRespond_ClickDown();
                 
             elseif strcmp(clickSelection, 'open')
                 
-                notify(obj, 'EVENT_DOUBLE_CLICK');
+                obj.fcnRespond_DoubleClick();
                 
             end
         end
@@ -591,7 +574,7 @@ classdef WidgetNeuroTree < handle
             % get current click position
             obj.click = obj.getClick();
             
-            notify(obj, 'EVENT_CLICK_UP');
+            obj.fcnRespond_ClickUp();
             
         end
         
@@ -603,7 +586,7 @@ classdef WidgetNeuroTree < handle
         % respond :: KeyDigit
         %   event :: EVENT_KEY_DIGIT
         %  action :: update states
-        function obj = fcnRespond_KeyDigit(obj, ~, ~)
+        function obj = fcnRespond_KeyDigit(obj)
             
             if obj.state == obj.STATE_IDLE
                 
@@ -618,7 +601,7 @@ classdef WidgetNeuroTree < handle
         % respond :: KeyDel
         %   event :: EVENT_KEY_DEL
         %  action :: update states
-        function obj = fcnRespond_KeyDel(obj, ~, ~)
+        function obj = fcnRespond_KeyDel(obj)
             
             if obj.state == obj.STATE_DRAWING
                 
@@ -643,7 +626,7 @@ classdef WidgetNeuroTree < handle
         % respond :: ClickDown
         %   event :: EVENT_CLICK_DOWN
         %  action :: update states
-        function obj = fcnRespond_ClickDown(obj, ~, ~)
+        function obj = fcnRespond_ClickDown(obj)
             
             if obj.state == obj.STATE_DRAWING
                 
@@ -670,7 +653,7 @@ classdef WidgetNeuroTree < handle
         % respond :: ClickUp
         %   event :: EVENT_CLICK_UP
         %  action :: update states
-        function obj = fcnRespond_ClickUp(obj, ~, ~)
+        function obj = fcnRespond_ClickUp(obj)
             
             if obj.state == obj.STATE_REPOSITION_BRANCH
                 
@@ -691,7 +674,7 @@ classdef WidgetNeuroTree < handle
         % respond :: ClickDouble
         %   event :: EVENT_CLICK_DOUBLE
         %  action :: update states
-        function obj = fcnRespond_ClickDouble(obj, ~, ~)
+        function obj = fcnRespond_ClickDouble(obj)
             
             if obj.state == obj.STATE_DRAWING
                 
@@ -712,7 +695,7 @@ classdef WidgetNeuroTree < handle
         % respond :: OverBranch
         %   event :: EVENT_OVER_BRANCH
         %  action :: update states
-        function obj = fcnRespond_OverBranch(obj, ~, ~)
+        function obj = fcnRespond_OverBranch(obj)
             
             if obj.state == obj.STATE_IDLE
                 
@@ -725,7 +708,7 @@ classdef WidgetNeuroTree < handle
         % respond :: OverNode
         %   event :: EVENT_OVER_NODE
         %  action :: update states
-        function obj = fcnRespond_OverNode(obj, ~, ~)
+        function obj = fcnRespond_OverNode(obj)
             
             if obj.state == obj.STATE_IDLE
                 
@@ -738,7 +721,7 @@ classdef WidgetNeuroTree < handle
         % respond :: MouseMove
         %   event :: EVENT_MOUSE_MOVE
         %  action :: update states
-        function obj = fcnRespond_MouseMove(obj, ~, ~)
+        function obj = fcnRespond_MouseMove(obj)
             
             if obj.state == obj.STATE_DRAWING
                 
@@ -774,19 +757,6 @@ classdef WidgetNeuroTree < handle
         %%% --- STATE MACHINE METHODS --- %%%
         %%% ----------------------------- %%%
         
-        % mathod :: addListeners
-        %  input :: class object
-        % action :: add listeners for State Machine events
-        function obj = addListeners(obj)
-            addlistener(obj, 'EVENT_KEY_DIGIT', @fcnRespond_KeyDigit);
-            addlistener(obj, 'EVENT_KEY_DEL', @fcnRespond_KeyDel);
-            addlistener(obj, 'EVENT_CLICK_DOWN', @fcnRespond_ClickDown);
-            addlistener(obj, 'EVENT_CLICK_UP', @fcnRespond_ClickUp);
-            addlistener(obj, 'EVENT_CLICK_DOUBLE', @fcnRespond_ClickDouble);
-            addlistener(obj, 'EVENT_OVER_BRANCH', @fcnRespond_OverBranch);
-            addlistener(obj, 'EVENT_OVER_NODE', @fcnRespond_OverNode);
-            addlistener(obj, 'EVENT_MOVE_MOUSE', @fcnRespond_MouseMove);
-        end
         
         % method :: getClick
         %  input :: class object

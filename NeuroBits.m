@@ -1,4 +1,4 @@
-classdef NeuroBits < handle
+ classdef NeuroBits < handle
     %
     % NeuroBits
     %
