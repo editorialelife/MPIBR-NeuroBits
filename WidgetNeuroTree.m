@@ -9,7 +9,7 @@ classdef WidgetNeuroTree < handle
     % creating a ROI labeled mask
     %
     % requires:
-    %    class NeuroTreeROI
+    %    class NeuroTreeBranch
     %    readLSMInfo.m
     %    readLSMImage.m
     %    uiGridLayout.m
@@ -27,6 +27,9 @@ classdef WidgetNeuroTree < handle
         mask
         tree
         
+        width
+        height
+        
     end
     
     properties (Access = public, Hidden = true)
@@ -42,6 +45,8 @@ classdef WidgetNeuroTree < handle
         
         %%% --- State Machine --- %%%
         state
+        key
+        click
         dilate
         indexBranch
         indexNode
@@ -81,13 +86,28 @@ classdef WidgetNeuroTree < handle
         MIN_DILATE_SIZE = 1;
         MAX_DILATE_SIZE = 30;
         
-        %%% --- State machine --- %%%
+        %%% --- State --- %%%
         STATE_IDLE = 0;
-        STATE_OVER_CLICK = 1;
-        STATE_OVER_ROI = 2;
-        STATE_MOVE_CLICK = 3;
-        STATE_MOVE_ROI = 4;
-        STATE_DRAWING_ROI = 5;
+        STATE_OVER_BRANCH = 1;
+        STATE_OVER_NODE = 2;
+        STATE_DRAWING = 3;
+        STATE_REPOSITION_BRANCH = 4;
+        STATE_REPOSITION_NODE = 5;
+        STATE_SELECTED_BRANCH = 6;
+        
+    end
+    
+    events (NotifyAccess = private, ListenAccess = private)
+        
+        %%% --- Events --- %%%
+        EVENT_KEY_DIGIT
+        EVENT_KEY_DEL
+        EVENT_CLICK_DOWN
+        EVENT_CLICK_UP
+        EVENT_CLICK_DOUBLE
+        EVENT_OVER_BRANCH
+        EVENT_OVER_NODE
+        EVENT_MOVE_MOUSE
         
     end
     
@@ -125,10 +145,18 @@ classdef WidgetNeuroTree < handle
             end
             
             % set defaults
+            obj.state = obj.STATE_IDLE;
+            obj.key = [];
+            obj.click = [];
             obj.dilate = 5;
+            obj.indexBranch = 0;
+            obj.indexNode = 0;
             
             % render UI
             obj.renderUI();
+            
+            % add event listeners
+            obj.addListeners();
             
         end
         
@@ -358,6 +386,11 @@ classdef WidgetNeuroTree < handle
             
            % set callback functions
            obj.setFigureCallbacks('on');
+           
+           % read image
+           obj.image = obj.ih_image.CData;
+           obj.width = size(obj.image, 2);
+           obj.height = size(obj.image, 1);
             
         end
         
@@ -387,7 +420,6 @@ classdef WidgetNeuroTree < handle
             
             set(buttonGroup, 'Enable', enable);
         end
-        
         
         
         %%% ----------------------------- %%%
@@ -473,6 +505,403 @@ classdef WidgetNeuroTree < handle
             % update status
             set(obj.ui_text_StatusDilate, 'String', sprintf('dilate[px] %d',obj.dilate));
             
+        end
+        
+        
+        %%% ---------------------------------- %%%
+        %%% --- DRAWING CALLBACK FUNCTIONS --- %%%
+        %%% ---------------------------------- %%%
+        
+        % callback :: PressKey
+        %    event :: on keyboard button press
+        %   action :: read button id
+        function obj = fcnCallback_PressKey(obj, ~, ~)
+            
+            % get current key pressed
+            obj.key = get(obj.ih_figure, 'CurrentCharacter');
+            
+            % check to fire event
+            if (obj.key >= '0') && (obj.key <= '9')
+                
+                notify(obj, 'EVENT_KEY_DIGIT');
+                
+            elseif uint8(obj.key) == 8 %(DEL)
+                
+                notify(obj, 'EVENT_KEY_DEL');
+                
+            end
+            
+        end
+        
+        % callback :: MoveMouse
+        %    event :: on mouse move
+        %   action :: track mouse position
+        function obj = fcnCallback_MoveMouse(obj, ~, ~)
+            
+            % get current click position
+            obj.click = obj.getClick();
+            
+            % check if over branch
+            if obj.isOverBranch()
+                
+                notify(obj, 'EVENT_OVER_BRANCH');
+                
+            elseif obj.isOverNode()
+                
+                notify(obj, 'EVENT_OVER_NODE');
+                
+            else
+                
+                notify(obj, 'EVENT_MOVE_MOUSE');
+                
+            end
+            
+            % add granularity
+            drawnow limitrate;
+            
+        end
+        
+        % callback :: ClickDown
+        %    event :: on mouse click down
+        %   action :: get mouse click position
+        function obj = fcnCallback_ClickDown(obj, ~, ~)
+            
+            % get current click position
+            obj.click = obj.getClick();
+            
+            % get mouse selection
+            clickSelection = get(obj.ih_figure, 'SelectionType');
+            
+            if strcmp(clickSelection, 'normal')
+                
+                notify(obj, 'EVENT_CLICK_DOWN');
+                
+            elseif strcmp(clickSelection, 'open')
+                
+                notify(obj, 'EVENT_DOUBLE_CLICK');
+                
+            end
+        end
+        
+        % callback :: ClickUp
+        %    event :: on mouse click up
+        %   action :: get mouse release position
+        function obj = fcnCallback_ClickUp(obj, ~, ~)
+            
+            % get current click position
+            obj.click = obj.getClick();
+            
+            notify(obj, 'EVENT_CLICK_UP');
+            
+        end
+        
+        
+        %%% -------------------------------- %%%
+        %%% --- EVENTS RESPOND FUNCTIONS --- %%%
+        %%% -------------------------------- %%%
+        
+        % respond :: KeyDigit
+        %   event :: EVENT_KEY_DIGIT
+        %  action :: update states
+        function obj = fcnRespond_KeyDigit(obj, ~, ~)
+            
+            if obj.state == obj.STATE_IDLE
+                
+                obj.createBranch();
+                
+                obj.state = obj.STATE_DRAWING;
+                
+            end
+            
+        end
+            
+        % respond :: KeyDel
+        %   event :: EVENT_KEY_DEL
+        %  action :: update states
+        function obj = fcnRespond_KeyDel(obj, ~, ~)
+            
+            if obj.state == obj.STATE_DRAWING
+                
+                obj.deleteNode();
+                
+                if obj.indexNode > 1
+                    obj.state = obj.STATE_DRAWING;
+                else
+                    obj.state = obj.STATE_IDLE;
+                end
+                
+            elseif obj.state == obj.STATE_SELECTED_BRANCH
+                
+                obj.deleteBranch();
+                
+                obj.state = obj.STATE_IDLE;
+                
+            end
+            
+        end
+        
+        % respond :: ClickDown
+        %   event :: EVENT_CLICK_DOWN
+        %  action :: update states
+        function obj = fcnRespond_ClickDown(obj, ~, ~)
+            
+            if obj.state == obj.STATE_DRAWING
+                
+                obj.addNode();
+                
+                obj.state = obj.STATE_DRAWING;
+                
+            elseif obj.state == obj.STATE_OVER_BRANCH
+                
+                obj.pickUpBranch();
+                
+                obj.state = obj.STATE_REPOSITION_BRANCH;
+                
+            elseif obj.state == obj.STATE_OVER_NODE
+                
+                obj.pickUpNode();
+                
+                obj.state = obj.STATE_REPOSITION_NODE;
+                
+            end
+            
+        end
+        
+        % respond :: ClickUp
+        %   event :: EVENT_CLICK_UP
+        %  action :: update states
+        function obj = fcnRespond_ClickUp(obj, ~, ~)
+            
+            if obj.state == obj.STATE_REPOSITION_BRANCH
+                
+                obj.putDownBranch();
+                
+                obj.state = obj.STATE_IDLE;
+                
+            elseif obj.state == obj.STATE_REPOSITION_NODE
+                
+                obj.putDownNode();
+                
+                obj.state = obj.STATE_IDLE;
+                
+            end
+            
+        end
+        
+        % respond :: ClickDouble
+        %   event :: EVENT_CLICK_DOUBLE
+        %  action :: update states
+        function obj = fcnRespond_ClickDouble(obj, ~, ~)
+            
+            if obj.state == obj.STATE_DRAWING
+                
+                obj.completeBranch();
+                
+                obj.state = obj.STATE_IDLE;
+                
+            elseif obj.state == obj.STATE_OVER_BRANCH
+                
+                obj.selectBranch();
+                
+                obj.state = obj.STATE_SELECTED_BRANCH;
+                
+            end
+            
+        end
+        
+        % respond :: OverBranch
+        %   event :: EVENT_OVER_BRANCH
+        %  action :: update states
+        function obj = fcnRespond_OverBranch(obj, ~, ~)
+            
+            if obj.state == obj.STATE_IDLE
+                
+                obj.state = obj.STATE_OVER_BRANCH;
+                
+            end
+            
+        end
+        
+        % respond :: OverNode
+        %   event :: EVENT_OVER_NODE
+        %  action :: update states
+        function obj = fcnRespond_OverNode(obj, ~, ~)
+            
+            if obj.state == obj.STATE_IDLE
+                
+                obj.state = obj.STATE_OVER_NODE;
+                
+            end
+            
+        end
+        
+        % respond :: MouseMove
+        %   event :: EVENT_MOUSE_MOVE
+        %  action :: update states
+        function obj = fcnRespond_MouseMove(obj, ~, ~)
+            
+            if obj.state == obj.STATE_DRAWING
+                
+                obj.extendBranch();
+                
+                obj.state = obj.STATE_DRAWING;
+                
+            elseif obj.state == obj.STATE_REPOSITION_BRANCH
+                
+                obj.moveBranch();
+                
+                obj.state = obj.STATE_REPOSITION_BRANCH;
+                
+            elseif obj.state == obj.STATE_REPOSITION_NODE
+                
+                obj.moveNode();
+                
+                obj.state = obj.STATE_REPOSITION_NODE;
+                
+            elseif obj.state == obj.STATE_OVER_BRANCH
+                
+                obj.state = obj.STATE_IDLE;
+                
+            elseif obj.state == obj.STATE_OVER_NODE
+                
+                obj.state = obj.STATE_IDLE;
+                
+            end
+            
+        end
+        
+        %%% ----------------------------- %%%
+        %%% --- STATE MACHINE METHODS --- %%%
+        %%% ----------------------------- %%%
+        
+        % mathod :: addListeners
+        %  input :: class object
+        % action :: add listeners for State Machine events
+        function obj = addListeners(obj)
+            addlistener(obj, 'EVENT_KEY_DIGIT', @fcnRespond_KeyDigit);
+            addlistener(obj, 'EVENT_KEY_DEL', @fcnRespond_KeyDel);
+            addlistener(obj, 'EVENT_CLICK_DOWN', @fcnRespond_ClickDown);
+            addlistener(obj, 'EVENT_CLICK_UP', @fcnRespond_ClickUp);
+            addlistener(obj, 'EVENT_CLICK_DOUBLE', @fcnRespond_ClickDouble);
+            addlistener(obj, 'EVENT_OVER_BRANCH', @fcnRespond_OverBranch);
+            addlistener(obj, 'EVENT_OVER_NODE', @fcnRespond_OverNode);
+            addlistener(obj, 'EVENT_MOVE_MOUSE', @fcnRespond_MouseMove);
+        end
+        
+        % method :: getClick
+        %  input :: class object
+        % action :: get current point
+        function clickPoint = getClick(obj)
+            
+            % read click point
+            clickPoint = get(obj.ih_axes, 'CurrentPoint');
+            clickPoint = round(clickPoint(1, 1:2));
+            
+            % check minimum
+            clickPoint(clickPoint < 1) = 1;
+            
+            % check maximum width
+            if clickPoint(1) > obj.width
+                clickPoint(1) = obj.width;
+            end
+            
+            % check maximum height
+            if clickPoint(2) > obj.height;
+                clickPoint(2) = obj.height;
+            end
+            
+        end
+        
+        % method :: isOverBranch
+        %  input :: class object
+        % action :: returns true if mouse over branch
+        function value = isOverBranch(obj)
+            value = false;
+        end
+        
+        % method :: isOverNode
+        %  input :: class object
+        % action :: retunrs true if mouse over node
+        function value = isOverNode(obj)
+            value = false;
+        end
+        
+        % method :: createBranch
+        %  input :: class object
+        % action :: creates new branch
+        function obj = createBranch(obj)
+        end
+        
+        % method :: deleteBranch
+        %  input :: class object
+        % action :: deletes branch
+        function obj = deleteBranch(obj)
+        end
+        
+        % method :: deleteNode
+        %  input :: class object
+        % action :: deletes node in current branch
+        function obj = deleteNode(obj)
+        end
+        
+        % method :: addNode
+        %  input :: class object
+        % action :: add new node to curren branch
+        function obj = addNode(obj)
+        end
+        
+        % method :: pickUpBranch
+        %  input :: class object
+        % action :: picks up branch to move
+        function obj = pickUpBranch(obj)
+        end
+        
+        % method :: pickUpNode
+        %  input :: class object
+        % action :: picks up node to move
+        function obj = pickUpNode(obj)
+        end
+        
+        % method :: putDownBranch
+        %  input :: class object
+        % action :: release branch after move
+        function obj = putDownBranch(obj)
+        end
+        
+        % method :: putDownNode
+        %  input :: class object
+        % action :: release node after move
+        function obj = putDownNode(obj)
+        end
+        
+        % method :: completeBranch
+        %  input :: class object
+        % action :: release branch after move
+        function obj = completeBranch(obj)
+        end
+        
+        % method :: selectBranch
+        %  input :: class object
+        % action :: select branch
+        function obj = selectBranch(obj)
+        end
+        
+        % method :: extendBranch
+        %  input :: class object
+        % action :: extend branch without adding node
+        function obj = extendBranch(obj)
+        end
+        
+        % method :: moveBranch
+        %  input :: class object
+        % action :: shift branch position
+        function obj = moveBranch(obj)
+        end
+        
+        % method :: moveNode
+        %  input :: class object
+        % action :: shift node position
+        function obj = moveNode(obj)
         end
         
     end
