@@ -48,8 +48,15 @@ classdef WidgetNeuroTree < handle
         key
         click
         dilate
+        linked
         indexBranch
         indexNode
+        
+        %%% --- Edint components --- %%%
+        edit_click
+        edit_indexBranch
+        edit_indexNode
+        edit_handle
         
         %%% --- UI components --- %%%
         ui_parent
@@ -130,13 +137,8 @@ classdef WidgetNeuroTree < handle
                 obj.ui_parent = parserObj.Results.Parent;
             end
             
-            % set defaults
-            obj.state = obj.STATE_IDLE;
-            obj.key = [];
-            obj.click = [];
-            obj.dilate = 5;
-            obj.indexBranch = 0;
-            obj.indexNode = 0;
+            % set default properties
+            obj.setDefaultProperties();
             
             % render UI
             obj.renderUI();
@@ -197,7 +199,7 @@ classdef WidgetNeuroTree < handle
             obj.ui_text_StatusLinked = uicontrol(...
                 'Parent', hPanel,...
                 'Style', 'Text',...
-                'String', 'linked false',...
+                'String', 'linked 0 / 0',...
                 'BackgroundColor', obj.getParentColor(),...
                 'HorizontalAlignment', 'center',...
                 'FontSize', obj.FONT_SIZE,...
@@ -314,6 +316,22 @@ classdef WidgetNeuroTree < handle
           
         end
         
+        % method :: setDefaultProperties
+        %  input :: class object
+        % action :: set hidden properties default values
+        function obj = setDefaultProperties(obj)
+            
+            % set defaults
+            obj.tree = [];
+            obj.state = obj.STATE_IDLE;
+            obj.key = [];
+            obj.click = [];
+            obj.dilate = 5;
+            obj.linked = 0;
+            obj.indexBranch = 0;
+            obj.indexNode = 0;
+            
+        end
         
         % method :: getParentColor
         %  input :: class object
@@ -374,7 +392,10 @@ classdef WidgetNeuroTree < handle
            obj.image = obj.ih_image.CData;
            obj.width = size(obj.image, 2);
            obj.height = size(obj.image, 1);
-            
+           
+           % set current figure
+           figure(obj.ih_figure);
+           
         end
         
         
@@ -385,6 +406,25 @@ classdef WidgetNeuroTree < handle
             
             % remove callback functions
             obj.setFigureCallbacks('off');
+            
+            % clear tree
+            if size(obj.tree, 1) > 0
+                
+                % dispose each branch
+                while ~isempty(obj.tree)
+                    obj.tree(1).disposeBranch();
+                    obj.tree(1) = [];
+                end
+                
+                % set default properties
+                obj.setDefaultProperties();
+                
+                % update default status
+                obj.updateStatus();
+                
+            end
+            
+            
             
         end
         
@@ -524,20 +564,8 @@ classdef WidgetNeuroTree < handle
             % get current click position
             obj.click = obj.getClick();
             
-            % check if over branch
-            if obj.isOverBranch()
-                
-                obj.fcnRespond_OverBranch();
-                
-            elseif obj.isOverNode()
-                
-                obj.fcnRespond_OverNode();
-                
-            else
-                
-                obj.fcnRespond_MouseMove();
-                
-            end
+            % call respond function
+            obj.fcnRespond_MouseMove();
             
             % add granularity
             drawnow limitrate;
@@ -561,7 +589,7 @@ classdef WidgetNeuroTree < handle
                 
             elseif strcmp(clickSelection, 'open')
                 
-                obj.fcnRespond_DoubleClick();
+                obj.fcnRespond_ClickDouble();
                 
             end
         end
@@ -608,9 +636,17 @@ classdef WidgetNeuroTree < handle
                 obj.deleteNode();
                 
                 if obj.indexNode > 1
+                    
                     obj.state = obj.STATE_DRAWING;
+                    
                 else
+                    
+                    % last node deleted, dispose branch
+                    obj.edit_indexBranch = obj.indexBranch;
+                    obj.deleteBranch();
                     obj.state = obj.STATE_IDLE;
+                    set(obj.ih_figure, 'Pointer', 'arrow');
+                    
                 end
                 
             elseif obj.state == obj.STATE_SELECTED_BRANCH
@@ -628,24 +664,30 @@ classdef WidgetNeuroTree < handle
         %  action :: update states
         function obj = fcnRespond_ClickDown(obj)
             
-            if obj.state == obj.STATE_DRAWING
+            switch obj.state
                 
-                obj.addNode();
-                
-                obj.state = obj.STATE_DRAWING;
-                
-            elseif obj.state == obj.STATE_OVER_BRANCH
-                
-                obj.pickUpBranch();
-                
-                obj.state = obj.STATE_REPOSITION_BRANCH;
-                
-            elseif obj.state == obj.STATE_OVER_NODE
-                
-                obj.pickUpNode();
-                
-                obj.state = obj.STATE_REPOSITION_NODE;
-                
+                case obj.STATE_DRAWING
+                    
+                    obj.extendBranch();
+                    
+                case obj.STATE_OVER_BRANCH
+                    
+                    obj.pickUpBranch();
+                    
+                    obj.state = obj.STATE_REPOSITION_BRANCH;
+                    
+                case obj.STATE_OVER_NODE
+                    
+                    obj.pickUpNode();
+                    
+                    obj.state = obj.STATE_REPOSITION_NODE;
+                    
+                case obj.STATE_SELECTED_BRANCH
+                    
+                    obj.deselectBranch();
+                    
+                    obj.state = obj.STATE_IDLE;
+                    
             end
             
         end
@@ -657,15 +699,11 @@ classdef WidgetNeuroTree < handle
             
             if obj.state == obj.STATE_REPOSITION_BRANCH
                 
-                obj.putDownBranch();
-                
-                obj.state = obj.STATE_IDLE;
+                obj.state = obj.STATE_OVER_BRANCH;
                 
             elseif obj.state == obj.STATE_REPOSITION_NODE
                 
-                obj.putDownNode();
-                
-                obj.state = obj.STATE_IDLE;
+                obj.state = obj.STATE_OVER_NODE;
                 
             end
             
@@ -692,64 +730,32 @@ classdef WidgetNeuroTree < handle
             
         end
         
-        % respond :: OverBranch
-        %   event :: EVENT_OVER_BRANCH
-        %  action :: update states
-        function obj = fcnRespond_OverBranch(obj)
-            
-            if obj.state == obj.STATE_IDLE
-                
-                obj.state = obj.STATE_OVER_BRANCH;
-                
-            end
-            
-        end
-        
-        % respond :: OverNode
-        %   event :: EVENT_OVER_NODE
-        %  action :: update states
-        function obj = fcnRespond_OverNode(obj)
-            
-            if obj.state == obj.STATE_IDLE
-                
-                obj.state = obj.STATE_OVER_NODE;
-                
-            end
-            
-        end
         
         % respond :: MouseMove
         %   event :: EVENT_MOUSE_MOVE
         %  action :: update states
         function obj = fcnRespond_MouseMove(obj)
             
-            if obj.state == obj.STATE_DRAWING
+            switch obj.state
                 
-                obj.extendBranch();
+                case obj.STATE_DRAWING
+                    
+                    obj.stretchBranch();
+                    
+                case obj.STATE_REPOSITION_BRANCH
+                    
+                    obj.moveBranch();
+                    
+                case obj.STATE_REPOSITION_NODE
+                    
+                    obj.moveNode();
+                    
+                case {obj.STATE_IDLE, obj.STATE_OVER_BRANCH, obj.STATE_OVER_NODE}    
                 
-                obj.state = obj.STATE_DRAWING;
-                
-            elseif obj.state == obj.STATE_REPOSITION_BRANCH
-                
-                obj.moveBranch();
-                
-                obj.state = obj.STATE_REPOSITION_BRANCH;
-                
-            elseif obj.state == obj.STATE_REPOSITION_NODE
-                
-                obj.moveNode();
-                
-                obj.state = obj.STATE_REPOSITION_NODE;
-                
-            elseif obj.state == obj.STATE_OVER_BRANCH
-                
-                obj.state = obj.STATE_IDLE;
-                
-            elseif obj.state == obj.STATE_OVER_NODE
-                
-                obj.state = obj.STATE_IDLE;
-                
+                    obj.hoverOverObject();
+                    
             end
+            
             
         end
         
@@ -782,96 +788,263 @@ classdef WidgetNeuroTree < handle
             
         end
         
-        % method :: isOverBranch
+        % method :: hoverOverObject
         %  input :: class object
-        % action :: returns true if mouse over branch
-        function value = isOverBranch(obj)
-            value = false;
-        end
-        
-        % method :: isOverNode
-        %  input :: class object
-        % action :: retunrs true if mouse over node
-        function value = isOverNode(obj)
-            value = false;
+        % action :: update state if mouse hover over object
+        function obj = hoverOverObject(obj)
+            
+            % undocumented matlab HITTEST function
+            % returns the handle of object that the mose is over
+            hobj = hittest(obj.ih_figure);
+            
+            % update curren hover handle
+            obj.edit_handle = hobj;
+            
+            % check the type of graphic object
+            if isgraphics(hobj, 'image')
+                
+                % update state
+                obj.state = obj.STATE_IDLE;
+                
+                % update mouse pointer
+                set(obj.ih_figure, 'Pointer', 'arrow');
+                
+            elseif isgraphics(hobj, 'line')
+                
+                % decide between line and point
+                if strcmp(hobj.LineStyle, 'none')
+                    
+                    % update state
+                    obj.state = obj.STATE_OVER_NODE;
+                    
+                    % update mouse pointer
+                    set(obj.ih_figure, 'Pointer', 'circle');
+                    
+                elseif strcmp(hobj.LineStyle,'-')
+                    
+                    % update state
+                    obj.state = obj.STATE_OVER_BRANCH;
+                    
+                    % update mouse pointer
+                    set(obj.ih_figure, 'Pointer', 'hand');
+                    
+                end
+                
+            end
+            
         end
         
         % method :: createBranch
         %  input :: class object
         % action :: creates new branch
         function obj = createBranch(obj)
+            
+            % update branch index
+            obj.indexBranch = size(obj.tree, 1) + 1;
+            
+            % reset node index
+            obj.indexNode = 0;
+            
+            % creane new branch object
+            obj.tree = cat(1, obj.tree,...
+                              NeuroTreeBranch('Index', obj.indexBranch,...
+                                              'Depth', obj.key,...
+                                              'Parent', obj.ih_axes));
+            
+            % update mouse pointer
+            set(obj.ih_figure, 'Pointer', 'crosshair');
+            
+            % update status message
+            obj.updateStatus();
+            
+            
         end
         
         % method :: deleteBranch
         %  input :: class object
         % action :: deletes branch
         function obj = deleteBranch(obj)
+            
+            % delete given branch
+            obj.tree(obj.edit_indexBranch).disposeBranch();
+            obj.tree(obj.edit_indexBranch) = [];
+            
+            % update current branch index
+            obj.indexBranch = numel(obj.tree);
+            
+            % check if tree is empty else reindex
+            if obj.indexBranch == 0
+                obj.setDefaultProperties();
+            else
+                for b = 1 : obj.indexBranch
+                    obj.tree(b).reindexBranch(b);
+                end
+            end
+            
+            % update status
+            obj.linked = 0;
+            obj.updateStatus();
+            
         end
         
         % method :: deleteNode
         %  input :: class object
         % action :: deletes node in current branch
         function obj = deleteNode(obj)
+            
+            % dispose node
+            obj.tree(obj.indexBranch).disposeNode(obj.indexNode);
+            
+            % updae node index
+            obj.indexNode = obj.indexNode - 1;
+            
         end
         
-        % method :: addNode
+        % method :: extendBranch
         %  input :: class object
         % action :: add new node to curren branch
-        function obj = addNode(obj)
+        function obj = extendBranch(obj)
+            
+            % update node index
+            obj.indexNode = obj.indexNode + 1;
+            
+            % update node in tree
+            obj.tree(obj.indexBranch).extendBranch(obj.indexNode, obj.click);
+            
+            % update status message
+            obj.updateStatus();
+            
         end
         
         % method :: pickUpBranch
         %  input :: class object
         % action :: picks up branch to move
         function obj = pickUpBranch(obj)
-        end
-        
-        % method :: pickUpNode
-        %  input :: class object
-        % action :: picks up node to move
-        function obj = pickUpNode(obj)
-        end
-        
-        % method :: putDownBranch
-        %  input :: class object
-        % action :: release branch after move
-        function obj = putDownBranch(obj)
-        end
-        
-        % method :: putDownNode
-        %  input :: class object
-        % action :: release node after move
-        function obj = putDownNode(obj)
-        end
-        
-        % method :: completeBranch
-        %  input :: class object
-        % action :: release branch after move
-        function obj = completeBranch(obj)
-        end
-        
-        % method :: selectBranch
-        %  input :: class object
-        % action :: select branch
-        function obj = selectBranch(obj)
-        end
-        
-        % method :: extendBranch
-        %  input :: class object
-        % action :: extend branch without adding node
-        function obj = extendBranch(obj)
+            
+            % get current click
+            obj.edit_click = obj.click;
+            obj.edit_indexBranch = obj.edit_handle.UserData; % user data keeps branch index
+            
         end
         
         % method :: moveBranch
         %  input :: class object
         % action :: shift branch position
         function obj = moveBranch(obj)
+            
+            % delta click
+            deltaClick = obj.click - obj.edit_click;
+            
+            % update branch
+            obj.tree(obj.edit_indexBranch).updateBranch(deltaClick);
+            
+            % update edit click
+            obj.edit_click = obj.click;
+            
+        end
+        
+        % method :: pickUpNode
+        %  input :: class object
+        % action :: picks up node to move
+        function obj = pickUpNode(obj)
+            
+            % get current click
+            obj.edit_click = obj.click;
+            
+            % get edit Branch
+            obj.edit_indexBranch = obj.edit_handle.UserData; % user data keeps branch index
+            
+            % get edit Node
+            distEucl = sqrt(sum(bsxfun(@minus, [obj.edit_handle.XData', obj.edit_handle.YData'], obj.edit_click).^2, 2));
+            [~, obj.edit_indexNode] = min(distEucl);
+            
         end
         
         % method :: moveNode
         %  input :: class object
         % action :: shift node position
         function obj = moveNode(obj)
+            
+            % update edit click
+            obj.edit_click = obj.click;
+            
+            % update branch
+            obj.tree(obj.edit_indexBranch).updateNode(obj.edit_indexNode, obj.edit_click);
+            
+        end
+        
+        % method :: completeBranch
+        %  input :: class object
+        % action :: release branch after move
+        function obj = completeBranch(obj)
+            
+            % update node in tree
+            obj.tree(obj.indexBranch).completeBranch();
+            
+            % update mouse pointer
+            set(obj.ih_figure, 'Pointer', 'arrow');
+            
+            % update status message
+            obj.updateStatus();
+            
+        end
+        
+        % method :: selectBranch
+        %  input :: class object
+        % action :: select branch
+        function obj = selectBranch(obj)
+            
+            % highlight branch
+            obj.tree(obj.edit_indexBranch).selectBranch();
+            
+            % update mouse pointer
+            set(obj.ih_figure, 'Pointer', 'arrow');
+            
+        end
+        
+        % method :: deselectBranch
+        %  input :: class object
+        % action :: deselect branch
+        function obj = deselectBranch(obj)
+            
+            % remove highlight
+            obj.tree(obj.edit_indexBranch).deselectBranch();
+            
+        end
+        
+        % method :: stretchBranch
+        %  input :: class object
+        % action :: extend branch without adding node
+        function obj = stretchBranch(obj)
+            
+            % update node in tree
+            obj.tree(obj.indexBranch).stretchBranch(obj.indexNode + 1, obj.click);
+            
+            % update status message
+            obj.updateStatus();
+            
+        end
+        
+        
+        
+        % method :: updateStatus
+        %  input :: class object
+        % action :: update UI status
+        function obj = updateStatus(obj)
+            
+            set(obj.ui_text_StatusBranch, 'String', sprintf('branch %d', obj.indexBranch));
+            set(obj.ui_text_StatusNode, 'String', sprintf('node %d', obj.indexNode));
+            set(obj.ui_text_StatusLinked, 'String', sprintf('linked %d / %d', obj.linked, size(obj.tree, 1)));
+            set(obj.ui_text_StatusDilate, 'String', sprintf('dilate[px] %d', obj.dilate));
+            
+            if obj.indexBranch > 0
+                set(obj.ui_text_StatusDepth, 'String', sprintf('depth %d', obj.tree(obj.indexBranch).depth));
+                set(obj.ui_text_StatusLength, 'String', sprintf('length[px] %d', round(obj.tree(obj.indexBranch).length)));
+            else
+                set(obj.ui_text_StatusDepth, 'String', 'depth 0');
+                set(obj.ui_text_StatusLength, 'String', 'length[px] 0');
+            end
+            
         end
         
     end
