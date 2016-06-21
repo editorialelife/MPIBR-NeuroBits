@@ -25,6 +25,7 @@ classdef WidgetNeuroTree < handle
         
         image
         mask
+        patch
         tree
         
         width
@@ -38,6 +39,7 @@ classdef WidgetNeuroTree < handle
         ih_figure
         ih_axes
         ih_image
+        ih_patch
         
     end
     
@@ -88,6 +90,8 @@ classdef WidgetNeuroTree < handle
         GRID_MARGIN_H = 0.015;
         GRID_MARGIN_W = 0.015;
         FONT_SIZE = 8;
+        PATCH_ALPHA_OFF = 0;
+        PATCH_ALPHA_ON = 0.2;
         
         %%% --- Tree Settings --- %%%
         MIN_DILATE_SIZE = 1;
@@ -393,6 +397,16 @@ classdef WidgetNeuroTree < handle
            obj.width = size(obj.image, 2);
            obj.height = size(obj.image, 1);
            
+           % create patch
+           obj.patch = zeros(obj.height, obj.width, 3, 'like', obj.image);
+           hold(obj.ih_axes, 'on');
+           obj.ih_patch = imshow(obj.patch, [],...
+                                 'Border', 'tight',...
+                                 'InitialMagnification', 'fit',...
+                                 'Parent', obj.ih_axes);
+           set(obj.ih_patch, 'AlphaData', obj.PATCH_ALPHA_OFF);                  
+           hold(obj.ih_axes, 'off');
+           
            % set current figure
            figure(obj.ih_figure);
            
@@ -475,8 +489,45 @@ classdef WidgetNeuroTree < handle
             treeSize = length(obj.tree);
             for b = 1 : treeSize
                 obj.mask(obj.tree(b).pixels) = obj.tree(b).index;
+                
             end
             
+            % fill up closed polygons
+            obj.mask = imfill(obj.mask,'holes');
+            
+        end
+        
+        % method :: dilateMask
+        %  input :: class object
+        % action :: dilate current mask based on dilation size
+        function obj = dilateMask(obj)
+            obj.mask = imdilate(obj.mask, strel('disk', obj.dilate));
+        end
+        
+        % method :: patchMask
+        %  input :: class object
+        % action :: patch mask with branch color
+        function obj = patchMask(obj)
+            
+            % allocate patch
+            obj.patch = zeros(obj.height, obj.width, 3, 'uint8');
+            
+            % create a 3D mask
+            modelMask = repmat(obj.mask, 1, 1, 3);
+            
+            % loop over tree
+            treeSize = length(obj.tree);
+            for b = 1 : treeSize
+                
+                branchColor = uint8(obj.tree(b).getBranchColor());
+                branchColorPatch = repmat(shiftdim(branchColor, -1),...
+                                          obj.height,...
+                                          obj.width,...
+                                          1);
+                bry = modelMask == b;
+                obj.patch(bry) = branchColorPatch(bry);
+                
+            end
             
         end
         
@@ -491,9 +542,14 @@ classdef WidgetNeuroTree < handle
             if treeSize < 1
                 warndlg('Nothing to mask, add more branches','NeuroTree::ShowMask');
             else
-                tic
+                
                 obj.createMask();
-                toc
+                obj.dilateMask();
+                obj.patchMask();
+                
+                set(obj.ih_patch, 'CData', obj.patch);
+                set(obj.ih_patch, 'AlphaData', (obj.mask > 0).* obj.PATCH_ALPHA_ON);
+                
             end
         end
         
@@ -501,6 +557,7 @@ classdef WidgetNeuroTree < handle
         %  input :: class object
         % action :: show current tree mask
         function obj = hideMask(obj)
+            set(obj.ih_patch, 'AlphaData', obj.PATCH_ALPHA_OFF);
         end
         
         % method :: clearTree
@@ -659,6 +716,10 @@ classdef WidgetNeuroTree < handle
             % update status
             set(obj.ui_text_StatusDilate, 'String', sprintf('dilate[px] %d',obj.dilate));
             
+            % update mask
+            if strcmp(obj.ui_pushButton_ViewMask.String, 'Show Mask')
+                obj.showMask();
+            end
         end
         
         

@@ -410,6 +410,14 @@ classdef NeuroTreeBranch < handle
             
         end
         
+        
+        % method :: getBranchColor
+        %  input :: class object
+        % action :: returns current branch color
+        function value = getBranchColor(obj)
+            value = round(255 .* obj.COLOR_TABLE(obj.depth + 1, :));
+        end
+        
     end
     
 end
