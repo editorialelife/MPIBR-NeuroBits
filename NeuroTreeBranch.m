@@ -22,6 +22,7 @@ classdef NeuroTreeBranch < handle
         depth
         nodes
         length
+        pixels
     end
     
     properties (Access = private)
@@ -161,9 +162,9 @@ classdef NeuroTreeBranch < handle
         end
         
         % method :: completeBranch
-        %  input :: class object
-        % action :: complete branch and calculate length
-        function obj = completeBranch(obj)
+        %  input :: class object, height, width
+        % action :: complete branch and calculate length and pixels
+        function obj = completeBranch(obj, height, width)
             
             % reorder uistack
             % points need to be on top of line to retrieve node
@@ -182,6 +183,9 @@ classdef NeuroTreeBranch < handle
             
             % set branch length
             obj.measureBranch();
+            
+            % create pixel array
+            obj.nodesToPixels(height, width);
             
         end
         
@@ -253,10 +257,9 @@ classdef NeuroTreeBranch < handle
         % action :: measure length of current branch
         function obj = measureBranch(obj)
             
-            diffLength = sqrt([0;diff(obj.nodes(:,1))].^2 + ...
-                              [0;diff(obj.nodes(:,2))].^2);
-                          
+            diffLength = sqrt(sum(diff(obj.nodes, [], 1).^2, 2));
             obj.length = sum(diffLength);
+            
         end
         
         % method :: reindexBranch
@@ -384,6 +387,26 @@ classdef NeuroTreeBranch < handle
                 
                 
             end
+            
+        end
+        
+        
+        % method :: nodesToPixels
+        %  input :: class object, height, width
+        % action :: takes nodes and return pixels
+        function obj = nodesToPixels(obj, height, width)
+            
+            % calculate cumulative pixel distance along line
+            dNodes = sqrt(sum(diff(obj.nodes, [], 1).^2, 2));
+            csNodes = cat(1, 0, cumsum(dNodes));
+            
+            % resample nodes at sub-pixel intervals
+            sampleCsNodes = linspace(0, csNodes(end), ceil(csNodes(end)/0.5));
+            sampleNodes = interp1(csNodes, obj.nodes, sampleCsNodes);
+            sampleNodes = round(sampleNodes);
+            
+            % return pixel indexes
+            obj.pixels = sub2ind([height, width], sampleNodes(:,2), sampleNodes(:,1));
             
         end
         

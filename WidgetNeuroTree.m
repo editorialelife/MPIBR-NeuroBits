@@ -286,7 +286,7 @@ classdef WidgetNeuroTree < handle
                 'Style', 'PushButton',...
                 'String', 'Show Mask',...
                 'Enable', 'off',...
-                'Callback', [],...
+                'Callback', @obj.fcnCallback_ViewMask,...
                 'Units', 'normalized',...
                 'Position', uiGridLayout([4,2],...
                                          [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
@@ -408,7 +408,7 @@ classdef WidgetNeuroTree < handle
             
             % check if branches
             if treeSize <= 1
-                warndlg('Nothing to link, add more branches','NeuroTree::Link');
+                warndlg('Nothing to link, add more branches','NeuroTree::LinkTree');
             else
                 
                 % count nodes per branch
@@ -463,10 +463,38 @@ classdef WidgetNeuroTree < handle
             
         end
         
+        % method :: createMask
+        %  input :: class object
+        % action :: create index mask based on current tree
+        function obj = createMask(obj)
+            
+            % allocate mask
+            obj.mask = zeros(obj.height, obj.width);
+            
+            % loop over tree
+            treeSize = length(obj.tree);
+            for b = 1 : treeSize
+                obj.mask(obj.tree(b).pixels) = obj.tree(b).index;
+            end
+            
+            
+        end
+        
         % method :: showMask
         %  input :: class object
         % action :: show current tree mask
         function obj = showMask(obj)
+            
+            % get tree size
+            treeSize = length(obj.tree);
+            
+            if treeSize < 1
+                warndlg('Nothing to mask, add more branches','NeuroTree::ShowMask');
+            else
+                tic
+                obj.createMask();
+                toc
+            end
         end
         
         % method :: hideMask
@@ -499,8 +527,6 @@ classdef WidgetNeuroTree < handle
                 obj.updateStatus();
                 
             end
-            
-            
             
         end
         
@@ -588,15 +614,15 @@ classdef WidgetNeuroTree < handle
         function obj = fcnCallback_ViewMask(obj, ~, ~)
             
             switch obj.ui_pushButton_ViewMask.String
-                case 'Show'
+                case 'Show Mask'
                     
                     obj.showMask();
-                    set(obj.ui_pushButton_ViewMask, 'String', 'Hide');
+                    set(obj.ui_pushButton_ViewMask, 'String', 'Hide Mask');
                     
-                case 'Hide'
+                case 'Hide Mask'
                     
                     obj.hideMask();
-                    set(obj.ui_pushButton_ViewMask, 'String', 'Show');
+                    set(obj.ui_pushButton_ViewMask, 'String', 'Show Mask');
                     
             end
             
@@ -1084,7 +1110,7 @@ classdef WidgetNeuroTree < handle
         function obj = completeBranch(obj)
             
             % update node in tree
-            obj.tree(obj.indexBranch).completeBranch();
+            obj.tree(obj.indexBranch).completeBranch(obj.height, obj.width);
             
             % update mouse pointer
             set(obj.ih_figure, 'Pointer', 'arrow');
