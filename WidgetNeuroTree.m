@@ -275,7 +275,7 @@ classdef WidgetNeuroTree < handle
                 'Style', 'PushButton',...
                 'String', 'Link Tree',...
                 'Enable', 'off',...
-                'Callback', [],...
+                'Callback', @obj.fcnCallback_LinkTree,...
                 'Units', 'normalized',...
                 'Position', uiGridLayout([4,2],...
                                          [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
@@ -398,6 +398,82 @@ classdef WidgetNeuroTree < handle
            
         end
         
+        % method :: linkTree
+        %  input :: class object
+        % action :: automatic linking of branch hierarchy
+        function obj = linkTree(obj)
+            
+            % get ree size
+            treeSize = length(obj.tree);
+            
+            % check if branches
+            if treeSize <= 1
+                warndlg('Nothing to link, add more branches','NeuroTree::Link');
+            else
+                
+                % count nodes per branch
+                countNodesPerBranch = zeros(treeSize, 1);
+                for b = 1 : treeSize
+                    countNodesPerBranch(b) = size(obj.tree(b).nodes, 1);
+                end
+                
+                
+                % build branch index per node
+                indexBranchPerNode = zeros(sum(countNodesPerBranch), 1);
+                indexBranchPerNode(cumsum([1;countNodesPerBranch(1:end-1)])) = 1;
+                indexBranchPerNode = cumsum(indexBranchPerNode);
+                
+                % build node list
+                listNodes = cat(1, obj.tree.nodes);
+                
+                % build depth per node
+                depthPerBranch = cat(1, obj.tree.depth);
+                depthPerNode = depthPerBranch(indexBranchPerNode);
+            
+                
+                % link relatives per branch
+                obj.linked = 0;
+                for b = 1 : treeSize
+                    
+                    % link parent
+                    obj.tree(b).linkParent(listNodes,...
+                                           depthPerNode,...
+                                           min(depthPerBranch),...
+                                           indexBranchPerNode);
+                    
+                    % link children
+                    obj.tree(b).linkChildren(listNodes,...
+                                             depthPerNode,...
+                                             max(depthPerBranch),...
+                                             indexBranchPerNode);
+                   
+                   % check if linking works
+                   if ~(isempty(obj.tree(b).parent) && isempty(obj.tree(b).children))
+                       
+                       obj.linked = obj.linked + 1;
+                       
+                   end
+                   
+                end
+                
+                % update status
+                obj.updateStatus();
+                
+            end
+            
+        end
+        
+        % method :: showMask
+        %  input :: class object
+        % action :: show current tree mask
+        function obj = showMask(obj)
+        end
+        
+        % method :: hideMask
+        %  input :: class object
+        % action :: show current tree mask
+        function obj = hideMask(obj)
+        end
         
         % method :: clearTree
         %  input :: class object
@@ -497,6 +573,35 @@ classdef WidgetNeuroTree < handle
         function obj = fcnCallback_LoadTree(obj, ~, ~)
             obj.loadTree();
         end
+        
+        
+        % callback :: LinkTree
+        %    event :: on link tree button
+        %   action :: automatic linking of branch hierarchy
+        function obj = fcnCallback_LinkTree(obj, ~, ~)
+            obj.linkTree();
+        end
+        
+        % callback :: ViewMask
+        %    event :: on view mask button
+        %   action :: show/hide mask
+        function obj = fcnCallback_ViewMask(obj, ~, ~)
+            
+            switch obj.ui_pushButton_ViewMask.String
+                case 'Show'
+                    
+                    obj.showMask();
+                    set(obj.ui_pushButton_ViewMask, 'String', 'Hide');
+                    
+                case 'Hide'
+                    
+                    obj.hideMask();
+                    set(obj.ui_pushButton_ViewMask, 'String', 'Show');
+                    
+            end
+            
+        end
+        
         
         % callback :: SetMaskSize
         %    event :: on mask Up/Down buttons

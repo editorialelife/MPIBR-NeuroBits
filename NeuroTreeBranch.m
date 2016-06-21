@@ -39,6 +39,8 @@ classdef NeuroTreeBranch < handle
         FONT_SIZE = 10;
         DEFAULT_NODE = [0,0];
         
+        BRANCH_POINT_RADIUS = 100;
+        
         COLOR_TABLE = [255,0,0;...   % red
                       255,125,0;... % orange
                       255,255,0;... % yellow
@@ -271,6 +273,7 @@ classdef NeuroTreeBranch < handle
             set(obj.ui_label, 'UserData', obj.index);
             
             % destroy available parent/children annotation
+            obj.tag = [];
             obj.parent = [];
             obj.children  = [];
             
@@ -305,6 +308,85 @@ classdef NeuroTreeBranch < handle
             delete(obj);
             
         end
+        
+        
+        % method :: linkParent
+        %  input :: class object, listNodes
+        %  input :: depthPerNode, minTreeDepth, indexBranchPerNode
+        % action :: finds closest parent node
+        function obj = linkParent(obj, listNodes, depthPerNode, minTreeDepth, indexBranchPerNode)
+            
+            % check branch order
+            if obj.depth == minTreeDepth
+                
+                obj.parent = 0;
+                
+            else
+                
+                parentNodesIndex = depthPerNode == (obj.depth - 1);
+                parentNodes = listNodes(parentNodesIndex, :);
+                parentIndex = indexBranchPerNode(parentNodesIndex);
+                
+                
+                distNodes = sqrt(sum(bsxfun(@minus, parentNodes, obj.nodes(1,:)).^2, 2));
+                [minDistNodes, indexMinDistNodes] = min(distNodes);
+                
+                % add parent index
+                if minDistNodes <= obj.BRANCH_POINT_RADIUS
+                    obj.parent = parentIndex(indexMinDistNodes);
+                end
+                
+            end
+            
+        end
+        
+        % method :: linkChildren
+        %  input :: class object, listNodes
+        %  input :: depthPerNode, maxTreeDepth, indexBranchPerNode
+        % action :: finds closest child node
+        function obj = linkChildren(obj, listNodes, depthPerNode, maxTreeDepth, indexBranchPerNode)
+            
+            % check branch order
+            if obj.depth == maxTreeDepth
+                
+                obj.children = 0;
+                
+            else
+                
+                childrenNodesIndex = depthPerNode == (obj.depth + 1);
+                childrenNodes = listNodes(childrenNodesIndex, :);
+                childrenIndex = indexBranchPerNode(childrenNodesIndex);
+                
+                countNodes = size(obj.nodes, 1);
+                
+                % for closed polygon nodes check children around each node
+                % else just check children around last node
+                if obj.depth == 0
+                    k = 1;
+                else
+                    k = countNodes;
+                end
+                
+                % loop through required nodes
+                tempChildren = [];
+                for n = k : countNodes
+                    
+                    distNodes = sqrt(sum(bsxfun(@minus, childrenNodes, obj.nodes(k,:)).^2, 2));
+                    
+                    % add parent index
+                    if any(distNodes <= obj.BRANCH_POINT_RADIUS)
+                        tempChildren = cat(1, tempChildren, childrenIndex(distNodes <= obj.BRANCH_POINT_RADIUS));
+                    end
+                
+                end
+                
+                obj.children = unique(tempChildren);
+                
+                
+            end
+            
+        end
+        
     end
     
 end
