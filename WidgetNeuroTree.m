@@ -68,16 +68,15 @@ classdef WidgetNeuroTree < handle
         ui_pushButton_SaveTree
         ui_pushButton_LoadTree
         ui_pushButton_LinkTree
-        ui_pushButton_ViewMask
-        ui_pushButton_DownMask
-        ui_pushButton_UpMask
         
         ui_text_StatusBranch
         ui_text_StatusNode
         ui_text_StatusDepth
-        ui_text_StatusLength
-        ui_text_StatusDilate
-        ui_text_StatusLinked
+        ui_text_StatusSpan
+        
+        ui_text_DilationHeader
+        ui_edit_DilationSize
+        ui_checkBox_ViewMask
         
     end
     
@@ -94,7 +93,7 @@ classdef WidgetNeuroTree < handle
         PATCH_ALPHA_ON = 0.2;
         
         %%% --- Tree Settings --- %%%
-        MIN_DILATE_SIZE = 1;
+        MIN_DILATE_SIZE = 10;
         MAX_DILATE_SIZE = 30;
         
         %%% --- State --- %%%
@@ -161,86 +160,7 @@ classdef WidgetNeuroTree < handle
                 'Units', 'normalized',...
                 'Position', [0, 0, 1, 1]);
             
-            obj.ui_text_StatusBranch = uicontrol(...
-                'Parent', hPanel,...
-                'Style', 'Text',...
-                'String', 'branch 0',...
-                'BackgroundColor', obj.getParentColor(),...
-                'HorizontalAlignment', 'center',...
-                'FontSize', obj.FONT_SIZE,...
-                'Callback', [],...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([8,3],...
-                                         [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
-                                         1, 1));
-            
-            obj.ui_text_StatusNode = uicontrol(...
-                'Parent', hPanel,...
-                'Style', 'Text',...
-                'String', 'node 0',...
-                'BackgroundColor', obj.getParentColor(),...
-                'HorizontalAlignment', 'center',...
-                'FontSize', obj.FONT_SIZE,...
-                'Callback', [],...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([8,3],...
-                                         [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
-                                         2, 1));
-            
-            obj.ui_text_StatusDepth = uicontrol(...
-                'Parent', hPanel,...
-                'Style', 'Text',...
-                'String', 'depth 0',...
-                'BackgroundColor', obj.getParentColor(),...
-                'HorizontalAlignment', 'center',...
-                'FontSize', obj.FONT_SIZE,...
-                'Callback', [],...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([8,3],...
-                                         [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
-                                         1, 2));
-            
-            obj.ui_text_StatusLinked = uicontrol(...
-                'Parent', hPanel,...
-                'Style', 'Text',...
-                'String', 'linked 0 / 0',...
-                'BackgroundColor', obj.getParentColor(),...
-                'HorizontalAlignment', 'center',...
-                'FontSize', obj.FONT_SIZE,...
-                'Callback', [],...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([8,3],...
-                                         [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
-                                         2, 2));                         
-                                     
-            obj.ui_text_StatusLength = uicontrol(...
-                'Parent', hPanel,...
-                'Style', 'Text',...
-                'String', 'length[px] 0',...
-                'BackgroundColor', obj.getParentColor(),...
-                'HorizontalAlignment', 'center',...
-                'FontSize', obj.FONT_SIZE,...
-                'Callback', [],...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([8,3],...
-                                         [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
-                                         1, 3));
-            
-            obj.ui_text_StatusDilate = uicontrol(...
-                'Parent', hPanel,...
-                'Style', 'Text',...
-                'String', 'dilate[px] 0',...
-                'BackgroundColor', obj.getParentColor(),...
-                'HorizontalAlignment', 'center',...
-                'FontSize', obj.FONT_SIZE,...
-                'Callback', [],...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([8,3],...
-                                         [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
-                                         2, 3));
-            
-            
-                                     
+            %%% --- render pushButtons --- %%% 
             obj.ui_pushButton_SegmentTree = uicontrol(...
                 'Parent', hPanel,...
                 'Style', 'PushButton',...
@@ -250,7 +170,7 @@ classdef WidgetNeuroTree < handle
                 'Units', 'normalized',...
                 'Position', uiGridLayout([4,2],...
                                          [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
-                                         2, 1));
+                                         1, 1));
                                      
             obj.ui_pushButton_SaveTree = uicontrol(...
                 'Parent', hPanel,...
@@ -261,7 +181,7 @@ classdef WidgetNeuroTree < handle
                 'Units', 'normalized',...
                 'Position', uiGridLayout([4,2],...
                                          [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
-                                         3, 1));
+                                         2, 1));
             
             obj.ui_pushButton_LoadTree = uicontrol(...
                 'Parent', hPanel,...
@@ -272,52 +192,114 @@ classdef WidgetNeuroTree < handle
                 'Units', 'normalized',...
                 'Position', uiGridLayout([4,2],...
                                          [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
-                                         4, 1));                         
+                                         3, 1));                         
                                      
             obj.ui_pushButton_LinkTree = uicontrol(...
                 'Parent', hPanel,...
                 'Style', 'PushButton',...
-                'String', 'Link Tree',...
+                'String', 'Link 0 / 0',...
                 'Enable', 'off',...
                 'Callback', @obj.fcnCallback_LinkTree,...
                 'Units', 'normalized',...
                 'Position', uiGridLayout([4,2],...
                                          [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
+                                         4, 1));
+            
+            
+            %%% --- render status information --- %%%
+            obj.ui_text_StatusBranch = uicontrol(...
+                'Parent', hPanel,...
+                'Style', 'Text',...
+                'String', 'branch 0',...
+                'BackgroundColor', obj.getParentColor(),...
+                'HorizontalAlignment', 'center',...
+                'FontSize', obj.FONT_SIZE,...
+                'Callback', [],...
+                'Units', 'normalized',...
+                'Position', uiGridLayout([8,2],...
+                                         [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
+                                         1, 2));
+            
+            obj.ui_text_StatusNode = uicontrol(...
+                'Parent', hPanel,...
+                'Style', 'Text',...
+                'String', 'node 0',...
+                'BackgroundColor', obj.getParentColor(),...
+                'HorizontalAlignment', 'center',...
+                'FontSize', obj.FONT_SIZE,...
+                'Callback', [],...
+                'Units', 'normalized',...
+                'Position', uiGridLayout([8,2],...
+                                         [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
                                          2, 2));
             
-           obj.ui_pushButton_ViewMask = uicontrol(...
+            obj.ui_text_StatusDepth = uicontrol(...
                 'Parent', hPanel,...
-                'Style', 'PushButton',...
-                'String', 'Show Mask',...
+                'Style', 'Text',...
+                'String', 'depth 0',...
+                'BackgroundColor', obj.getParentColor(),...
+                'HorizontalAlignment', 'center',...
+                'FontSize', obj.FONT_SIZE,...
+                'Callback', [],...
+                'Units', 'normalized',...
+                'Position', uiGridLayout([8,2],...
+                                         [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
+                                         3, 2));
+            
+            obj.ui_text_StatusSpan = uicontrol(...
+                'Parent', hPanel,...
+                'Style', 'Text',...
+                'String', 'span[px] 0',...
+                'BackgroundColor', obj.getParentColor(),...
+                'HorizontalAlignment', 'center',...
+                'FontSize', obj.FONT_SIZE,...
+                'Callback', [],...
+                'Units', 'normalized',...
+                'Position', uiGridLayout([8,2],...
+                                         [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
+                                         4, 2));
+                                    
+            %%% --- mask properties --- %%%
+            obj.ui_checkBox_ViewMask = uicontrol(...
+                'Parent', hPanel,...
+                'Style', 'CheckBox',...
+                'String', 'view mask',...
+                'Value', 0,...
                 'Enable', 'off',...
+                'BackgroundColor', obj.getParentColor(),...
+                'FontSize', obj.FONT_SIZE,...
                 'Callback', @obj.fcnCallback_ViewMask,...
                 'Units', 'normalized',...
                 'Position', uiGridLayout([4,2],...
                                          [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
                                          3, 2));
-                                     
-           obj.ui_pushButton_DownMask = uicontrol(...
+            
+            obj.ui_text_DilationHeader = uicontrol(...
                 'Parent', hPanel,...
-                'Style', 'PushButton',...
-                'String', '<<',...
-                'Enable', 'off',...
-                'Callback', @obj.fcnCallback_SetMaskSize,...
+                'Style', 'Text',...
+                'String', 'dilation size [px]',...
+                'BackgroundColor', obj.getParentColor(),...
+                'HorizontalAlignment', 'center',...
+                'FontSize', obj.FONT_SIZE,...
+                'Callback', [],...
                 'Units', 'normalized',...
                 'Position', uiGridLayout([4,4],...
                                          [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
                                          4, 3));
-            
-           obj.ui_pushButton_UpMask = uicontrol(...
+                                     
+            obj.ui_edit_DilationSize = uicontrol(...
                 'Parent', hPanel,...
-                'Style', 'PushButton',...
-                'String', '>>',...
+                'Style', 'Edit',...
+                'String', '21',...
                 'Enable', 'off',...
-                'Callback', @obj.fcnCallback_SetMaskSize,...
+                'BackgroundColor', obj.getParentColor(),...
+                'FontSize', obj.FONT_SIZE,...
+                'Callback', @obj.fcnCallback_DilationSize,...
                 'Units', 'normalized',...
                 'Position', uiGridLayout([4,4],...
-                                         [obj.GRID_MARGIN_H, obj.GRID_MARGIN_W],...
+                                         [obj.GRID_MARGIN_H *5, obj.GRID_MARGIN_W *5],...
                                          4, 4));
-          
+            
         end
         
         % method :: setDefaultProperties
@@ -330,10 +312,12 @@ classdef WidgetNeuroTree < handle
             obj.state = obj.STATE_IDLE;
             obj.key = [];
             obj.click = [];
-            obj.dilate = 5;
+            obj.dilate = 21;
             obj.linked = 0;
             obj.indexBranch = 0;
             obj.indexNode = 0;
+            obj.mask = zeros(obj.height, obj.width);
+            obj.patch = zeros(obj.height, obj.width, 3, 'like', obj.image);
             
         end
         
@@ -397,6 +381,9 @@ classdef WidgetNeuroTree < handle
            obj.width = size(obj.image, 2);
            obj.height = size(obj.image, 1);
            
+           % create empty mask
+           obj.mask = zeros(obj.height, obj.width);
+           
            % create patch
            obj.patch = zeros(obj.height, obj.width, 3, 'like', obj.image);
            hold(obj.ih_axes, 'on');
@@ -412,6 +399,19 @@ classdef WidgetNeuroTree < handle
            
         end
         
+        % method :: saveTree
+        %  input :: class object
+        % action :: saves current tree to file
+        function obj = saveTree(obj)
+        end
+        
+        % method :: loadTree
+        %  input :: class object
+        % action :: load current tree from file
+        function obj = loadTree(obj)
+        end
+        
+        
         % method :: linkTree
         %  input :: class object
         % action :: automatic linking of branch hierarchy
@@ -419,145 +419,72 @@ classdef WidgetNeuroTree < handle
             
             % get ree size
             treeSize = length(obj.tree);
-            
-            % check if branches
-            if treeSize <= 1
-                warndlg('Nothing to link, add more branches','NeuroTree::LinkTree');
-            else
                 
-                % count nodes per branch
-                countNodesPerBranch = zeros(treeSize, 1);
-                for b = 1 : treeSize
-                    countNodesPerBranch(b) = size(obj.tree(b).nodes, 1);
-                end
-                
-                
-                % build branch index per node
-                indexBranchPerNode = zeros(sum(countNodesPerBranch), 1);
-                indexBranchPerNode(cumsum([1;countNodesPerBranch(1:end-1)])) = 1;
-                indexBranchPerNode = cumsum(indexBranchPerNode);
-                
-                % build node list
-                listNodes = cat(1, obj.tree.nodes);
-                
-                % build depth per node
-                depthPerBranch = cat(1, obj.tree.depth);
-                depthPerNode = depthPerBranch(indexBranchPerNode);
-            
-                
-                % link relatives per branch
-                obj.linked = 0;
-                for b = 1 : treeSize
-                    
-                    % link parent
-                    obj.tree(b).linkParent(listNodes,...
-                                           depthPerNode,...
-                                           min(depthPerBranch),...
-                                           indexBranchPerNode);
-                    
-                    % link children
-                    obj.tree(b).linkChildren(listNodes,...
-                                             depthPerNode,...
-                                             max(depthPerBranch),...
-                                             indexBranchPerNode);
-                   
-                   % check if linking works
-                   if ~(isempty(obj.tree(b).parent) && isempty(obj.tree(b).children))
-                       
-                       obj.linked = obj.linked + 1;
-                       
-                   end
-                   
-                end
-                
-                % update status
-                obj.updateStatus();
-                
-            end
-            
-        end
-        
-        % method :: createMask
-        %  input :: class object
-        % action :: create index mask based on current tree
-        function obj = createMask(obj)
-            
-            % allocate mask
-            obj.mask = zeros(obj.height, obj.width);
-            
-            % loop over tree
-            treeSize = length(obj.tree);
+            % count nodes per branch
+            countNodesPerBranch = zeros(treeSize, 1);
             for b = 1 : treeSize
-                obj.mask(obj.tree(b).pixels) = obj.tree(b).index;
-                
+            	countNodesPerBranch(b) = size(obj.tree(b).nodes, 1);
             end
-            
-            % fill up closed polygons
-            obj.mask = imfill(obj.mask,'holes');
-            
-        end
-        
-        % method :: dilateMask
-        %  input :: class object
-        % action :: dilate current mask based on dilation size
-        function obj = dilateMask(obj)
-            obj.mask = imdilate(obj.mask, strel('disk', obj.dilate));
-        end
-        
-        % method :: patchMask
-        %  input :: class object
-        % action :: patch mask with branch color
-        function obj = patchMask(obj)
-            
-            % allocate patch
-            obj.patch = zeros(obj.height, obj.width, 3, 'uint8');
-            
-            % create a 3D mask
-            modelMask = repmat(obj.mask, 1, 1, 3);
-            
-            % loop over tree
-            treeSize = length(obj.tree);
+                
+            % build branch index per node
+            indexBranchPerNode = zeros(sum(countNodesPerBranch), 1);
+            indexBranchPerNode(cumsum([1;countNodesPerBranch(1:end-1)])) = 1;
+            indexBranchPerNode = cumsum(indexBranchPerNode);
+                
+            % build node list
+            listNodes = cat(1, obj.tree.nodes);
+                
+            % build depth per node
+            depthPerBranch = cat(1, obj.tree.depth);
+            depthPerNode = depthPerBranch(indexBranchPerNode);
+                
+            % link relatives per branch
+            obj.linked = 0;
             for b = 1 : treeSize
-                
-                branchColor = uint8(obj.tree(b).getBranchColor());
-                branchColorPatch = repmat(shiftdim(branchColor, -1),...
-                                          obj.height,...
-                                          obj.width,...
-                                          1);
-                bry = modelMask == b;
-                obj.patch(bry) = branchColorPatch(bry);
-                
+                    
+            	% link parent
+                obj.tree(b).linkParent(listNodes,...
+                                       depthPerNode,...
+                                       min(depthPerBranch),...
+                                       indexBranchPerNode);
+                    
+                % link children
+                obj.tree(b).linkChildren(listNodes,...
+                                         depthPerNode,...
+                                         max(depthPerBranch),...
+                                         indexBranchPerNode);
+                   
+                % check if linking works
+                if ~(isempty(obj.tree(b).parent) && isempty(obj.tree(b).children))
+                       
+                	obj.linked = obj.linked + 1;
+                       
+                end
+                   
             end
+                
+            % update status
+            obj.updateStatus();
             
         end
         
         % method :: showMask
         %  input :: class object
-        % action :: show current tree mask
+        % action :: makes patch visible
         function obj = showMask(obj)
             
-            % get tree size
-            treeSize = length(obj.tree);
+            set(obj.ih_patch, 'CData', obj.patch);
+            set(obj.ih_patch, 'AlphaData', (obj.mask > 0) .* obj.PATCH_ALPHA_ON);
             
-            if treeSize < 1
-                warndlg('Nothing to mask, add more branches','NeuroTree::ShowMask');
-            else
-                
-                obj.createMask();
-                obj.dilateMask();
-                obj.patchMask();
-                
-                set(obj.ih_patch, 'CData', obj.patch);
-                set(obj.ih_patch, 'AlphaData', (obj.mask > 0).* obj.PATCH_ALPHA_ON);
-                
-            end
         end
         
         % method :: hideMask
         %  input :: class object
-        % action :: show current tree mask
+        % action :: makes patch unvisible
         function obj = hideMask(obj)
+            
             set(obj.ih_patch, 'AlphaData', obj.PATCH_ALPHA_OFF);
+            
         end
         
         % method :: clearTree
@@ -596,9 +523,8 @@ classdef WidgetNeuroTree < handle
                 obj.ui_pushButton_SaveTree,...
                 obj.ui_pushButton_LoadTree,...
                 obj.ui_pushButton_LinkTree,...
-                obj.ui_pushButton_ViewMask,...
-                obj.ui_pushButton_DownMask,...
-                obj.ui_pushButton_UpMask);
+                obj.ui_edit_DilationSize,...
+                obj.ui_checkBox_ViewMask);
             
             set(buttonGroup, 'Enable', enable);
         end
@@ -630,7 +556,6 @@ classdef WidgetNeuroTree < handle
                 
                 case 'Segment'
                     set(obj.ui_pushButton_SegmentTree, 'String', 'Clear');
-                    obj.enableButtonGroup('on');
                     obj.segmentTree();
                     
                 case 'Clear'
@@ -670,56 +595,44 @@ classdef WidgetNeuroTree < handle
         %   action :: show/hide mask
         function obj = fcnCallback_ViewMask(obj, ~, ~)
             
-            switch obj.ui_pushButton_ViewMask.String
-                case 'Show Mask'
-                    
-                    obj.showMask();
-                    set(obj.ui_pushButton_ViewMask, 'String', 'Hide Mask');
-                    
-                case 'Hide Mask'
-                    
-                    obj.hideMask();
-                    set(obj.ui_pushButton_ViewMask, 'String', 'Show Mask');
-                    
+            if obj.ui_checkBox_ViewMask.Value == 1        
+                obj.showMask();
+            else
+                obj.hideMask();
             end
             
         end
         
-        
-        % callback :: SetMaskSize
-        %    event :: on mask Up/Down buttons
-        %   action :: adjust mask size
-        function obj = fcnCallback_SetMaskSize(obj, hSrc, ~)
+        % callback :: DilationSize
+        %    event :: on edit dilation size field
+        %   action :: update current dilation value
+        function obj = fcnCallback_DilationSize(obj, ~, ~)
             
-            % update mask size
-            switch hSrc
-                case obj.ui_pushButton_DownMask
-                    obj.dilate = obj.dilate - 1;
-                case obj.ui_pushButton_UpMask
-                    obj.dilate = obj.dilate + 1;
-            end
+            % extract value
+            value = regexp(obj.ui_edit_DilationSize.String, '[\d]+','match');
             
-            % set minimum size
-            if (obj.dilate < obj.MIN_DILATE_SIZE + 1)
-                set(obj.ui_pushButton_DownMask, 'Enable', 'off');
+            % check if value is empty
+            if isempty(value)
+                value = 0;
             else
-                set(obj.ui_pushButton_DownMask, 'Enable', 'on');
+                value = str2double(value(1));
             end
             
-            % set maximum size
-            if (obj.dilate > obj.MAX_DILATE_SIZE - 1)
-                set(obj.ui_pushButton_UpMask, 'Enable', 'off');
+            % check value span
+            if value < obj.MIN_DILATE_SIZE
+                obj.dilate = obj.MIN_DILATE_SIZE;
+            elseif value > obj.MAX_DILATE_SIZE
+                obj.dilate = obj.MAX_DILATE_SIZE;
             else
-                set(obj.ui_pushButton_UpMask, 'Enable', 'on');
+                obj.dilate = value;
             end
             
-            % update status
-            set(obj.ui_text_StatusDilate, 'String', sprintf('dilate[px] %d',obj.dilate));
+            % update edit box string
+            set(obj.ui_edit_DilationSize, 'String', sprintf('%d', obj.dilate));
             
-            % update mask
-            if strcmp(obj.ui_pushButton_ViewMask.String, 'Show Mask')
-                obj.showMask();
-            end
+            % update mask dilation
+            obj.updateMaskDilation();
+            
         end
         
         
@@ -891,10 +804,12 @@ classdef WidgetNeuroTree < handle
             
             if obj.state == obj.STATE_REPOSITION_BRANCH
                 
+                obj.releaseBranch();
                 obj.state = obj.STATE_OVER_BRANCH;
                 
             elseif obj.state == obj.STATE_REPOSITION_NODE
                 
+                obj.releaseBranch();
                 obj.state = obj.STATE_OVER_NODE;
                 
             end
@@ -1061,6 +976,10 @@ classdef WidgetNeuroTree < handle
             obj.tree(obj.edit_indexBranch).disposeBranch();
             obj.tree(obj.edit_indexBranch) = [];
             
+            % delete branch patch
+            obj.deleteBranchPatch(obj.edit_indexBranch);
+            obj.deleteBranchMask(obj.edit_indexBranch);
+            
             % update current branch index
             obj.indexBranch = numel(obj.tree);
             
@@ -1071,6 +990,11 @@ classdef WidgetNeuroTree < handle
                 for b = 1 : obj.indexBranch
                     obj.tree(b).reindexBranch(b);
                 end
+            end
+            
+            % check if mask viewer is active
+            if obj.ui_checkBox_ViewMask.Value == 1
+                obj.showMask();
             end
             
             % update status
@@ -1135,6 +1059,39 @@ classdef WidgetNeuroTree < handle
             
         end
         
+        % method :: releaseBranch
+        %  input :: class object
+        % action :: update branch after release
+        function obj = releaseBranch(obj)
+            
+            % set branch length
+            obj.tree(obj.edit_indexBranch).measureBranch();
+            
+            % create pixel array
+            obj.tree(obj.edit_indexBranch).nodesToPixels(obj.height, obj.width);
+            
+            % delete old patch and mask
+            obj.deleteBranchPatch(obj.edit_indexBranch);
+            obj.deleteBranchMask(obj.edit_indexBranch);
+            
+            % mask branch
+            obj.maskBranch(obj.tree(obj.indexBranch).pixels,...
+                           obj.tree(obj.indexBranch).index);
+            
+            % patch branch
+            obj.patchBranch(obj.tree(obj.indexBranch).getBranchColor(),...
+                            obj.tree(obj.indexBranch).index);
+                        
+            % check if mask viewer is active
+            if obj.ui_checkBox_ViewMask.Value == 1
+                obj.showMask();
+            end
+            
+            % update status
+            obj.updateStatus();
+                        
+        end
+        
         % method :: pickUpNode
         %  input :: class object
         % action :: picks up node to move
@@ -1173,6 +1130,24 @@ classdef WidgetNeuroTree < handle
             % update node in tree
             obj.tree(obj.indexBranch).completeBranch(obj.height, obj.width);
             
+            % mask branch
+            obj.maskBranch(obj.tree(obj.indexBranch).pixels,...
+                           obj.tree(obj.indexBranch).index);
+            
+            % patch branch
+            obj.patchBranch(obj.tree(obj.indexBranch).getBranchColor(),...
+                            obj.tree(obj.indexBranch).index);
+            
+            % check tree size and enable button group
+            if size(obj.tree, 1) > 0
+                obj.enableButtonGroup('on');
+            end
+            
+            % check if mask viewer is active
+            if obj.ui_checkBox_ViewMask.Value == 1
+                obj.showMask();
+            end
+            
             % update mouse pointer
             set(obj.ih_figure, 'Pointer', 'arrow');
             
@@ -1180,6 +1155,73 @@ classdef WidgetNeuroTree < handle
             obj.updateStatus();
             
         end
+        
+        
+        % method :: maskBranch
+        %  input :: class object, pixels, index
+        % action :: update current mask
+        function obj = maskBranch(obj, pixels, index)
+            
+            % create branch binary mask
+            bry = false(obj.height, obj.width);
+            bry(pixels) = true;
+            
+            % complete closed polygons
+            bry = imfill(bry, 'holes');
+            
+            % dilate mask
+            bry = imdilate(bry, strel('disk', obj.dilate));
+            
+            % keep index in mask
+            obj.mask(bry) = index;
+            
+        end
+        
+        % method :: deleteBranchMask
+        %  input :: class object, index
+        % action :: dispose current mask
+        function obj = deleteBranchMask(obj, index)
+            
+            obj.mask(obj.mask == index) = 0;
+            
+        end
+        
+        % method :: patchBranch
+        %  input :: class object, branchColor, index
+        % action :: update current patch
+        function obj = patchBranch(obj, branchColor, index)
+            
+            % cast branch color type
+            branchColor = cast(branchColor, 'like', obj.patch);
+            
+            % create color patch
+            branchColorPatch = repmat(shiftdim(branchColor, -1),...
+                                      obj.height,...
+                                      obj.width,...
+                                      1);
+                                  
+            % create binary mask
+            bry = repmat(obj.mask, 1, 1, 3) == index;
+            
+            % aplly color patch
+            obj.patch(bry) = branchColorPatch(bry);
+            
+        end
+        
+        
+        % method :: deleteBranchPatch
+        %  input :: class object, index
+        % action :: dispose branch patch
+        function obj = deleteBranchPatch(obj, index)
+            
+            % create binary mask
+            bry = repmat(obj.mask, 1, 1, 3) == index;
+            
+            % dispose patch
+            obj.patch(bry) = cast(0 , 'like', obj.patch);
+            
+        end
+        
         
         % method :: selectBranch
         %  input :: class object
@@ -1218,6 +1260,47 @@ classdef WidgetNeuroTree < handle
         end
         
         
+        % method :: updateMaskDilation
+        %  input :: class object
+        % action :: update mask dilation size
+        function obj = updateMaskDilation(obj)
+            tic
+            
+            % get current tree size
+            treeSize = size(obj.tree, 1);
+            
+            % sort tree by order
+            treeOrder = cat(1, obj.tree.depth);
+            [~, sortIndex] = sort(treeOrder);
+            
+            for b = 1 : treeSize
+                
+                % get tree branch
+                branchIndex = sortIndex(b);
+                
+                % delete previous patch
+                obj.deleteBranchPatch(branchIndex);
+                
+                % delete previous mask
+                obj.deleteBranchMask(branchIndex);
+                
+                % mask branch
+                obj.maskBranch(obj.tree(branchIndex).pixels,...
+                               obj.tree(branchIndex).index);
+            
+                % patch branch
+                obj.patchBranch(obj.tree(branchIndex).getBranchColor(),...
+                                obj.tree(branchIndex).index);
+            
+            end
+            
+            % check if mask viewer is active
+            if obj.ui_checkBox_ViewMask.Value == 1
+                obj.showMask();
+            end
+            
+            fprintf('full mask update %.4f\n', toc);
+        end
         
         % method :: updateStatus
         %  input :: class object
@@ -1226,15 +1309,13 @@ classdef WidgetNeuroTree < handle
             
             set(obj.ui_text_StatusBranch, 'String', sprintf('branch %d', obj.indexBranch));
             set(obj.ui_text_StatusNode, 'String', sprintf('node %d', obj.indexNode));
-            set(obj.ui_text_StatusLinked, 'String', sprintf('linked %d / %d', obj.linked, size(obj.tree, 1)));
-            set(obj.ui_text_StatusDilate, 'String', sprintf('dilate[px] %d', obj.dilate));
-            
+            set(obj.ui_pushButton_LinkTree, 'String', sprintf('Link %d / %d',obj.linked, size(obj.tree, 1)));
             if obj.indexBranch > 0
                 set(obj.ui_text_StatusDepth, 'String', sprintf('depth %d', obj.tree(obj.indexBranch).depth));
-                set(obj.ui_text_StatusLength, 'String', sprintf('length[px] %d', round(obj.tree(obj.indexBranch).length)));
+                set(obj.ui_text_StatusSpan, 'String', sprintf('span[px] %d', round(obj.tree(obj.indexBranch).span)));
             else
                 set(obj.ui_text_StatusDepth, 'String', 'depth 0');
-                set(obj.ui_text_StatusLength, 'String', 'length[px] 0');
+                set(obj.ui_text_StatusSpan, 'String', 'span[px] 0');
             end
             
         end

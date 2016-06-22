@@ -21,7 +21,7 @@ classdef NeuroTreeBranch < handle
         children
         depth
         nodes
-        length
+        span
         pixels
     end
     
@@ -96,7 +96,7 @@ classdef NeuroTreeBranch < handle
             obj.parent = [];
             obj.children = [];
             obj.nodes = obj.DEFAULT_NODE;
-            obj.length = 0;
+            obj.span = 0;
             
             % set graphics handles
             hold(obj.ui_parent, 'on');
@@ -258,7 +258,7 @@ classdef NeuroTreeBranch < handle
         function obj = measureBranch(obj)
             
             diffLength = sqrt(sum(diff(obj.nodes, [], 1).^2, 2));
-            obj.length = sum(diffLength);
+            obj.span = sum(diffLength);
             
         end
         
