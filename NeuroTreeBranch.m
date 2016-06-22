@@ -410,6 +410,28 @@ classdef NeuroTreeBranch < handle
             
         end
         
+        % method :: exportBranch
+        %  input :: class object
+        % action :: export branch
+        function obj = exportBranch(obj, fpWrite)
+            
+            fprintf(fpWrite, '[branch=%d]\n', obj.index);
+            fprintf(fpWrite, 'depth=%d\n', obj.depth);
+            fprintf(fpWrite, 'tag=%d\n', obj.tag);
+            fprintf(fpWrite, 'parent=%d\n', obj.parent);
+            childrenList = sprintf('%d,', obj.children);
+            childrenList(end) = [];
+            fprintf(fpWrite, 'children=%s\n', childrenList);
+            fprintf(fpWrite, 'nodes=%d\n', size(obj.nodes, 1));
+            xPosList = sprintf('%d,', obj.nodes(:,1));
+            xPosList(end) = [];
+            fprintf(fpWrite, 'x=%s\n', xPosList);
+            yPosList = sprintf('%d,',obj.nodes(:,2));
+            yPosList (end) = [];
+            fprintf(fpWrite, 'y=%s\n', yPosList);
+            fprintf(fpWrite, '\n');
+            
+        end
         
         % method :: getBranchColor
         %  input :: class object

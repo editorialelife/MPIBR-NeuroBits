@@ -403,12 +403,52 @@ classdef WidgetNeuroTree < handle
         %  input :: class object
         % action :: saves current tree to file
         function obj = saveTree(obj)
+            
+            % create output file
+            fileOut = [obj.path,...
+                       filesep,...
+                       obj.name,...
+                       '_neuroTree_',...
+                       datestr(now,'ddmmmyyyy'),...
+                       '.txt'];
+           fpWrite = fopen(fileOut, 'w');
+           
+           % loop over each branch
+           treeSize = size(obj.tree, 1);
+           for b = 1 : treeSize
+               obj.tree(b).exportBranch(fpWrite);
+           end
+           fclose(fpWrite);
+            
         end
         
         % method :: loadTree
         %  input :: class object
         % action :: load current tree from file
         function obj = loadTree(obj)
+            
+            % get tree file
+            [name, path] = uigetfile('*_neuroTree_*.txt', 'Pick Neuro Tree Branch file');
+            
+            % open file to read
+            fileIn = [path, filesep, name];
+            fpRead = fopen(fileIn, 'r');
+            txt = textscan(fpRead, '%s', 'delimiter', '\t');
+            fclose(fpRead);
+            txt = txt{:};
+            
+            % find branch index
+            branchDataIndex = strncmp(txt, '[', 1);
+            branchDataIndex = cumsum(branchDataIndex);
+            for b = 1 : branchDataIndex(end)
+                
+                % branch data
+                branchData = txt(branchDataIndex == b);
+                
+                % parse branch info
+                
+            end
+            
         end
         
         
