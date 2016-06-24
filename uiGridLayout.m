@@ -87,7 +87,7 @@ function [uigrid] = uiGridLayout(varargin)
         gridHeight = tmpGridHeight;
     end
 
-    if (maxWidth < tmpGridWidth) && (maxWidth > 0);
+    if (maxWidth < tmpGridWidth) && (maxWidth > 0)
         gridWidth = maxWidth;
     else
         gridWidth = tmpGridWidth;
