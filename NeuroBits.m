@@ -42,14 +42,16 @@
         %  input :: class object
         % action :: class constructor
         function obj = NeuroBits()
-            clc;
-            close all;
             
             % initialize graphical user interface
             obj.renderUI();
             
             % initialize listeners
             addlistener(obj.widget_FolderBrowser, 'event_fileUpdated', @obj.fcnCallback_FileUpdate);
+            addlistener(obj.widget_ImageBrowser, 'event_ImageBrowser_Show', @obj.fcnCallback_ImageShow);
+            addlistener(obj.widget_ImageBrowser, 'event_ImageBrowser_Hide', @obj.fcnCallback_ImageHide);
+            %addlistener(obj.widget_NeuroTree, 'event_segmentTree', @obj.fcnCallback_SegmentTree);
+            addlistener(obj.widget_NeuroPuncta, 'event_NeuroPuncta_Segment', @obj.fcnCallback_SegmentPuncta);
             
         end
         
@@ -111,6 +113,7 @@
             
             
             %%% --- DrawTree --- %%%
+            %{
             hPan_NeuroTree = uipanel(...
                 'Parent', obj.ui_parent,...
                 'Title', 'Neuro Tree',...
@@ -125,7 +128,7 @@
                                          [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
                                          3, 1));
             obj.widget_NeuroTree = WidgetNeuroTree('Parent', hPan_NeuroTree);
-            
+            %}
             
             %%% --- Find Puncta --- %%%
             hPan_NeuroPuncta = uipanel(...
@@ -141,8 +144,11 @@
                 'Position', uiGridLayout([5, 1],...
                                          [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
                                          4, 1));
+            obj.widget_NeuroPuncta = WidgetNeuroPuncta('Parent', hPan_NeuroPuncta);                         
+            
             
             %%% --- Batch Processing --- %%%
+            %{
             hPan_Batch = uipanel(...
                 'Parent', obj.ui_parent,...
                 'Title', 'Batch Job',...
@@ -156,18 +162,7 @@
                 'Position', uiGridLayout([5, 1],...
                                          [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
                                          5, 1));
-            
-        end
-        
-        
-        % method :: initWidgetImageBrowser
-        %  input :: class object
-        % action :: initialize image browser image
-        function obj = initWidgetImageBrowser(obj)
-            
-            % evoke load method in WidgetImageBrowser
-            obj.file = obj.widget_FolderBrowser.list{obj.widget_FolderBrowser.index};
-            obj.widget_ImageBrowser.loadImage(obj.file);
+          %}                           
             
         end
         
@@ -200,9 +195,13 @@
         %   action :: class detructor
         function obj = fcnCallback_CloseUIWindow(obj, ~, ~)
             
-            if isgraphics(obj.widget_ImageBrowser.ih_figure, 'Figure')
-                delete(obj.widget_ImageBrowser.ih_figure);
+            if isa(obj.widget_FolderBrowser, 'WidgetFolderBrowser')
+                delete(obj.widget_FolderBrowser);
             end
+            
+            %if isgraphics(obj.widget_ImageBrowser.ih_figure, 'Figure')
+            %    delete(obj.widget_ImageBrowser.ih_figure);
+            %end
             
             if isgraphics(obj.ui_parent, 'Figure')
                 delete(obj.ui_parent);
@@ -216,11 +215,45 @@
         %   action :: load image in ImageBrowser widget
         function obj = fcnCallback_FileUpdate(obj, ~, ~)
             
-            % initialize WidgetImageBrowser
-            obj.initWidgetImageBrowser();
+            % evoke load method in WidgetImageBrowser
+            obj.file = obj.widget_FolderBrowser.list{obj.widget_FolderBrowser.index};
+            obj.widget_ImageBrowser.loadImage(obj.file);
             
-            % initialize WidgetNeuroTree
-            obj.initWidgetNeuroTree();
+        end
+        
+        % callback :: ImageShow
+        %    event :: on ImageShow event from ImageBrowser widget
+        %   action :: unlocks GUI for dependant widgets
+        function obj = fcnCallback_ImageShow(obj, ~, ~)
+            
+            %obj.widget_NeuroTree.unlockUI();
+            obj.widget_NeuroPuncta.unlockUI();
+            
+        end
+        
+        % callback :: ImageHide
+        %    event :: on ImageHide event from ImageBrowser widget
+        %   action :: locks GUI for dependant widgets
+        function obj = fcnCallback_ImageHide(obj, ~, ~)
+            
+            %obj.widget_NeuroTree.lockUI();
+            obj.widget_NeuroPuncta.lockUI();
+            
+        end
+        
+        % callback :: SegmentTree
+        %    event :: on SegmentTree event from NeuroTree widget
+        %   action :: initialize NeuroTree input image
+        function obj = fcnCallback_SegmentTree(obj, ~, ~)
+        end
+        
+        % callback :: SegmentPuncta
+        %    event :: on SegmentPuncta event from NeuroPuncta widget
+        %   action :: initialize NeuroPuncta input image
+        function obj = fcnCallback_SegmentPuncta(obj, ~, ~)
+            
+            obj.widget_NeuroPuncta.startSegmentation(obj.file,...
+                                                     obj.widget_ImageBrowser.image);
             
         end
         

@@ -63,6 +63,11 @@ classdef WidgetImageBrowser < handle
         
     end
     
+    events (NotifyAccess = protected)
+        event_ImageBrowser_Show
+        event_ImageBrowser_Hide
+    end
+    
     methods
         
         % method :: WidgetImageBrowser
@@ -96,6 +101,18 @@ classdef WidgetImageBrowser < handle
                 obj.loadImage();
             end
             
+        end
+        
+        
+        % method :: getParentColor
+        %  input :: class object
+        % action :: returns value of Parent Color/BackgroundColor property
+        function value = getParentColor(obj)
+            if isgraphics(obj.ui_parent, 'figure')
+                value = get(obj.ui_parent, 'Color');
+            elseif isgraphics(obj.ui_parent, 'uipanel')
+                value = get(obj.ui_parent, 'BackgroundColor');
+            end
         end
         
         
@@ -210,18 +227,6 @@ classdef WidgetImageBrowser < handle
         end
         
         
-        % method :: getParentColor
-        %  input :: class object
-        % action :: returns value of Parent Color/BackgroundColor property
-        function value = getParentColor(obj)
-            if isgraphics(obj.ui_parent, 'figure')
-                value = get(obj.ui_parent, 'Color');
-            elseif isgraphics(obj.ui_parent, 'uipanel')
-                value = get(obj.ui_parent, 'BackgroundColor');
-            end
-        end
-        
-        
         % method :: loadImage
         %  input :: class object, fileName
         % action :: load image from file name
@@ -251,7 +256,10 @@ classdef WidgetImageBrowser < handle
             
             % read image
             obj.readImage();
-                                  
+            
+            % update button enable property
+            obj.updatePushButtons();
+            
             % update user interface
             obj.updateStatus();
             
@@ -280,12 +288,14 @@ classdef WidgetImageBrowser < handle
             
             % update meta data message
             set(obj.ui_text_ImageResolution,...
-                'String',sprintf('%d bits, H x W %d x %d\n(%.2f x %.2f um)',...
+                'String',sprintf('%d bits, HxW %d x %d (%.2f x %.2f um), intensity [%d, %d]',...
                 obj.metaData.bitsPerSample,...
                 obj.metaData.height,...
                 obj.metaData.width,...
                 obj.metaData.height * obj.metaData.yResolution,...
-                obj.metaData.width * obj.metaData.xResolution));
+                obj.metaData.width * obj.metaData.xResolution,...
+                min(obj.image(:)),...
+                max(obj.image(:))));
             
             set(obj.ui_text_ChannelCounter,...
                 'String',sprintf('channel %d / %d',...
@@ -294,6 +304,14 @@ classdef WidgetImageBrowser < handle
             set(obj.ui_text_StackCounter,...
                 'String',sprintf('stack %d / %d',...
                 obj.indexStack, obj.metaData.stacks));
+            
+        end
+        
+        
+        % method :: updatePushButtons
+        %  input :: class object
+        % action :: update status message
+        function obj = updatePushButtons(obj)
             
             % update stack buttons callbacks
             if obj.metaData.stacks == 1
@@ -316,7 +334,6 @@ classdef WidgetImageBrowser < handle
             end
             
         end
-        
         
         % method :: showImage
         %  input :: class object
@@ -371,6 +388,8 @@ classdef WidgetImageBrowser < handle
                 
             end
             
+            % notify that image is shown
+            notify(obj, 'event_ImageBrowser_Show');
             
         end
         
@@ -384,7 +403,13 @@ classdef WidgetImageBrowser < handle
         %    event :: on close request
         %   action :: dispose image figure
         function obj = fcnCallback_CloseFigure(obj, ~, ~)
+            
+            % hide figure
             set(obj.ih_figure, 'Visible', 'off');
+            
+            % fire an event
+            notify(obj, 'event_ImageBrowser_Hide');
+            
         end
         
         

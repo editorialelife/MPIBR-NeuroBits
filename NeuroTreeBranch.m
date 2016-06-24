@@ -422,6 +422,7 @@ classdef NeuroTreeBranch < handle
             childrenList = sprintf('%d,', obj.children);
             childrenList(end) = [];
             fprintf(fpWrite, 'children=%s\n', childrenList);
+            fprintf(fpWrite, 'span=%.2f\n', obj.span);
             fprintf(fpWrite, 'nodes=%d\n', size(obj.nodes, 1));
             xPosList = sprintf('%d,', obj.nodes(:,1));
             xPosList(end) = [];

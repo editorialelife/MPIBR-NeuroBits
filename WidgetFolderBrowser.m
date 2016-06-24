@@ -73,6 +73,18 @@ classdef WidgetFolderBrowser < handle
         end
         
         
+        % method :: getParentColor
+        %  input :: class object
+        % action :: returns value of Parent Color/BackgroundColor property
+        function value = getParentColor(obj)
+            if isgraphics(obj.ui_parent, 'figure')
+                value = get(obj.ui_parent, 'Color');
+            elseif isgraphics(obj.ui_parent, 'uipanel')
+                value = get(obj.ui_parent, 'BackgroundColor');
+            end
+        end
+        
+        
         % method :: renderUI
         %  input :: class object
         % action :: render user interface
@@ -149,18 +161,6 @@ classdef WidgetFolderBrowser < handle
                                          [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
                                          2, 1:2));
             
-        end
-        
-        
-        % method :: getParentColor
-        %  input :: class object
-        % action :: returns value of Parent Color/BackgroundColor property
-        function value = getParentColor(obj)
-            if isgraphics(obj.ui_parent, 'figure')
-                value = get(obj.ui_parent, 'Color');
-            elseif isgraphics(obj.ui_parent, 'uipanel')
-                value = get(obj.ui_parent, 'BackgroundColor');
-            end
         end
         
         

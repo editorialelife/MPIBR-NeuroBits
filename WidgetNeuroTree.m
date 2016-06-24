@@ -148,6 +148,38 @@ classdef WidgetNeuroTree < handle
             
         end
         
+        % method :: setDefaultProperties
+        %  input :: class object
+        % action :: set hidden properties default values
+        function obj = setDefaultProperties(obj)
+            
+            % set defaults
+            obj.tree = [];
+            obj.state = obj.STATE_IDLE;
+            obj.key = [];
+            obj.click = [];
+            obj.dilate = 21;
+            obj.linked = 0;
+            obj.indexBranch = 0;
+            obj.indexNode = 0;
+            obj.mask = zeros(obj.height, obj.width);
+            obj.patch = zeros(obj.height, obj.width, 3, 'like', obj.image);
+            
+        end
+        
+        
+        % method :: getParentColor
+        %  input :: class object
+        % action :: returns value of Parent Color/BackgroundColor property
+        function value = getParentColor(obj)
+            if isgraphics(obj.ui_parent, 'figure')
+                value = get(obj.ui_parent, 'Color');
+            elseif isgraphics(obj.ui_parent, 'uipanel')
+                value = get(obj.ui_parent, 'BackgroundColor');
+            end
+        end
+        
+        
         % method :: renderUI
         %  input :: class object
         % action :: render user interface
@@ -302,35 +334,6 @@ classdef WidgetNeuroTree < handle
             
         end
         
-        % method :: setDefaultProperties
-        %  input :: class object
-        % action :: set hidden properties default values
-        function obj = setDefaultProperties(obj)
-            
-            % set defaults
-            obj.tree = [];
-            obj.state = obj.STATE_IDLE;
-            obj.key = [];
-            obj.click = [];
-            obj.dilate = 21;
-            obj.linked = 0;
-            obj.indexBranch = 0;
-            obj.indexNode = 0;
-            obj.mask = zeros(obj.height, obj.width);
-            obj.patch = zeros(obj.height, obj.width, 3, 'like', obj.image);
-            
-        end
-        
-        % method :: getParentColor
-        %  input :: class object
-        % action :: returns value of Parent Color/BackgroundColor property
-        function value = getParentColor(obj)
-            if isgraphics(obj.ui_parent, 'figure')
-                value = get(obj.ui_parent, 'Color');
-            elseif isgraphics(obj.ui_parent, 'uipanel')
-                value = get(obj.ui_parent, 'BackgroundColor');
-            end
-        end
         
         % mehtod :: unlockUI
         %  input :: class object
@@ -427,6 +430,7 @@ classdef WidgetNeuroTree < handle
         % action :: load current tree from file
         function obj = loadTree(obj)
             
+            %{
             % get tree file
             [name, path] = uigetfile('*_neuroTree_*.txt', 'Pick Neuro Tree Branch file');
             
@@ -448,7 +452,7 @@ classdef WidgetNeuroTree < handle
                 % parse branch info
                 
             end
-            
+            %}
         end
         
         
