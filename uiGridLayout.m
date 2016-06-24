@@ -54,6 +54,15 @@ function [uigrid] = uiGridLayout(varargin)
     maxWidth = parseObj.Results.MaximumWidth;
     anchor = parseObj.Results.Anchor;
     
+    % check if span fits in grid
+    if (min(horSpan) < 1) || (max(horSpan) > grid(2))
+        error('uiGridLayout:HorizontalSpan', 'horizontal span outside grid.');
+    end
+    
+    if (min(verSpan) < 1) || (max(verSpan) > grid(1))
+        error('uiGridLayout:VerticalSpan', 'vertical span outside grid.');
+    end
+    
     % get parent position
     position = get(parent, 'Position');
     
@@ -132,6 +141,10 @@ function [uigrid] = uiGridLayout(varargin)
             gridXPos = tmpGridXPos + (tmpGridWidth - gridWidth);
             gridYPos = tmpGridYPos;
         
+        otherwise
+            
+            error('uiGridLayout:Anchor','unknown anchor position.');
+            
     end
     
     % export ui grid
