@@ -63,8 +63,8 @@ function [uigrid] = uiGridLayout(varargin)
     
     % calculate grid position
     verGridPos = flipud(cumsum([gap(1); repmat(verGridSize + gap(1), grid(1) - 1, 1)]));
-    horGridPos = cumsum([gap(2); repmat(verGridSize + gap(2), grid(2) - 1, 1)]);
-
+    horGridPos = cumsum([gap(2); repmat(horGridSize + gap(2), grid(2) - 1, 1)]);
+    
     % set temporary grid
     tmpGridXPos = horGridPos(horSpan(1));
     tmpGridYPos = verGridPos(verSpan(end));
