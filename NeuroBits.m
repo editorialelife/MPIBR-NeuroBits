@@ -17,23 +17,32 @@
     
     properties (Access = private, Hidden = true)
         file
+        
+        %%% --- UI Components --- %%%
         ui_parent
+        ui_panel_FolderBrowser
+        ui_panel_ImageBrowser
+        ui_panel_NeuroTree
+        ui_panel_NeuroPuncta
+        ui_panel_BatchJob
+        
+        %%% --- Widget Objects --- %%%
         widget_FolderBrowser
         widget_ImageBrowser
         widget_NeuroTree
         widget_NeuroPuncta
-        widget_BatchJoat
+        widget_BatchJob
     end
     
     properties (Constant = true, Access = private, Hidden = true)
         
-        GUI_WINDOW_POSITION = [0, 0.15, 0.15, 0.8];
-        BACKGROUND_COLOR = [1, 1, 1]; % WHITE
-        FOREGROUND_COLOR = [0.5, 0.5, 0.5]; % GRAY
-        FONT_SIZE = 10;
-        BORDER_WIDTH = 0.015;
-        BORDER_HEIGHT = 0.015;
+        GUI_WINDOW_POSITION = [1, 1, 250, 650];
+        BORDER_GAP = [5, 5];
         
+        BACKGROUND_COLOR = [1, 1, 1]; % WHITE COLOR
+        FOREGROUND_COLOR = [0.5, 0.5, 0.5]; % GRAY COLOR
+        FONT_SIZE = 8;
+   
     end
     
     methods
@@ -43,16 +52,21 @@
         % action :: class constructor
         function obj = NeuroBits()
             
-            % initialize graphical user interface
+            % render widget panels
             obj.renderUI();
+            
+            % initialize widget objects
+            obj.renderWidgets();
+            
             
             % initialize listeners
             addlistener(obj.widget_FolderBrowser, 'event_fileUpdated', @obj.fcnCallback_FileUpdate);
+            %{
             addlistener(obj.widget_ImageBrowser, 'event_ImageBrowser_Show', @obj.fcnCallback_ImageShow);
             addlistener(obj.widget_ImageBrowser, 'event_ImageBrowser_Hide', @obj.fcnCallback_ImageHide);
             %addlistener(obj.widget_NeuroTree, 'event_segmentTree', @obj.fcnCallback_SegmentTree);
             addlistener(obj.widget_NeuroPuncta, 'event_NeuroPuncta_Segment', @obj.fcnCallback_SegmentPuncta);
-            
+            %}
         end
         
         
@@ -67,17 +81,18 @@
                 'Visible', 'on',...
                 'Tag', 'hNeuroBits',...
                 'Name', 'NeuroBits',...
-                'Units', 'normalized',...
-                'Position', obj.GUI_WINDOW_POSITION,...
-                'NumberTitle', 'off',...
                 'MenuBar', 'none',...
                 'ToolBar', 'none',...
+                'NumberTitle', 'off',...
                 'Color', obj.BACKGROUND_COLOR,...
+                'Resize', 'off',...
+                'Units', 'pixels',...
+                'Position', obj.GUI_WINDOW_POSITION,...
                 'CloseRequestFcn', @obj.fcnCallback_CloseUIWindow);
+            movegui(obj.ui_parent, 'northwest');
             
-            
-            %%% --- Load Images --- %%%
-            hPan_FolderBrowser = uipanel(...
+            %%% --- Folder Browser --- %%%
+            obj.ui_panel_FolderBrowser = uipanel(...
                 'Parent', obj.ui_parent,...
                 'Title', 'Folder Browser',...
                 'TitlePosition', 'lefttop',...
@@ -86,17 +101,16 @@
                 'HighlightColor', obj.FOREGROUND_COLOR,...
                 'ForegroundColor', obj.FOREGROUND_COLOR,...
                 'BackgroundColor', obj.BACKGROUND_COLOR,...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([5, 1],...
-                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
-                                         1, 1));
-            obj.widget_FolderBrowser = WidgetFolderBrowser(...
-                                       'Parent',hPan_FolderBrowser,...
-                                       'Extension','*.lsm');
+                'Units', 'pixels',...
+                'Position', uiGridLayout('Parent', obj.ui_parent,...
+                                         'Grid', [5,1],...
+                                         'Gap', obj.BORDER_GAP,...
+                                         'HorizontalSpan', 1,...
+                                         'VerticalSpan', 1));
             
-                                              
-            %%% --- Browse Images --- %%%
-            hPan_ImageBrowser = uipanel(...
+            
+            %%% --- Image Browser --- %%%
+            obj.ui_panel_ImageBrowser = uipanel(...
                 'Parent', obj.ui_parent,...
                 'Title', 'Image Browser',...
                 'TitlePosition', 'lefttop',...
@@ -105,11 +119,12 @@
                 'HighlightColor', obj.FOREGROUND_COLOR,...
                 'ForegroundColor', obj.FOREGROUND_COLOR,...
                 'BackgroundColor', obj.BACKGROUND_COLOR,...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([5, 1],...
-                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
-                                         2, 1));
-            obj.widget_ImageBrowser = WidgetImageBrowser('Parent',hPan_ImageBrowser);
+                'Units', 'pixels',...
+                'Position', uiGridLayout('Parent', obj.ui_parent,...
+                                         'Grid', [5,1],...
+                                         'Gap', obj.BORDER_GAP,...
+                                         'HorizontalSpan', 1,...
+                                         'VerticalSpan', 2));
             
             
             %%% --- DrawTree --- %%%
@@ -129,7 +144,7 @@
                                          3, 1));
             obj.widget_NeuroTree = WidgetNeuroTree('Parent', hPan_NeuroTree);
             %}
-            
+            %{
             %%% --- Find Puncta --- %%%
             hPan_NeuroPuncta = uipanel(...
                 'Parent', obj.ui_parent,...
@@ -145,7 +160,7 @@
                                          [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
                                          4, 1));
             obj.widget_NeuroPuncta = WidgetNeuroPuncta('Parent', hPan_NeuroPuncta);                         
-            
+            %}
             
             %%% --- Batch Processing --- %%%
             %{
@@ -165,6 +180,25 @@
           %}                           
             
         end
+        
+        % method :: renderWidgets
+        %  input :: class object
+        % action :: initializes widget object
+        function obj = renderWidgets(obj)
+            
+            % start FolderBrowser
+            obj.widget_FolderBrowser = WidgetFolderBrowser(...
+                'Parent', obj.ui_panel_FolderBrowser,...
+                'Extension', '*.lsm');
+            
+            % start ImageBrowser
+            obj.widget_ImageBrowser = WidgetImageBrowser(...
+                'Parent', obj.ui_panel_ImageBrowser);
+            
+            
+        end
+        
+        
         
         % method :: initWidgetNeuroTree
         %  input :: class object
@@ -217,7 +251,7 @@
             
             % evoke load method in WidgetImageBrowser
             obj.file = obj.widget_FolderBrowser.list{obj.widget_FolderBrowser.index};
-            obj.widget_ImageBrowser.loadImage(obj.file);
+            obj.widget_ImageBrowser.updateFileName(obj.file);
             
         end
         

@@ -11,6 +11,7 @@ classdef WidgetImageBrowser < handle
     %    readLSMInfo.m
     %    readLSMImage.m
     %    uiGridLayout.m
+    %    uiAlignText.m
     %
     % Georgi Tushev
     % sciclist@brain.mpg.de
@@ -19,15 +20,14 @@ classdef WidgetImageBrowser < handle
     
     properties
         
-        indexChannel
-        indexStack
-        fileName
-        metaData
-        image
+        file
         
     end
     
     properties (Access = public, Hidden = true)
+        
+        image
+        info
         
         %%% --- image figure handlers --- %%%
         ih_figure
@@ -38,9 +38,13 @@ classdef WidgetImageBrowser < handle
     
     properties (Access = private, Hidden = true)
         
+        %%% --- state properties --- %%%
+        indexChannel
+        indexStack
+        span
+        
         %%% --- ui handlers --- %%%
         ui_parent
-        ui_panel
         
         ui_pushButton_PrevChannel
         ui_pushButton_NextChannel
@@ -58,8 +62,10 @@ classdef WidgetImageBrowser < handle
     
     properties (Constant = true, Access = private, Hidden = true)
         
-        BORDER_WIDTH = 0.015;
-        BORDER_HEIGHT = 0.015;
+        GUI_WINDOW_POSITION = [1, 1, 250, 130];
+        BORDER_GAP = [2, 2];
+        BACKGROUND_COLOR = [1, 1, 1]; % WHITE COLOR
+        PUSHBUTTON_SIZE = [26, 90];
         
     end
     
@@ -78,28 +84,42 @@ classdef WidgetImageBrowser < handle
             parserObj = inputParser;
             addParameter(parserObj, 'Parent', [], @isgraphics);
             addParameter(parserObj, 'FileName', [], @ischar);
-            addParameter(parserObj, 'Axes', [], @isgraphics);
             parse(parserObj, varargin{:});
             
             if isempty(parserObj.Results.Parent)
-                obj.ui_parent = figure;
+                
+                obj.ui_parent = figure(...
+                    'Visible', 'on',...
+                    'Tag', 'hFolderBrowser',...
+                    'Name', 'FolderBrowser',...
+                    'MenuBar', 'none',...
+                    'ToolBar', 'none',...
+                    'NumberTitle', 'off',...
+                    'Color', obj.BACKGROUND_COLOR,...
+                    'Resize', 'off',...
+                    'Units', 'pixels',...
+                    'Position', obj.GUI_WINDOW_POSITION,...
+                    'CloseRequestFcn', @obj.fcnCallback_CloseUIWindow);
+                movegui(obj.ui_parent, 'northwest');
+                
             else
                 obj.ui_parent = parserObj.Results.Parent;
             end
-            obj.fileName = parserObj.Results.FileName;
             
+            % set filename
+            obj.file = parserObj.Results.FileName;
             
             % set defaults
+            obj.image = [];
+            obj.info = [];
             obj.indexChannel = 1;
             obj.indexStack = 1;
             
             % render user interface
             obj.renderUI();
             
-            % if file is provided
-            if ~isempty(obj.fileName)
-                obj.loadImage();
-            end
+            % render image
+            obj.renderImage();
             
         end
         
@@ -121,163 +141,313 @@ classdef WidgetImageBrowser < handle
         % action :: render user interface
         function obj = renderUI(obj)
             
-            obj.ui_panel = uipanel(...
+            obj.ui_text_ImageResolution = uicontrol(...
                 'Parent', obj.ui_parent,...
-                'BorderType', 'none',...
+                'Style', 'text',...
+                'String', 'load image',...
+                'FontSize', 8,...
                 'BackgroundColor', obj.getParentColor(),...
-                'Unit', 'normalized',...
-                'Position', [0,0,1,1]);
+                'Units', 'pixels',...
+                'Position', uiGridLayout('Parent', obj.ui_parent,...
+                                         'Grid', [4, 4],...
+                                         'Gap', obj.BORDER_GAP,...
+                                         'VerticalSpan', 1,...
+                                         'HorizontalSpan', 1:4));
+            uiAlignText(obj.ui_text_ImageResolution, 'center');
+            
             
             obj.ui_text_ChannelCounter = uicontrol(...
-                'Parent', obj.ui_panel,...
+                'Parent', obj.ui_parent,...
                 'Style', 'text',...
                 'String', 'channel 0 / 0',...
                 'BackgroundColor', obj.getParentColor(),...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([4, 4],...
-                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
-                                         1, 1:2));
+                'Units', 'pixels',...
+                'Position', uiGridLayout('Parent', obj.ui_parent,...
+                                         'Grid', [4, 4],...
+                                         'Gap', obj.BORDER_GAP,...
+                                         'VerticalSpan', 2,...
+                                         'HorizontalSpan', 1:2));
+            uiAlignText(obj.ui_text_ChannelCounter, 'center');
+            
             
             obj.ui_pushButton_PrevChannel = uicontrol(...
-                'Parent', obj.ui_panel,...
+                'Parent', obj.ui_parent,...
                 'Style', 'PushButton',...
                 'String', '<<',...
                 'Enable', 'off',...
-                'Callback', @obj.fcnCallback_PrevChannel,...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([4, 4],...
-                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
-                                         1, 3));
+                'Callback', @obj.fcnCallback_UpdateImage,...
+                'Units', 'pixels',...
+                'Position', uiGridLayout('Parent', obj.ui_parent,...
+                                         'Grid', [4, 4],...
+                                         'Gap', obj.BORDER_GAP,...
+                                         'VerticalSpan', 2,...
+                                         'HorizontalSpan', 3,...
+                                         'MaximumHeight', obj.PUSHBUTTON_SIZE(1),...
+                                         'MaximumWidth', obj.PUSHBUTTON_SIZE(2),...
+                                         'Anchor', 'center'));
             
             obj.ui_pushButton_NextChannel = uicontrol(...
-                'Parent', obj.ui_panel,...
+                'Parent', obj.ui_parent,...
                 'Style', 'PushButton',...
                 'String', '>>',...
                 'Enable', 'off',...
-                'Callback', @obj.fcnCallback_NextChannel,...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([4, 4],...
-                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
-                                         1, 4));
+                'Callback', @obj.fcnCallback_UpdateImage,...
+                'Units', 'pixels',...
+                'Position', uiGridLayout('Parent', obj.ui_parent,...
+                                         'Grid', [4, 4],...
+                                         'Gap', obj.BORDER_GAP,...
+                                         'VerticalSpan', 2,...
+                                         'HorizontalSpan', 4,...
+                                         'MaximumHeight', obj.PUSHBUTTON_SIZE(1),...
+                                         'MaximumWidth', obj.PUSHBUTTON_SIZE(2),...
+                                         'Anchor', 'center'));
             
             obj.ui_text_StackCounter = uicontrol(...
-                'Parent', obj.ui_panel,...
+                'Parent', obj.ui_parent,...
                 'Style', 'text',...
                 'String', 'stack 0 / 0',...
                 'BackgroundColor', obj.getParentColor(),...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([4, 4],...
-                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
-                                         2, 1:2));
+                'Units', 'pixels',...
+                'Position', uiGridLayout('Parent', obj.ui_parent,...
+                                         'Grid', [4, 4],...
+                                         'Gap', obj.BORDER_GAP,...
+                                         'VerticalSpan', 3,...
+                                         'HorizontalSpan', 1:2));
+            uiAlignText(obj.ui_text_ChannelCounter, 'center');
             
             obj.ui_pushButton_PrevStack = uicontrol(...
-                'Parent', obj.ui_panel,...
+                'Parent', obj.ui_parent,...
                 'Style', 'PushButton',...
                 'String', '<<',...
                 'Enable', 'off',...
-                'Callback', @obj.fcnCallback_PrevStack,...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([4, 4],...
-                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
-                                         2, 3));
+                'Callback', @obj.fcnCallback_UpdateImage,...
+                'Units', 'pixels',...
+                'Position', uiGridLayout('Parent', obj.ui_parent,...
+                                         'Grid', [4, 4],...
+                                         'Gap', obj.BORDER_GAP,...
+                                         'VerticalSpan', 3,...
+                                         'HorizontalSpan', 3,...
+                                         'MaximumHeight', obj.PUSHBUTTON_SIZE(1),...
+                                         'MaximumWidth', obj.PUSHBUTTON_SIZE(2),...
+                                         'Anchor', 'center'));
             
             obj.ui_pushButton_NextStack = uicontrol(...
-                'Parent', obj.ui_panel,...
+                'Parent', obj.ui_parent,...
                 'Style', 'PushButton',...
                 'String', '>>',...
                 'Enable', 'off',...
-                'Callback', @obj.fcnCallback_NextStack,...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([4, 4],...
-                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
-                                         2, 4));
-            
-            obj.ui_text_ImageResolution = uicontrol(...
-                'Parent', obj.ui_panel,...
-                'Style', 'text',...
-                'String', 'load image',...
-                'BackgroundColor', obj.getParentColor(),...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([4, 4],...
-                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
-                                         3, 1:4));
+                'Callback', @obj.fcnCallback_UpdateImage,...
+                'Units', 'pixels',...
+                'Position', uiGridLayout('Parent', obj.ui_parent,...
+                                         'Grid', [4, 4],...
+                                         'Gap', obj.BORDER_GAP,...
+                                         'VerticalSpan', 3,...
+                                         'HorizontalSpan', 4,...
+                                         'MaximumHeight', obj.PUSHBUTTON_SIZE(1),...
+                                         'MaximumWidth', obj.PUSHBUTTON_SIZE(2),...
+                                         'Anchor', 'center'));
+                                     
             
             obj.ui_pushButton_ApplyProjection = uicontrol(...
-                'Parent', obj.ui_panel,...
+                'Parent', obj.ui_parent,...
                 'Style', 'PushButton',...
                 'String', 'Projection',...
                 'Enable', 'off',...
                 'Callback', @obj.fcnCallback_ApplyProjection,...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([4, 4],...
-                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
-                                         4, 1:2));
+                'Units', 'pixels',...
+                'Position', uiGridLayout('Parent', obj.ui_parent,...
+                                         'Grid', [4, 4],...
+                                         'Gap', obj.BORDER_GAP,...
+                                         'VerticalSpan', 4,...
+                                         'HorizontalSpan', 1:2,...
+                                         'MaximumHeight', obj.PUSHBUTTON_SIZE(1),...
+                                         'MaximumWidth', obj.PUSHBUTTON_SIZE(2),...
+                                         'Anchor', 'center'));
             
             obj.ui_popup_PickProjection = uicontrol(...
-                'Parent', obj.ui_panel,...
+                'Parent', obj.ui_parent,...
                 'Style', 'PopUp',...
                 'String', {'Max';'Sum';'Std'},...
                 'BackgroundColor', obj.getParentColor(),...
+                'Enable', 'off',...
                 'Callback', [],...
-                'Units', 'normalized',...
-                'Position', uiGridLayout([4, 4],...
-                                         [obj.BORDER_HEIGHT, obj.BORDER_WIDTH],...
-                                         4, 3:4));
+                'Units', 'pixels',...
+                'Position', uiGridLayout('Parent', obj.ui_parent,...
+                                         'Grid', [4, 4],...
+                                         'Gap', obj.BORDER_GAP,...
+                                         'VerticalSpan', 4,...
+                                         'HorizontalSpan', 3:4,...
+                                         'MaximumHeight', obj.PUSHBUTTON_SIZE(1),...
+                                         'MaximumWidth', obj.PUSHBUTTON_SIZE(2),...
+                                         'Anchor', 'center'));
             
         end
         
-        
-        % method :: loadImage
-        %  input :: class object, fileName
-        % action :: load image from file name
-        function obj = loadImage(obj, fileName)
-            
-            % assign new file name
-            obj.fileName = fileName;
-            
-            % close previous image
-            if ~isempty(obj.ih_figure) && isgraphics(obj.ih_figure)
-                close(obj.ih_figure);
-            end
-            
-            % read image file meta data
-            obj.metaData = readLSMInfo(obj.fileName);
-            
-            % update new image
-            obj.updateImage();
-            
-        end
-        
-        
-        % method :: updateImage
+        % method :: renderImage
         %  input :: class object
-        % action :: reads and shows image
-        function obj = updateImage(obj)
+        % action :: creates image figure
+        function obj = renderImage(obj)
             
-            % read image
-            obj.readImage();
             
-            % update button enable property
-            obj.updatePushButtons();
+            % calculate screen dimensions
+            sizeScrn = get(0, 'ScreenSize');
+            obj.span = floor(0.8 * min(sizeScrn(3:4)));
             
-            % update user interface
-            obj.updateStatus();
+            % allocate empty image
+            obj.image = 255 .* ones(obj.span, obj.span, 'uint8');
             
-            % show image
-            obj.showImage();
+            % render image handlers
+        	obj.ih_figure = figure(...
+            	'Color','w',...
+                'Visible','off',...
+                'MenuBar','figure',...
+                'ToolBar','figure',...
+                'Name','',...
+                'NumberTitle','off',...
+                'Units','pixels',...
+                'Position', [ 1, 1, obj.span, obj.span],...
+                'CloseRequestFcn', @obj.fcnCallback_CloseImageFigure);
+                   
+            obj.ih_axes = axes(...
+                'Parent', obj.ih_figure,...
+                'Units','normalized',...
+                'XTick',[],...
+                'YTick',[],...
+                'Position',[0,0,1,1]);
+                
+            obj.ih_image = imshow(...
+                obj.image,[],...
+                'Parent', obj.ih_axes,...
+                'Border','tight',...
+                'InitialMagnification','fit');
+            
+            % update position
+            movegui(obj.ih_figure, 'north');
             
         end
         
-        % method :: readImage
+        % method :: resizeImageFigure
         %  input :: class object
-        % action :: read image from current name
-        function obj = readImage(obj)
+        % action :: adapt image figure to new image dimensions
+        function obj = resizeImageFigure(obj)
             
-            % read image
-            obj.image = readLSMImage(obj.fileName,...
-                                     obj.metaData,...
+            % re-render image handler
+            obj.ih_image = imshow(...
+                obj.image, [],...
+                'Parent', obj.ih_axes,...
+                'Border', 'tight',...
+                'InitialMagnification', 'fit');
+            
+            set(obj.ih_figure, 'Visible', 'on');
+            
+            % notify that image is shown
+            notify(obj, 'event_ImageBrowser_Show');
+            
+        end
+        % method :: readImageInfo
+        %  input :: class object
+        % action :: reads image meta data
+        function obj = readImageInfo(obj)
+            
+            obj.info = readLSMInfo(obj.file);
+            
+        end
+        
+        % method :: readImageCData
+        %  input :: class object
+        % action :: reads image pixel data
+        function obj = readImageCData(obj)
+            
+            obj.image = readLSMImage(obj.file,...
+                                     obj.info,...
                                      obj.indexStack,...
                                      obj.indexChannel);
+                                 
+        end
+        
+        % method :: updateFileName
+        %  input :: class object, fileName
+        % action :: update file name and image figure
+        function obj = updateFileName(obj, fileName)
+            
+            % set new file name
+            obj.file = fileName;
+            [~, name] = fileparts(obj.file);
+            set(obj.ih_figure, 'Name', name);
+            
+            % read image info
+            obj.readImageInfo();
+            
+            % set default indexes
+            obj.indexStack = 1;
+            obj.indexChannel = 1;
+            
+            % read current image
+            obj.readImageCData();
+            
+            % resize image figure
+            obj.resizeImageFigure();
+            
+            % enable button group
+            obj.enableButtonGroup();
+            
+            % update status
+            obj.updateStatus();
+            
+        end
+        
+        % method :: updateCData
+        %  input :: class object
+        % action :: update image pixel data
+        function obj = updateCData(obj)
+            
+            % update CData
+            set(obj.ih_image, 'CData', obj.image);
+            
+            % update figure visibility
+            set(obj.ih_figure, 'Visible', 'on');
+            
+            % notify that image is shown
+            notify(obj, 'event_ImageBrowser_Show');
+            
+        end
+        
+        
+        % method :: enableButtonGroup
+        %  input :: class object
+        % action :: update button group
+        function obj = enableButtonGroup(obj)
+            
+            % update stack buttons callbacks
+            if obj.info.stacks == 1
+                
+                set(obj.ui_pushButton_PrevStack, 'Enable', 'off');
+                set(obj.ui_pushButton_NextStack, 'Enable', 'off');
+                set(obj.ui_pushButton_ApplyProjection, 'Enable', 'off');
+                set(obj.ui_popup_PickProjection, 'Enable', 'off');
+                
+            else
+                
+                set(obj.ui_pushButton_PrevStack, 'Enable','on');
+                set(obj.ui_pushButton_NextStack, 'Enable','on');
+                set(obj.ui_pushButton_ApplyProjection, 'Enable','on');
+                set(obj.ui_popup_PickProjection, 'Enable', 'on');
+                
+            end
+            
+            % update channel buttons callbacks
+            if obj.info.channels == 1
+                
+                set(obj.ui_pushButton_PrevChannel, 'Enable', 'off');
+                set(obj.ui_pushButton_NextChannel, 'Enable', 'off');
+                
+            else
+                
+                set(obj.ui_pushButton_PrevChannel, 'Enable', 'on');
+                set(obj.ui_pushButton_NextChannel, 'Enable', 'on');
+                
+            end
+            
         end
         
         
@@ -289,109 +459,24 @@ classdef WidgetImageBrowser < handle
             % update meta data message
             set(obj.ui_text_ImageResolution,...
                 'String',sprintf('%d bits, HxW %d x %d (%.2f x %.2f um), intensity [%d, %d]',...
-                obj.metaData.bitsPerSample,...
-                obj.metaData.height,...
-                obj.metaData.width,...
-                obj.metaData.height * obj.metaData.yResolution,...
-                obj.metaData.width * obj.metaData.xResolution,...
+                obj.info.bitsPerSample,...
+                obj.info.height,...
+                obj.info.width,...
+                obj.info.height * obj.info.yResolution,...
+                obj.info.width * obj.info.xResolution,...
                 min(obj.image(:)),...
                 max(obj.image(:))));
             
             set(obj.ui_text_ChannelCounter,...
                 'String',sprintf('channel %d / %d',...
-                obj.indexChannel, obj.metaData.channels));
+                obj.indexChannel, obj.info.channels));
             
             set(obj.ui_text_StackCounter,...
                 'String',sprintf('stack %d / %d',...
-                obj.indexStack, obj.metaData.stacks));
+                obj.indexStack, obj.info.stacks));
             
         end
         
-        
-        % method :: updatePushButtons
-        %  input :: class object
-        % action :: update status message
-        function obj = updatePushButtons(obj)
-            
-            % update stack buttons callbacks
-            if obj.metaData.stacks == 1
-                set(obj.ui_pushButton_PrevStack,'Enable','off');
-                set(obj.ui_pushButton_NextStack,'Enable','off');
-                set(obj.ui_pushButton_ApplyProjection,'Enable','off');
-            else
-                set(obj.ui_pushButton_PrevStack,'Enable','on');
-                set(obj.ui_pushButton_NextStack,'Enable','on');
-                set(obj.ui_pushButton_ApplyProjection,'Enable','on');
-            end
-            
-            % update channel buttons callbacks
-            if obj.metaData.channels == 1
-                set(obj.ui_pushButton_PrevChannel,'Enable','off');
-                set(obj.ui_pushButton_NextChannel,'Enable','off');
-            else
-                set(obj.ui_pushButton_PrevChannel,'Enable','on');
-                set(obj.ui_pushButton_NextChannel,'Enable','on');
-            end
-            
-        end
-        
-        % method :: showImage
-        %  input :: class object
-        % action :: render image on figure
-        function obj = showImage(obj)
-            
-            % create new axes
-            if isempty(obj.ih_axes) || ~isgraphics(obj.ih_axes)
-                
-                % calculate figure resize ratio
-                sizeImage = [obj.metaData.height, obj.metaData.width];
-                sizeScrn = get(0, 'ScreenSize');
-                ratioResize = floor(100*0.8*min(sizeScrn(3:4))/max(sizeImage(1:2)))/100;
-                if ratioResize > 1
-                    ratioResize = 1;
-                end
-                
-                % calculate figure positions
-                figW = ceil(sizeImage(2) * ratioResize);
-                figH = ceil(sizeImage(1) * ratioResize);
-                figX = round(0.5*(sizeScrn(3) - figW));
-                figY = sizeScrn(4) - figH;
-                
-                obj.ih_figure = figure(...
-                       'Color','w',...
-                       'Visible','on',...
-                       'MenuBar','none',...
-                       'ToolBar','none',...
-                       'Name','',...
-                       'NumberTitle','off',...
-                       'Units','pixels',...
-                       'Position', [figX, figY, figW, figH],...
-                       'CloseRequestFcn', @obj.fcnCallback_CloseFigure);
-                   
-                obj.ih_axes = axes(...
-                    'Parent', obj.ih_figure,...
-                    'Units','normalized',...
-                    'XTick',[],...
-                    'YTick',[],...
-                    'Position',[0,0,1,1]);
-                
-                obj.ih_image = imshow(...
-                    obj.image,[],...
-                    'Parent', obj.ih_axes,...
-                    'Border','tight',...
-                    'InitialMagnification','fit');
-                
-            else % update CData of old image
-                
-                set(obj.ih_image,'CData', obj.image);
-                set(obj.ih_figure, 'Visible', 'on');
-                
-            end
-            
-            % notify that image is shown
-            notify(obj, 'event_ImageBrowser_Show');
-            
-        end
         
         
         
@@ -399,10 +484,29 @@ classdef WidgetImageBrowser < handle
         %%% --- CALLBACK FUNCTIONS --- %%%
         %%% -------------------------- %%%
         
-        % callback :: CloseFigure
-        %    event :: on close request
+        % callback :: CloseUIWindow
+        %    event :: on close UI window request
+        %   action :: class destructor
+        function obj = fcnCallback_CloseUIWindow(obj, ~, ~)
+            
+            % check if image figure exists
+            if isgraphics(obj.ih_figure, 'figure')
+                delete(obj.ih_figure);
+            end
+            
+            % check if parent is figure or was inherit
+            if isgraphics(obj.ui_parent, 'figure')
+                delete(obj.ui_parent);
+            end
+            
+            delete(obj);
+        end
+        
+        
+        % callback :: CloseImageWindow
+        %    event :: on close image request
         %   action :: dispose image figure
-        function obj = fcnCallback_CloseFigure(obj, ~, ~)
+        function obj = fcnCallback_CloseImageFigure(obj, ~, ~)
             
             % hide figure
             set(obj.ih_figure, 'Visible', 'off');
@@ -412,52 +516,52 @@ classdef WidgetImageBrowser < handle
             
         end
         
-        
-        % callback :: PrevChannel
-        %    event :: on PrevChannel button click
-        %   action :: decrement channel index
-        function obj = fcnCallback_PrevChannel(obj, ~, ~)
-            obj.indexChannel = obj.indexChannel - 1;
-            if (obj.indexChannel < 1)
-                obj.indexChannel = obj.metaData.channels;
+        % callback :: UpdateImage
+        %    event :: on browsing button click
+        %   action :: reads and re-render image from file
+        function obj = fcnCallback_UpdateImage(obj, hSrc, ~)
+            
+            % update image index
+            switch hSrc
+                case obj.ui_pushButton_PrevChannel
+                    
+                    obj.indexChannel = obj.indexChannel - 1;
+                    if (obj.indexChannel < 1)
+                        obj.indexChannel = obj.info.channels;
+                    end
+                    
+                case obj.ui_pushButton_NextChannel
+                    
+                    obj.indexChannel = obj.indexChannel + 1;
+                    if (obj.indexChannel > obj.info.channels)
+                        obj.indexChannel = 1;
+                    end
+                    
+                case obj.ui_pushButton_PrevStack
+                    
+                    obj.indexStack = obj.indexStack - 1;
+                    if (obj.indexStack < 1)
+                        obj.indexStack = obj.info.stacks;
+                    end
+                    
+                case obj.ui_pushButton_NextStack
+                    
+                    obj.indexStack = obj.indexStack + 1;
+                    if (obj.indexStack > obj.info.stacks)
+                        obj.indexStack = 1;
+                    end
+                    
             end
-            obj.updateImage();
-        end
-        
-        
-        % callback :: NrevChannel
-        %    event :: on NrevChannel button click
-        %   action :: increment channel index
-        function obj = fcnCallback_NextChannel(obj, ~, ~)
-            obj.indexChannel = obj.indexChannel + 1;
-            if (obj.indexChannel > obj.metaData.channels)
-                obj.indexChannel = 1;
-            end
-            obj.updateImage();
-        end
-        
-        
-        % callback :: PrevStack
-        %    event :: on PrevStack button click
-        %   action :: decrement stack index
-        function obj = fcnCallback_PrevStack(obj, ~, ~)
-            obj.indexStack = obj.indexStack - 1;
-            if (obj.indexStack < 1)
-                obj.indexStack = obj.metaData.stacks;
-            end
-            obj.updateImage();
-        end
-        
-        
-        % callback :: NextStack
-        %    event :: on NextStack button click
-        %   action :: increment stack index
-        function obj = fcnCallback_NextStack(obj, ~, ~)
-            obj.indexStack = obj.indexStack + 1;
-            if (obj.indexStack > obj.metaData.stacks)
-                obj.indexStack = 1;
-            end
-            obj.updateImage();
+            
+            % update status
+            obj.updateStatus();
+            
+            % read current image
+            obj.readImageCData();
+            
+            % update CData
+            obj.updateCData();
+            
         end
         
         
@@ -466,28 +570,37 @@ classdef WidgetImageBrowser < handle
         %   action :: generate required image projection
         function obj = fcnCallback_ApplyProjection(obj, ~, ~)
             
+            % update stack index
+            indexStackLast = obj.indexStack;
+            obj.indexStack = (1:obj.info.stacks)';
+            
             % read full stack
-            img = readLSMImage(obj.fileName,...
-                               obj.metaData,...
-                               (1:obj.metaData.stacks)',...
-                               obj.indexChannel);
+            obj.readImageCData();
+            
+            % re-initialize index
+            obj.indexStack = indexStackLast;
+            
             
             % get value from pop up
-            
             switch obj.ui_popup_PickProjection.Value
                 case 1
-                    obj.image = max(img,[],3);
+                    
+                    obj.image = max(obj.image,[],3);
+                    
                 case 2
-                    % fix data range
-                    obj.image = sum(img, 3);
+                    
+                    % rescale
+                    obj.image = im2uint16(sum(obj.image, 3));
                     
                 case 3
-                    % fix data range
-                    obj.image = std(double(img),[],3);
+                    
+                    % rescale
+                    obj.image = im2uint16(std(double(obj.image),[],3));
+                    
             end
             
-            % show image
-            obj.showImage();
+            % update CData
+            obj.updateCData();
              
         end
         
