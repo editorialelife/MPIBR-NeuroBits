@@ -295,14 +295,15 @@ classdef WidgetFolderBrowser < handle
             
         end
         
-        %%% -------------------------- %%%
-        %%% --- CALLBACK FUNCTIONS --- %%%
-        %%% -------------------------- %%%
-        
-        % callback :: CloseUIWindow
-        %    event :: on close UI window request
-        %   action :: class destructor
-        function obj = fcnCallback_CloseUIWindow(obj, ~, ~)
+        % method :: dispose
+        %  input :: class object
+        % action :: class destructor
+        function obj = dispose(obj)
+            
+            % remove grid
+            if isa(obj.ui_grid, 'uiGridLayout')
+                delete(obj.ui_grid);
+            end
             
             % check if parent is figure or was inherit
             if isgraphics(obj.ui_parent, 'figure')
@@ -310,6 +311,19 @@ classdef WidgetFolderBrowser < handle
             end
             
             delete(obj);
+        end
+        
+        %%% -------------------------- %%%
+        %%% --- CALLBACK FUNCTIONS --- %%%
+        %%% -------------------------- %%%
+        
+        % callback :: CloseUIWindow
+        %    event :: on close UI window request
+        %   action :: call class destructor method
+        function obj = fcnCallback_CloseUIWindow(obj, ~, ~)
+            
+            obj.dispose();
+            
         end
         
         

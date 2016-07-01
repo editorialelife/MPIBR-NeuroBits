@@ -70,7 +70,7 @@ classdef WidgetImageBrowser < handle
         PUSHBUTTON_HALFWIDTH = [1, 1, 45, 26];
         BACKGROUND_COLOR = [1, 1, 1]; % WHITE COLOR
         FOREGROUND_COLOR = [0.5, 0.5, 0.5]; % GRAY COLOR
-        FONT_SIZE = 10;
+        FONT_SIZE = 8;
         
     end
     
@@ -148,7 +148,6 @@ classdef WidgetImageBrowser < handle
                 'Parent', obj.ui_parent,...
                 'Title', 'Image Browser',...
                 'TitlePosition', 'lefttop',...
-                'FontSize', obj.FONT_SIZE,...
                 'BorderType', 'line',...
                 'HighlightColor', obj.FOREGROUND_COLOR,...
                 'ForegroundColor', obj.FOREGROUND_COLOR,...
@@ -162,6 +161,7 @@ classdef WidgetImageBrowser < handle
                 'Parent', obj.ui_parent,...
                 'Style', 'text',...
                 'String', 'load image',...
+                'FontSize', obj.FONT_SIZE,...
                 'BackgroundColor', obj.BACKGROUND_COLOR,...
                 'Units', 'pixels',...
                 'Position', obj.ui_grid.getGrid('VIndex', 1, 'HIndex', 1:4));
@@ -482,7 +482,30 @@ classdef WidgetImageBrowser < handle
             
         end
         
-        
+        % method :: dispose
+        %  input :: class object
+        % action :: class destructor
+        function obj = dispose(obj)
+            
+            % check if image figure exists
+            if isgraphics(obj.ih_figure, 'figure')
+                delete(obj.ih_figure);
+            end
+            
+            % remove grid
+            if isa(obj.ui_grid, 'uiGridLayout')
+                delete(obj.ui_grid);
+            end
+            
+            % check if parent is figure or was inherit
+            if isgraphics(obj.ui_parent, 'figure')
+                delete(obj.ui_parent);
+            end
+            
+            % dispose class object
+            delete(obj);
+            
+        end
         
         
         %%% -------------------------- %%%
@@ -491,20 +514,11 @@ classdef WidgetImageBrowser < handle
         
         % callback :: CloseUIWindow
         %    event :: on close UI window request
-        %   action :: class destructor
+        %   action :: call class destructor method
         function obj = fcnCallback_CloseUIWindow(obj, ~, ~)
             
-            % check if image figure exists
-            if isgraphics(obj.ih_figure, 'figure')
-                delete(obj.ih_figure);
-            end
+            obj.dispose();
             
-            % check if parent is figure or was inherit
-            if isgraphics(obj.ui_parent, 'figure')
-                delete(obj.ui_parent);
-            end
-            
-            delete(obj);
         end
         
         

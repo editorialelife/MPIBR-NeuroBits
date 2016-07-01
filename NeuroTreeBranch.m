@@ -23,9 +23,10 @@ classdef NeuroTreeBranch < handle
         nodes
         span
         pixels
+        range
     end
     
-    properties (Access = private)
+    properties (Access = private, Hidden = true)
         ui_parent
         ui_point
         ui_line
@@ -35,7 +36,8 @@ classdef NeuroTreeBranch < handle
     properties(Constant = true, Hidden = true)
         
         LINE_WIDTH = 4;
-        LINE_ALPHA = 0.5;
+        ALPHALINE_ON = 0.5;
+        ALPHALINE_OFF = 1;
         MARKER_SIZE = 5;
         FONT_SIZE = 10;
         DEFAULT_NODE = [0,0];
@@ -58,12 +60,11 @@ classdef NeuroTreeBranch < handle
                   
     end
     
+    %%% --- constructor / destructor --- %%%
     methods
         
-        % method :: NeuroTreeBranch
-        %  input :: varargin
-        % action :: class constructor
         function obj = NeuroTreeBranch(varargin)
+            %NEUROTREEBRANCH class constructor
             
             % use parser
             parserObj = inputParser;
@@ -71,6 +72,8 @@ classdef NeuroTreeBranch < handle
             % define inputs
             addParameter(parserObj, 'Index', [], @isIndex);
             addParameter(parserObj, 'Depth', [], @isDepth);
+            addParameter(parserObj, 'Height', [], @isnumeric);
+            addParameter(parserObj, 'Width', [], @isnumeric);
             addParameter(parserObj, 'Parent', [], @(x) isgraphics(x, 'Axes'));
             
             % parse varargin
@@ -80,25 +83,24 @@ classdef NeuroTreeBranch < handle
             obj.index = parserObj.Results.Index;
             obj.depth = str2double(parserObj.Results.Depth);
             obj.ui_parent = parserObj.Results.Parent;
+            obj.range = [parserObj.Results.Height, parserObj.Results.Width];
             
-            % allocateBranch
-            obj.allocateBranch();
+            % default values
+            obj.default();
             
         end
         
-        % method :: allocateBranch
-        %  input :: class object
-        % action :: set default properties
-        function obj = allocateBranch(obj)
+        function obj = default(obj)
+            %DEFAULT set properties default values
             
-            % set defaults
             obj.tag = 0;
             obj.parent = [];
             obj.children = [];
             obj.nodes = obj.DEFAULT_NODE;
             obj.span = 0;
+            obj.pixels = [];
             
-            % set graphics handles
+            % create hidden handles
             hold(obj.ui_parent, 'on');
             
             obj.ui_point = plot(obj.nodes(:,1), obj.nodes(:,2), '*',...
@@ -112,7 +114,7 @@ classdef NeuroTreeBranch < handle
                                 'Color', obj.COLOR_TABLE(obj.depth + 1, :),...
                                 'Parent', obj.ui_parent,...
                                 'Visible', 'off');
-            obj.ui_line.Color(4) = obj.LINE_ALPHA;
+            obj.ui_line.Color(4) = obj.ALPHALINE_ON;
             
             obj.ui_label = text(obj.nodes(:,1), obj.nodes(:,2), '',...
                                 'FontSize', obj.FONT_SIZE,...
@@ -121,6 +123,9 @@ classdef NeuroTreeBranch < handle
                             
             hold(obj.ui_parent, 'off');
             
+            % reorder uistack
+            % points need to be on top of line to retrieve node
+            uistack(obj.ui_point, 'top');
             
             % integrate current branch index in user data
             set(obj.ui_point, 'UserData', obj.index);
@@ -130,180 +135,8 @@ classdef NeuroTreeBranch < handle
         end
         
         
-        % method :: extendBranch
-        %  input :: class object, indexNode, click
-        % action :: add node to branch
-        function obj = extendBranch(obj, indexNode, click)
-            
-            % add click to nodes
-            obj.nodes(indexNode,:) = click;
-            
-            % update point
-            obj.ui_point.XData(indexNode) = click(1);
-            obj.ui_point.YData(indexNode) = click(2);
-            set(obj.ui_point, 'Visible', 'on');
-            
-            % update line
-            obj.ui_line.XData(indexNode) = click(1);
-            obj.ui_line.YData(indexNode) = click(2);
-            set(obj.ui_line, 'Visible', 'on');
-            
-        end
-        
-        % method :: stretchBranch
-        %  input :: class object, indexNode, click
-        % action :: elongate branch without adding a node
-        function obj = stretchBranch(obj, indexNode, click)
-            
-            % update line
-            obj.ui_line.XData(indexNode) = click(1);
-            obj.ui_line.YData(indexNode) = click(2);
-            
-        end
-        
-        % method :: completeBranch
-        %  input :: class object, height, width
-        % action :: complete branch and calculate length and pixels
-        function obj = completeBranch(obj, height, width)
-            
-            % reorder uistack
-            % points need to be on top of line to retrieve node
-            uistack(obj.ui_point, 'up');
-            
-            % closed polygon at root
-            if obj.depth == 0
-                
-                % update nodes
-                obj.nodes = cat(1, obj.nodes, obj.nodes(1,:));
-                
-                % update line
-                obj.ui_line.XData = cat(2, obj.ui_line.XData, obj.ui_line.XData(1));
-                obj.ui_line.YData = cat(2, obj.ui_line.YData, obj.ui_line.YData(1));
-            end
-            
-            % set branch length
-            obj.measureBranch();
-            
-            % create pixel array
-            obj.nodesToPixels(height, width);
-            
-        end
-        
-        
-        % method :: updateBranch
-        %  input :: class object, deltaClick
-        % action :: update branch ui components
-        function obj = updateBranch(obj, deltaClick)
-            
-            % update nodes
-            obj.nodes = bsxfun(@plus, obj.nodes, deltaClick);
-            
-            % update line
-            obj.ui_line.XData = obj.ui_line.XData + deltaClick(1);
-            obj.ui_line.YData = obj.ui_line.YData + deltaClick(2);
-            
-            % update points
-            obj.ui_point.XData = obj.ui_point.XData + deltaClick(1);
-            obj.ui_point.YData = obj.ui_point.YData + deltaClick(2);
-            
-        end
-        
-        % method :: updateNode
-        %  input :: class object, indexNode, deltaClick
-        % action :: update given node in ui components
-        function obj = updateNode(obj, indexNode, deltaClick)
-            
-            % update nodes
-            obj.nodes(indexNode,:) = deltaClick;
-            
-            % update line
-            obj.ui_line.XData(indexNode) = deltaClick(1);
-            obj.ui_line.YData(indexNode) = deltaClick(2);
-            
-            % update points
-            obj.ui_point.XData(indexNode) = deltaClick(1);
-            obj.ui_point.YData(indexNode) = deltaClick(2);
-            
-        end
-        
-        % method :: selectBranch
-        %  input :: class object
-        % action :: highlight branch ui
-        function obj = selectBranch(obj)
-            
-            % remove line Alpha property
-            obj.ui_line.Color(4) = 1;
-            
-            % double the size of marker size
-            obj.ui_point.MarkerSize = 2 * obj.MARKER_SIZE;
-            
-        end
-        
-        % method :: deselectBranch
-        %  input :: class object
-        % action :: highlight branch ui
-        function obj = deselectBranch(obj)
-            
-            % revert line Alpha value
-            obj.ui_line.Color(4) = obj.LINE_ALPHA;
-            
-            % revert point marker size
-            obj.ui_point.MarkerSize = obj.MARKER_SIZE;
-            
-        end
-        
-        % method :: measureBranch
-        %  input :: class object
-        % action :: measure length of current branch
-        function obj = measureBranch(obj)
-            
-            diffLength = sqrt(sum(diff(obj.nodes, [], 1).^2, 2));
-            obj.span = sum(diffLength);
-            
-        end
-        
-        % method :: reindexBranch
-        %  input :: class object, indexNew
-        % action :: reindex current branch index
-        function obj = reindexBranch(obj, indexBranch)
-            
-            % update index
-            obj.index = indexBranch;
-            
-            % update UserData property in ui elements
-            set(obj.ui_point, 'UserData', obj.index);
-            set(obj.ui_line, 'UserData', obj.index);
-            set(obj.ui_label, 'UserData', obj.index);
-            
-            % destroy available parent/children annotation
-            obj.tag = [];
-            obj.parent = [];
-            obj.children  = [];
-            
-        end
-        
-        % method :: disposeNode
-        %  input :: calss object, indexNode
-        % action :: remove node  from array
-        function obj = disposeNode(obj, indexNode)
-            
-            % update nodes
-            obj.nodes(indexNode, :) = [];
-            
-            % update point
-            obj.ui_point.XData(indexNode) = [];
-            obj.ui_point.YData(indexNode) = [];
-            
-            % update line
-            obj.ui_line.XData(indexNode) = [];
-            obj.ui_line.YData(indexNode) = [];
-                
-        end
-        
-        % method :: disposeBranch
-        %  input :: class object
-        % action :: dispose ui elements of current branch
-        function obj = disposeBranch(obj)
+        function obj = dispose(obj)
+            %DISPOSE class destructor
             
             delete(obj.ui_point);
             delete(obj.ui_line);
@@ -312,89 +145,95 @@ classdef NeuroTreeBranch < handle
             
         end
         
+    end % constructor / destructor
+    
+    
+    %%% --- modify branches --- %%%
+    methods
         
-        % method :: linkParent
-        %  input :: class object, listNodes
-        %  input :: depthPerNode, minTreeDepth, indexBranchPerNode
-        % action :: finds closest parent node
-        function obj = linkParent(obj, listNodes, depthPerNode, minTreeDepth, indexBranchPerNode)
+        function obj = stretch(obj, indexNode, point)
+            %STRETCH extends branch without appending node
             
-            % check branch order
-            if obj.depth == minTreeDepth
-                
-                obj.parent = 0;
-                
-            else
-                
-                parentNodesIndex = depthPerNode == (obj.depth - 1);
-                parentNodes = listNodes(parentNodesIndex, :);
-                parentIndex = indexBranchPerNode(parentNodesIndex);
-                
-                
-                distNodes = sqrt(sum(bsxfun(@minus, parentNodes, obj.nodes(1,:)).^2, 2));
-                [minDistNodes, indexMinDistNodes] = min(distNodes);
-                
-                % add parent index
-                if minDistNodes <= obj.BRANCH_POINT_RADIUS
-                    obj.parent = parentIndex(indexMinDistNodes);
-                end
-                
-            end
-            
-        end
-        
-        % method :: linkChildren
-        %  input :: class object, listNodes
-        %  input :: depthPerNode, maxTreeDepth, indexBranchPerNode
-        % action :: finds closest child node
-        function obj = linkChildren(obj, listNodes, depthPerNode, maxTreeDepth, indexBranchPerNode)
-            
-            % check branch order
-            if obj.depth == maxTreeDepth
-                
-                obj.children = 0;
-                
-            else
-                
-                childrenNodesIndex = depthPerNode == (obj.depth + 1);
-                childrenNodes = listNodes(childrenNodesIndex, :);
-                childrenIndex = indexBranchPerNode(childrenNodesIndex);
-                
-                countNodes = size(obj.nodes, 1);
-                
-                % for closed polygon nodes check children around each node
-                % else just check children around last node
-                if obj.depth == 0
-                    k = 1;
-                else
-                    k = countNodes;
-                end
-                
-                % loop through required nodes
-                tempChildren = [];
-                for n = k : countNodes
-                    
-                    distNodes = sqrt(sum(bsxfun(@minus, childrenNodes, obj.nodes(k,:)).^2, 2));
-                    
-                    % add parent index
-                    if any(distNodes <= obj.BRANCH_POINT_RADIUS)
-                        tempChildren = cat(1, tempChildren, childrenIndex(distNodes <= obj.BRANCH_POINT_RADIUS));
-                    end
-                
-                end
-                
-                obj.children = unique(tempChildren);
-                
-                
-            end
+            % update line handler Data
+            obj.ui_line.XData(indexNode) = point(1);
+            obj.ui_line.YData(indexNode) = point(2);
             
         end
         
         
-        % method :: nodesToPixels
-        %  input :: class object, height, width
-        % action :: takes nodes and return pixels
-        function obj = nodesToPixels(obj, height, width)
+        function obj = extend(obj, indexNode, point)
+            %EXTEND appends node to the branch
+            
+            % add point to nodes
+            obj.nodes(indexNode, :) = point;
+            
+            % update point handler data
+            obj.ui_point.XData(indexNode) = point(1);
+            obj.ui_point.YData(indexNode) = point(2);
+            set(obj.ui_point, 'Visible', 'on');
+            
+            % update line handler data
+            obj.ui_line.XData(indexNode) = point(1);
+            obj.ui_line.YData(indexNode) = point(2);
+            set(obj.ui_line, 'Visible', 'on');
+            
+        end
+        
+        
+        function obj = move(obj, offset)
+            %MOVE update branch position with given offset
+            
+            % update nodes
+            obj.nodes = bsxfun(@plus, obj.nodes, offset);
+            
+            % update line
+            obj.ui_line.XData = obj.ui_line.XData + offset(1);
+            obj.ui_line.YData = obj.ui_line.YData + offset(2);
+            
+            % update points
+            obj.ui_point.XData = obj.ui_point.XData + offset(1);
+            obj.ui_point.YData = obj.ui_point.YData + offset(2);
+            
+        end
+        
+        
+        function obj = complete(obj, nhood)
+            %COMPLETE complete branch drawing
+            % calculates branch length, pixels and neighbours
+            
+            % close polygon if depth is root
+            if obj.depth == 0
+                
+                % update nodes
+                obj.nodes = cat(1, obj.nodes, obj.nodes(1, :));
+                
+                % update line
+                obj.ui_line.XData = cat(2, obj.ui_line.XData, obj.ui_line.XData(1));
+                obj.ui_line.YData = cat(2, obj.ui_line.YData, obj.ui_line.YData(1));
+            end
+            
+            % measure branch length
+            obj.measure();
+            
+            % interpolate branch nodes to pixels
+            %obj.interpolate();
+            
+            % link relatives
+            %obj.link();
+            
+        end
+        
+        
+        function obj = measure(obj)
+            %MEASURE find span of branch
+            
+            dist = sqrt(sum(diff(obj.nodes, [], 1) .^ 2, 2));
+            obj.span = round(sum(dist));
+            
+        end
+        
+        function obj = interpolate(obj)
+            %INTERPOLATE convert nodes to pixels
             
             % calculate cumulative pixel distance along line
             dNodes = sqrt(sum(diff(obj.nodes, [], 1).^2, 2));
@@ -406,44 +245,79 @@ classdef NeuroTreeBranch < handle
             sampleNodes = round(sampleNodes);
             
             % return pixel indexes
-            obj.pixels = sub2ind([height, width], sampleNodes(:,2), sampleNodes(:,1));
+            obj.pixels = sub2ind(obj.range, sampleNodes(:,2), sampleNodes(:,1));
             
         end
         
-        % method :: exportBranch
-        %  input :: class object
-        % action :: export branch
-        function obj = exportBranch(obj, fpWrite)
+        
+        function obj = tweak(obj, indexNode, point)
+            %TWEAK updates node point
             
-            fprintf(fpWrite, '[branch=%d]\n', obj.index);
-            fprintf(fpWrite, 'depth=%d\n', obj.depth);
-            fprintf(fpWrite, 'tag=%d\n', obj.tag);
-            fprintf(fpWrite, 'parent=%d\n', obj.parent);
-            childrenList = sprintf('%d,', obj.children);
-            childrenList(end) = [];
-            fprintf(fpWrite, 'children=%s\n', childrenList);
-            fprintf(fpWrite, 'span=%.2f\n', obj.span);
-            fprintf(fpWrite, 'nodes=%d\n', size(obj.nodes, 1));
-            xPosList = sprintf('%d,', obj.nodes(:,1));
-            xPosList(end) = [];
-            fprintf(fpWrite, 'x=%s\n', xPosList);
-            yPosList = sprintf('%d,',obj.nodes(:,2));
-            yPosList (end) = [];
-            fprintf(fpWrite, 'y=%s\n', yPosList);
-            fprintf(fpWrite, '\n');
+            % update nodes
+            obj.nodes(indexNode,:) = point;
+            
+            % update line
+            obj.ui_line.XData(indexNode) = point(1);
+            obj.ui_line.YData(indexNode) = point(2);
+            
+            % update points
+            obj.ui_point.XData(indexNode) = point(1);
+            obj.ui_point.YData(indexNode) = point(2);
             
         end
         
-        % method :: getBranchColor
-        %  input :: class object
-        % action :: returns current branch color
-        function value = getBranchColor(obj)
+        
+        function obj = remove(obj, indexNode)
+            %REMOVE removes node from data arrays
+            
+            % update nodes
+            obj.nodes(indexNode, :) = [];
+            
+            % update point
+            obj.ui_point.XData(indexNode) = [];
+            obj.ui_point.YData(indexNode) = [];
+            
+            % update line
+            obj.ui_line.XData(indexNode) = [];
+            obj.ui_line.YData(indexNode) = [];
+            
+        end
+        
+        
+        function obj = select(obj)
+            %SELECT highligh branch ui
+            
+            % remove line Alpha property
+            obj.ui_line.Color(4) = obj.ALPHALINE_OFF;
+            
+            % double the size of marker size
+            obj.ui_point.MarkerSize = 2 * obj.MARKER_SIZE;
+            
+        end
+        
+        
+        function obj = deselect(obj)
+            %DESELECT remove branch ui highlight
+            
+            % revert line Alpha value
+            obj.ui_line.Color(4) = obj.ALPHALINE_ON;
+            
+            % revert point marker size
+            obj.ui_point.MarkerSize = obj.MARKER_SIZE;
+            
+        end
+        
+        
+        function value = color(obj)
+            %COLOR returns current branch color
+            
             value = round(255 .* obj.COLOR_TABLE(obj.depth + 1, :));
+            
         end
         
-    end
-    
+    end % modify branch
 end
+
 
 % parser :: isIndex
 %  input :: parserValue
