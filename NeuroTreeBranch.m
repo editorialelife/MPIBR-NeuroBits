@@ -197,7 +197,7 @@ classdef NeuroTreeBranch < handle
         end
         
         
-        function obj = complete(obj, nhood)
+        function obj = complete(obj)
             %COMPLETE complete branch drawing
             % calculates branch length, pixels and neighbours
             
@@ -212,14 +212,87 @@ classdef NeuroTreeBranch < handle
                 obj.ui_line.YData = cat(2, obj.ui_line.YData, obj.ui_line.YData(1));
             end
             
-            % measure branch length
+        end
+        
+        
+        function obj = replace(obj, indexNode, point)
+            %REPLACE updates node point
+            
+            % update nodes
+            obj.nodes(indexNode,:) = point;
+            
+            % update line
+            obj.ui_line.XData(indexNode) = point(1);
+            obj.ui_line.YData(indexNode) = point(2);
+            
+            % update points
+            obj.ui_point.XData(indexNode) = point(1);
+            obj.ui_point.YData(indexNode) = point(2);
+            
+            % update connected component
+            if (obj.depth == 0) && (indexNode == 1)
+                obj.nodes(end, :) = point;
+                
+                obj.ui_line.XData(end) = point(1);
+                obj.ui_line.YData(end) = point(2);
+            end
+            
+        end
+        
+        
+        
+        function obj = remove(obj, indexNode)
+            %REMOVE removes node from data arrays
+            
+            % update nodes
+            obj.nodes(indexNode, :) = [];
+            
+            % update point
+            obj.ui_point.XData(indexNode) = [];
+            obj.ui_point.YData(indexNode) = [];
+            
+            % update line
+            obj.ui_line.XData(indexNode) = [];
+            obj.ui_line.YData(indexNode) = [];
+            
+        end
+        
+        
+        
+        function obj = select(obj)
+            %SELECT highligh branch ui
+            
+            % remove line Alpha property
+            obj.ui_line.Color(4) = obj.ALPHALINE_OFF;
+            
+            % double the size of marker size
+            obj.ui_point.MarkerSize = 2 * obj.MARKER_SIZE;
+            
+        end
+        
+        
+        function obj = deselect(obj)
+            %DESELECT remove branch ui highlight
+            
+            % revert line Alpha value
+            obj.ui_line.Color(4) = obj.ALPHALINE_ON;
+            
+            % revert point marker size
+            obj.ui_point.MarkerSize = obj.MARKER_SIZE;
+            
+        end
+        
+        
+        function obj = properties(obj, nhood)
+            %PROPERTIES calculates branch properties
+            
+            % measure length
             obj.measure();
             
-            % interpolate branch nodes to pixels
-            %obj.interpolate();
+            % nodes to pixels
+            obj.interpolate();
             
-            % link relatives
-            %obj.link();
+            % link
             
         end
         
@@ -246,64 +319,6 @@ classdef NeuroTreeBranch < handle
             
             % return pixel indexes
             obj.pixels = sub2ind(obj.range, sampleNodes(:,2), sampleNodes(:,1));
-            
-        end
-        
-        
-        function obj = tweak(obj, indexNode, point)
-            %TWEAK updates node point
-            
-            % update nodes
-            obj.nodes(indexNode,:) = point;
-            
-            % update line
-            obj.ui_line.XData(indexNode) = point(1);
-            obj.ui_line.YData(indexNode) = point(2);
-            
-            % update points
-            obj.ui_point.XData(indexNode) = point(1);
-            obj.ui_point.YData(indexNode) = point(2);
-            
-        end
-        
-        
-        function obj = remove(obj, indexNode)
-            %REMOVE removes node from data arrays
-            
-            % update nodes
-            obj.nodes(indexNode, :) = [];
-            
-            % update point
-            obj.ui_point.XData(indexNode) = [];
-            obj.ui_point.YData(indexNode) = [];
-            
-            % update line
-            obj.ui_line.XData(indexNode) = [];
-            obj.ui_line.YData(indexNode) = [];
-            
-        end
-        
-        
-        function obj = select(obj)
-            %SELECT highligh branch ui
-            
-            % remove line Alpha property
-            obj.ui_line.Color(4) = obj.ALPHALINE_OFF;
-            
-            % double the size of marker size
-            obj.ui_point.MarkerSize = 2 * obj.MARKER_SIZE;
-            
-        end
-        
-        
-        function obj = deselect(obj)
-            %DESELECT remove branch ui highlight
-            
-            % revert line Alpha value
-            obj.ui_line.Color(4) = obj.ALPHALINE_ON;
-            
-            % revert point marker size
-            obj.ui_point.MarkerSize = obj.MARKER_SIZE;
             
         end
         
