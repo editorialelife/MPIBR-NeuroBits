@@ -430,6 +430,10 @@ classdef WidgetNeuroTree < handle
             %FCNCALLBACK_LOAD user interface callback function
             % calls class LOAD method
             
+            set(obj.ui_toggleButton_segment, 'String', 'Clear');
+            set(obj.ui_toggleButton_segment, 'Value', 1);
+                
+            obj.segment();
             obj.load();
             
         end
@@ -591,8 +595,43 @@ classdef WidgetNeuroTree < handle
         function obj = load(obj)
             %LOAD load tree file
             
-            % fire get image exent
-            notify(obj, 'event_NeuroTree_GetImage');
+            % choose file to load
+            [fileName, filePath] = uigetfile({'*_neuroTree_*.txt', 'WidgetNeuroTree files'},'Pick a file');
+            
+            % open file to read
+            fpRead = fopen([filePath, fileName], 'r');
+            txt = textscan(fpRead, '%s', 'delimiter', '\n');
+            fclose(fpRead);
+            txt = txt{:};
+            
+            % read dilation
+            idx_txt_dilation = strncmp('# dilation[px]:', txt, 15);
+            obj.dilation = sscanf(txt{idx_txt_dilation},'# dilation[px]: %d');
+            
+            % read nhood
+            idx_txt_nhood = strncmp('# nhood[px]:', txt, 12);
+            obj.nhood = sscanf(txt{idx_txt_nhood},'# nhood[px]: %d');
+            
+            % read branch info
+            idx_txt_branch = strncmp('[', txt, 1);
+            idx_txt_branch = cumsum(idx_txt_branch);
+            branchCount = max(idx_txt_branch);
+            for b = 1 : branchCount
+                
+                obj.tree = cat(1, obj.tree,...
+                              NeuroTreeBranch('Index', b,...
+                                              'Depth', '0',...
+                                              'Height', obj.height,...
+                                              'Width', obj.width,...
+                                              'Parent', obj.ih_axes));
+                obj.tree(b).load(txt(idx_txt_branch == b));
+                
+            end
+            
+            % update user message
+            obj.status(obj.indexBranch, obj.indexNode);
+            
+            
         end
         
         

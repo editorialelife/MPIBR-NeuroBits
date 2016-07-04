@@ -365,6 +365,55 @@ classdef NeuroTreeBranch < handle
             
         end
         
+        function obj = load(obj, vartxt)
+            %LOAD set branch properties from input text
+            
+            % parse text 
+            obj.index = sscanf(vartxt{1}, '[branch=%d]');
+            obj.depth = sscanf(vartxt{2}, 'depth=%d');
+            obj.tag = sscanf(vartxt{3}, 'tag=%d');
+            obj.parent = sscanf(vartxt{4}, 'partent=%d');
+            obj.children = str2double(regexp(vartxt{5},'[\d]+', 'match'))';
+            obj.span = sscanf(vartxt{6}, 'span=%f');
+            % nodeCount = sscanf(vartxt{7}, 'nodes=%d');
+            xData = str2double(regexp(vartxt{8}, '[\d]+', 'match'));
+            yData = str2double(regexp(vartxt{9}, '[\d]+', 'match'));
+            
+            % set ui elements
+            obj.nodes = [xData', yData'];
+            
+            
+            if obj.depth == 0
+                obj.ui_line.XData = cat(2, xData, xData(1));
+                obj.ui_line.YData = cat(2, yData, yData(1));
+            else
+                obj.ui_line.XData = xData;
+                obj.ui_line.YData = yData;
+            end
+            set(obj.ui_line, 'Color', obj.COLOR_TABLE(obj.depth + 1, :));
+            obj.ui_line.Color(4) = obj.ALPHALINE_ON;
+            set(obj.ui_line, 'Visible', 'on');
+            
+            obj.ui_point.XData = xData;
+            obj.ui_point.YData = yData;
+            set(obj.ui_point, 'Color', obj.COLOR_TABLE(obj.depth + 1, :));
+            set(obj.ui_point, 'Visible', 'on');
+            
+            % reorder uistack
+            % points need to be on top of line to retrieve node
+            uistack(obj.ui_point, 'top');
+            
+            % integrate current branch index in user data
+            set(obj.ui_point, 'UserData', obj.index);
+            set(obj.ui_line, 'UserData', obj.index);
+            set(obj.ui_label, 'UserData', obj.index);
+            
+            % call properties
+            obj.properties();
+            
+        end
+        
+        
     end % modify branch
 end
 
