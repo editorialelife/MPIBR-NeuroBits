@@ -564,11 +564,27 @@ classdef WidgetNeuroTree < handle
         
         
         function obj = clear(obj)
-            %CLEAR clean tree and drawing
+        	%CLEAR clean tree and drawing
+            
+            % evoke automatic export
+            %obj.export();
             
             % switch off drawing callbacks
             obj.drawing('off');
             
+            % clear tree
+            if size(obj.tree, 1) > 0
+                
+                % dispose each branch
+                while ~isempty(obj.tree)
+                    obj.tree(1).dispose();
+                    obj.tree(1) = [];
+                end
+                
+                % set default properties
+                obj.default();
+                
+            end
         end
         
         
