@@ -159,11 +159,9 @@
             % start NeuroTree
             obj.widget_NeuroTree = WidgetNeuroTree(...
                 'Parent', obj.ui_panel_NeuroTree);
-            %{
             if isa(obj.widget_NeuroTree, 'WidgetNeuroTree')
-            	addlistener(obj.widget_NeuroTree, 'event_segmentTree', @obj.fcnCallback_SegmentTree);
+            	addlistener(obj.widget_NeuroTree, 'event_NeuroTree_GetImage', @obj.fcnCallback_SegmentTree);
             end
-            %}
             
             
             % start NeuroPuncta
@@ -236,8 +234,8 @@
         function obj = fcnCallback_ImageShow(obj, ~, ~)
             
             disp('IMAGE_SHOW');
-            %obj.widget_NeuroTree.unlockUI();
-            obj.widget_NeuroPuncta.unlockUI();
+            obj.widget_NeuroTree.enable(1:2, 'on');
+            %obj.widget_NeuroPuncta.unlockUI();
             
         end
         
@@ -247,8 +245,8 @@
         function obj = fcnCallback_ImageHide(obj, ~, ~)
             
             disp('IMAGE_HIDE');
-            %obj.widget_NeuroTree.lockUI();
-            obj.widget_NeuroPuncta.lockUI();
+            obj.widget_NeuroTree.enable([],'off');
+            %obj.widget_NeuroPuncta.lockUI();
             
         end
         
@@ -256,6 +254,12 @@
         %    event :: on SegmentTree event from NeuroTree widget
         %   action :: initialize NeuroTree input image
         function obj = fcnCallback_SegmentTree(obj, ~, ~)
+            
+            disp('SEGMENT TREE');
+            obj.widget_NeuroTree.start('FileName', obj.file,...
+                                       'Figure', obj.widget_ImageBrowser.ih_figure,...
+                                       'Axes', obj.widget_ImageBrowser.ih_axes,...
+                                       'Image',obj.widget_ImageBrowser.ih_image);
         end
         
         % callback :: SegmentPuncta
@@ -263,12 +267,13 @@
         %   action :: initialize NeuroPuncta input image
         function obj = fcnCallback_SegmentPuncta(obj, ~, ~)
             
+            %{
             obj.widget_NeuroPuncta.segment(...
                 'FileName', obj.file,...
                 'Figure', obj.widget_ImageBrowser.ih_figure,...
                 'Axes', obj.widget_ImageBrowser.ih_axes,...
                 'Image', obj.widget_ImageBrowser.ih_image);
-            
+            %}
             %obj.widget_NeuroPuncta.startSegmentation(obj.file,...
             %                                         obj.widget_ImageBrowser.image);
             

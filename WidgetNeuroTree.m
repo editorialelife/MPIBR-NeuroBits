@@ -538,6 +538,7 @@ classdef WidgetNeuroTree < handle
             obj.patch = zeros(obj.height, obj.width, 3, 'uint8');
             
             % create patch
+            %{
             hold(obj.ih_axes, 'on');
             obj.ih_patch = imshow(obj.patch,[],...
                                   'Parent', obj.ih_axes,...
@@ -545,7 +546,7 @@ classdef WidgetNeuroTree < handle
                                   'InitialMagnification', 'fit');
             hold(obj.ih_axes, 'off');
             set(obj.ih_patch, 'AlphaData', obj.PATCHALPHA_OFF);
-            
+            %}
             
         end
         
@@ -1042,7 +1043,7 @@ classdef WidgetNeuroTree < handle
             end
             
             % add granularity (20 ms delay)
-            drawnow limitrate;
+            drawnow;
             
         end
         
