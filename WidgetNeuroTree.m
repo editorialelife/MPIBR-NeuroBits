@@ -96,6 +96,7 @@ classdef WidgetNeuroTree < handle
         BACKGROUND_COLOR = [1, 1, 1]; % WHITE COLOR
         FOREGROUND_COLOR = [0.5, 0.5, 0.5]; % GRAY COLOR
         FONT_SIZE = 8;
+        MESSAGE_LENGTH = 25;
         
         PATCHALPHA_OFF = 0;
         PATCHALPHA_ON = 0.2;
@@ -580,24 +581,53 @@ classdef WidgetNeuroTree < handle
         
         
         function obj = export(obj)
-            %EXPORT exports current tree
+        	%EXPORT exports current tree
             
-            % create output file
-            fileOut = [obj.path,...
-                       filesep,...
-                       obj.name,...
-                       '_neuroTree_',...
-                       datestr(now,'ddmmmyyyy'),...
-                       '.txt'];
-           fpWrite = fopen(fileOut, 'w');
+            % check if tree exists
+            if obj.indexBranch == 0
+                msg = 'Nothing to export, segment a tree.';
+            else
+            
+                % create output file
+                fileOut = [obj.path,...
+                           filesep,...
+                           obj.name,...
+                           '_neuroTree_',...
+                           datestr(now,'ddmmmyyyy'),...
+                           '.txt'];
+                fpWrite = fopen(fileOut, 'w');
+                
+                % output settings
+                fprintf(fpWrite, '# file_path: %s\n', obj.path);
+                fprintf(fpWrite, '# file_name: %s\n', obj.name);
+                fprintf(fpWrite, '# dilation[px]: %d\n', obj.dilation);
+                fprintf(fpWrite, '# nhood[px]: %d\n', obj.nhood);
+                fprintf(fpWrite, '\n');
+                % loop over each branch
+                treeSize = size(obj.tree, 1);
+                for b = 1 : treeSize
+                    obj.tree(b).export(fpWrite);
+                end
+                fclose(fpWrite);
            
-           % loop over each branch
-           treeSize = size(obj.tree, 1);
-           for b = 1 : treeSize
-               obj.tree(b).export(fpWrite);
-           end
-           fclose(fpWrite);
-           
+                % user message
+                [~, fileTag] = fileparts(fileOut);
+                msgLength = length(fileTag);
+                if msgLength > obj.MESSAGE_LENGTH
+                    msgLength = obj.MESSAGE_LENGTH;
+                    fileTag = fileTag(1:msgLength);
+                    fileTag = [fileTag,'...'];
+                end
+                msg = sprintf('NeuroTree exported to %s', fileTag);
+                
+            end
+            
+        	set(obj.ui_text_status, 'String', msg);
+            obj.ui_grid.align(obj.ui_text_status,...
+                              'VIndex', 3,...
+                              'HIndex', 1:4,...
+                              'Anchor', 'center');
+            
         end
         
         
@@ -700,7 +730,7 @@ classdef WidgetNeuroTree < handle
             
             if idxBranch > 0
                 
-                msg = sprintf('branch %d, node %d, depth %d, span[px] %d',...
+                msg = sprintf('branch %d, node %d, depth %d, span[px] %.2f',...
                           idxBranch,...
                           idxNode,...
                           obj.tree(idxBranch).depth,...

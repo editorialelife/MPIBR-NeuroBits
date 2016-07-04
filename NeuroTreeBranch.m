@@ -302,7 +302,7 @@ classdef NeuroTreeBranch < handle
             % depth 0 connected component line
             lineNodes = [obj.ui_line.XData', obj.ui_line.YData'];
             dist = sqrt(sum(diff(lineNodes, [], 1) .^ 2, 2));
-            obj.span = round(sum(dist));
+            obj.span = sum(dist);
             
         end
         
@@ -338,6 +338,30 @@ classdef NeuroTreeBranch < handle
             set(obj.ui_point, 'UserData', index);
             set(obj.ui_line, 'UserData', index);
             set(obj.ui_label, 'UserData', index);
+            
+        end
+        
+        
+        function obj = export(obj, fpWrite)
+            %EXPORT export current branch properties
+            % fpWrite is an open file pointer
+            
+            fprintf(fpWrite, '[branch=%d]\n', obj.index);
+            fprintf(fpWrite, 'depth=%d\n', obj.depth);
+            fprintf(fpWrite, 'tag=%d\n', obj.tag);
+            fprintf(fpWrite, 'parent=%d\n', obj.parent);
+            childrenList = sprintf('%d,', obj.children);
+            childrenList(end) = [];
+            fprintf(fpWrite, 'children=%s\n', childrenList);
+            fprintf(fpWrite, 'span=%.2f\n', obj.span);
+            fprintf(fpWrite, 'nodes=%d\n', size(obj.nodes, 1));
+            xPosList = sprintf('%d,', obj.nodes(:,1));
+            xPosList(end) = [];
+            fprintf(fpWrite, 'x=%s\n', xPosList);
+            yPosList = sprintf('%d,',obj.nodes(:,2));
+            yPosList (end) = [];
+            fprintf(fpWrite, 'y=%s\n', yPosList);
+            fprintf(fpWrite, '\n');
             
         end
         
