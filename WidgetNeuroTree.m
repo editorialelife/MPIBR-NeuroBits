@@ -18,7 +18,7 @@ classdef WidgetNeuroTree < handle
     %
     
    
-    properties (Access = private, Hidden = true)
+    properties (Access = public, Hidden = true)
         
         %%% --- input properties --- %%%
         
@@ -28,6 +28,7 @@ classdef WidgetNeuroTree < handle
         image       % image CData
         mask        % binary mask
         patch       % color pathch
+        tree        % current NeuroTreeBranch list
         
         height      % image height
         width       % image width
@@ -48,7 +49,6 @@ classdef WidgetNeuroTree < handle
         sm_table % state transition table
         sm_state % current state in state machine
         sm_lh    % state machine listener handle
-        tree
         
         keychar
         point
@@ -557,7 +557,7 @@ classdef WidgetNeuroTree < handle
             figure(obj.ih_figure);
             
             % update user message
-            obj.status();
+            obj.status(obj.indexBranch, obj.indexNode);
             
         end
         
@@ -695,16 +695,16 @@ classdef WidgetNeuroTree < handle
         end
         
         
-        function obj = status(obj)
+        function obj = status(obj, idxBranch, idxNode)
             %STATUS updates status message
             
-            if isa(obj.tree, 'NeuroTreeBranch')
+            if idxBranch > 0
                 
                 msg = sprintf('branch %d, node %d, depth %d, span[px] %d',...
-                          obj.indexBranch,...
-                          obj.indexNode,...
-                          obj.tree(obj.indexBranch).depth,...
-                          obj.tree(obj.indexBranch).span);
+                          idxBranch,...
+                          idxNode,...
+                          obj.tree(idxBranch).depth,...
+                          obj.tree(idxBranch).span);
                       
             else
                 
@@ -995,7 +995,7 @@ classdef WidgetNeuroTree < handle
                                               'Parent', obj.ih_axes));
             
            % update status
-           obj.status();
+           obj.status(obj.indexBranch, obj.indexNode);
                                          
         end
         
@@ -1031,14 +1031,14 @@ classdef WidgetNeuroTree < handle
             obj.tree(obj.indexBranch).measure();
             
             % update status
-            obj.status();
+            obj.status(obj.indexBranch, obj.indexNode);
             
         end
         
         
         function obj = fcnBranch_complete(obj)
             %FCNBRANCH_COMPLETE complete branch drawing
-            tic
+            
             % update state transition
             obj.sm_state = obj.STATE_OVER_NODE;
             
@@ -1051,27 +1051,14 @@ classdef WidgetNeuroTree < handle
             % update branch properties
             obj.tree(obj.indexBranch).properties();
             
-            % mask branch
-            %{
-            obj.fcnMask_index(obj.tree(obj.indexBranch).pixels,...
-                              obj.tree(obj.indexBranch).index,...
-                              obj.tree(obj.indexBranch).color);
-            %}
-            
             % activate full UI 
             if obj.indexBranch > 0
                 obj.enable([], 'on');
             end
             
-            % check if mask view is active
-            if get(obj.ui_toggleButton_mask, 'Value') == 1
-                obj.view();
-            end
-            
             % update status
-            obj.status();
+            obj.status(obj.indexBranch, obj.indexNode);
             
-            fprintf('complete %.2f\n',toc);
         end
         
         
@@ -1081,13 +1068,20 @@ classdef WidgetNeuroTree < handle
             % update state transition
             obj.sm_state = obj.STATE_REPOSITION_BRANCH;
             
+            % update mouse pointer
+            set(obj.ih_figure, 'Pointer', 'hand');
+            
             % set edit point
             obj.editPoint = obj.point;
             
             % set edit branch index
             % user data hides branch index (check NeuroTreeBranch
             % constructor)
-            obj.editIndexBranch = obj.hoverHandle.UserData; 
+            obj.editIndexBranch = obj.hoverHandle.UserData;
+            obj.editIndexNode = size(obj.tree(obj.editIndexBranch).nodes, 1);
+            
+            % update status
+            obj.status(obj.editIndexBranch, obj.editIndexNode);
             
         end
         
@@ -1097,6 +1091,9 @@ classdef WidgetNeuroTree < handle
             
             % update state transition
             obj.sm_state = obj.STATE_REPOSITION_BRANCH;
+            
+            % update mouse pointer
+            set(obj.ih_figure, 'Pointer', 'hand');
             
             % displacement from pickUp click
             deltaClick = obj.point - obj.editPoint;
@@ -1116,25 +1113,14 @@ classdef WidgetNeuroTree < handle
             %update state transition
             obj.sm_state = obj.STATE_OVER_BRANCH;
             
-            % complete branch
-            obj.tree(obj.editIndexBranch).complete();
+            % update mouse pointer
+            set(obj.ih_figure, 'Pointer', 'hand');
             
             % update branch properties
-            obj.tree(obj.editIndexBranch).properties();
-            %{
-            % update mask
-            obj.fcnMask_update(obj.tree(obj.editIndexBranch).pixels,...
-                              obj.tree(obj.editIndexBranch).index,...
-                              obj.tree(obj.editIndexBranch).color);
-            %}
-            
-            % is view mask active
-            if get(obj.ui_toggleButton_mask, 'Value') == 1
-                obj.view();
-            end
+            obj.tree(obj.editIndexBranch).interpolate();
             
             % update status
-            obj.status();
+            obj.status(obj.editIndexBranch, obj.editIndexNode);
                          
         end
         
@@ -1171,9 +1157,14 @@ classdef WidgetNeuroTree < handle
             
             % update state transition
             obj.sm_state = obj.STATE_SELECTED_BRANCH;
+            
+            % update mouse pointer
             set(obj.ih_figure, 'Pointer', 'arrow');
             
             obj.tree(obj.editIndexBranch).select();
+            
+            % update user status
+            obj.status(obj.editIndexBranch, obj.editIndexNode);
             
         end
         
@@ -1184,7 +1175,13 @@ classdef WidgetNeuroTree < handle
             % update state transition
             obj.sm_state = obj.STATE_IDLE;
             
+            % update mouse pointer
+            set(obj.ih_figure, 'Pointer', 'arrow');
+            
             obj.tree(obj.editIndexBranch).deselect();
+            
+            % update status
+            obj.status(obj.indexBranch, obj.indexNode);
             
         end
         
@@ -1205,7 +1202,7 @@ classdef WidgetNeuroTree < handle
             obj.tree(obj.editIndexBranch).dispose();
             obj.tree(obj.editIndexBranch) = [];
             
-            % update current branch index
+            % update current branch / node index
             obj.indexBranch = numel(obj.tree);
             
             % check if tree is empty else reindex
@@ -1215,10 +1212,13 @@ classdef WidgetNeuroTree < handle
                 for b = 1 : obj.indexBranch
                     obj.tree(b).reindex(b);
                 end
+                
+                obj.indexNode = size(obj.tree(obj.indexBranch).nodes, 1);
+            
             end
             
             % update status
-            obj.status();
+            obj.status(obj.indexBranch, obj.indexNode);
             
         end
         
@@ -1234,6 +1234,9 @@ classdef WidgetNeuroTree < handle
             % update state transition
             obj.sm_state = obj.STATE_REPOSITION_NODE;
             
+            % update mosue pointer
+            set(obj.ih_figure, 'Pointer', 'circle');
+            
             % set edit branch index
             % user data hides branch index (check NeuroTreeBranch
             % constructor)
@@ -1243,6 +1246,9 @@ classdef WidgetNeuroTree < handle
             dist = sqrt(sum(bsxfun(@minus, [obj.hoverHandle.XData', obj.hoverHandle.YData'], obj.point) .^ 2, 2));
             [~, obj.editIndexNode] = min(dist);
             
+            % update status
+            obj.status(obj.editIndexBranch, obj.editIndexNode);
+            
         end
         
         
@@ -1251,6 +1257,9 @@ classdef WidgetNeuroTree < handle
             
             % update state transition
             obj.sm_state = obj.STATE_REPOSITION_NODE;
+            
+            % update mosue pointer
+            set(obj.ih_figure, 'Pointer', 'circle');
             
             % update branch node
             obj.tree(obj.editIndexBranch).replace(obj.editIndexNode, obj.point);
@@ -1264,27 +1273,14 @@ classdef WidgetNeuroTree < handle
             % update state transition
             obj.sm_state = obj.STATE_OVER_NODE;
             
-            % complete branch
-            obj.tree(obj.editIndexBranch).replace(obj.editIndexNode, obj.point);
-            
+            % update mouse pointer
+            set(obj.ih_figure, 'Pointer', 'circle');
             
             % branch properties
             obj.tree(obj.editIndexBranch).properties();
             
-            %{
-            % update mask
-            obj.fcnMask_update(obj.tree(obj.editIndexBranch).pixels,...
-                              obj.tree(obj.editIndexBranch).index,...
-                              obj.tree(obj.editIndexBranch).color);
-            %}
-            
-            % is view mask active
-            if get(obj.ui_toggleButton_mask, 'Value') == 1
-                obj.view();
-            end
-            
             % update status
-            obj.status();
+            obj.status(obj.editIndexBranch, obj.editIndexNode);
             
         end
         
@@ -1329,10 +1325,10 @@ classdef WidgetNeuroTree < handle
             
                 % update node index
                 obj.indexNode = obj.indexNode - 1;
-            
-                % update status
-                obj.status();
                 
+                % update status
+                obj.status(obj.indexBranch, obj.indexNode);
+            
             else
                 
                 % remove branch
@@ -1340,7 +1336,6 @@ classdef WidgetNeuroTree < handle
                 obj.fcnBranch_delete();
                 
             end
-            
             
         end
         

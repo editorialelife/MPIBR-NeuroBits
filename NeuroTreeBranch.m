@@ -204,12 +204,10 @@ classdef NeuroTreeBranch < handle
             % close polygon if depth is root
             if obj.depth == 0
                 
-                % update nodes
-                obj.nodes = cat(1, obj.nodes, obj.nodes(1, :));
-                
                 % update line
                 obj.ui_line.XData = cat(2, obj.ui_line.XData, obj.ui_line.XData(1));
                 obj.ui_line.YData = cat(2, obj.ui_line.YData, obj.ui_line.YData(1));
+                
             end
             
         end
@@ -231,10 +229,10 @@ classdef NeuroTreeBranch < handle
             
             % update connected component
             if (obj.depth == 0) && (indexNode == 1)
-                obj.nodes(end, :) = point;
                 
                 obj.ui_line.XData(end) = point(1);
                 obj.ui_line.YData(end) = point(2);
+                
             end
             
         end
@@ -300,7 +298,10 @@ classdef NeuroTreeBranch < handle
         function obj = measure(obj)
             %MEASURE find span of branch
             
-            dist = sqrt(sum(diff(obj.nodes, [], 1) .^ 2, 2));
+            % measure length on line to include
+            % depth 0 connected component line
+            lineNodes = [obj.ui_line.XData', obj.ui_line.YData'];
+            dist = sqrt(sum(diff(lineNodes, [], 1) .^ 2, 2));
             obj.span = round(sum(dist));
             
         end
@@ -327,6 +328,16 @@ classdef NeuroTreeBranch < handle
             %COLOR returns current branch color
             
             value = round(255 .* obj.COLOR_TABLE(obj.depth + 1, :));
+            
+        end
+        
+        function obj = reindex(obj, index)
+            %REINDEX update branch indexes
+            
+            obj.index = index;
+            set(obj.ui_point, 'UserData', index);
+            set(obj.ui_line, 'UserData', index);
+            set(obj.ui_label, 'UserData', index);
             
         end
         
