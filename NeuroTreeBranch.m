@@ -44,20 +44,18 @@ classdef NeuroTreeBranch < handle
         
         BRANCH_POINT_RADIUS = 100;
         
-        COLOR_TABLE = [255,0,0;...   % red
-                      255,125,0;... % orange
-                      255,255,0;... % yellow
-                      125,255,0;... % spring green
-                      0,255,0;...   % green
-                      0,255,125;... % turquoise
-                      0,255,255;... % cyan
-                      0,125,255;... % ocean
-                      0,0,255;...   % blue
-                      125,0,255;... % violet
-                      255,0,255;... % magenta
-                      255,0,125]... % raspberry
-                      ./255; 
-                  
+        COLOR_TABLE = [255, 255, 255;...  % white
+                       255,   0,   0;...  % red
+                       255, 165,   0;...  % orange
+                       255, 255,   0;...  % yellow
+                        60, 179, 113;...  % dark green
+                         0, 255, 255;...  % cyan
+                       100, 149, 237;...  % light blue
+                         0,   0, 255;...  % blue
+                       128,   0, 128;...  % dark purple
+                       255,  20, 147]...  % pink
+                       ./255;
+                   
     end
     
     %%% --- constructor / destructor --- %%%
