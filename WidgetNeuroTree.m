@@ -38,17 +38,12 @@ classdef WidgetNeuroTree < handle
         
     end
     
-    properties (SetObservable)
-        
-        sm_event % current event in state machine
-        
-    end
     
     properties (Access = private, Hidden = true)
         
+        sm_pair % action/state pair keeping index to sm_table
         sm_table % state transition table
         sm_state % current state in state machine
-        sm_lh    % state machine listener handle
         
         keychar
         point
@@ -113,20 +108,25 @@ classdef WidgetNeuroTree < handle
         STATE_REPOSITION_BRANCH = 5;
         STATE_REPOSITION_NODE = 6;
         STATE_SELECTED_BRANCH = 7;
-        STATE_COUNT = 8;
         
         %%% --- Events --- %%%
-        EVENT_NULL = 1;
-        EVENT_KEY_DIGIT = 2;
-        EVENT_KEY_DEL = 3;
-        EVENT_CLICK_DOWN = 4;
-        EVENT_CLICK_UP = 5;
-        EVENT_CLICK_DOUBLE = 6;
-        EVENT_MOUSE_MOVE = 7;
-        EVENT_OVER_BRANCH = 8;
-        EVENT_OVER_NODE = 9;
-        EVENT_OVER_IMAGE = 10;
-        EVENT_COUNT = 11;
+        ACTION_KEY_DIGIT = 1;
+        ACTION_KEY_DEL = 2;
+        ACTION_CLICK_DOWN = 3;
+        ACTION_CLICK_UP = 4;
+        ACTION_CLICK_DOUBLE = 5;
+        ACTION_MOUSE_MOVE = 6;
+        ACTION_OVER_BRANCH = 7;
+        ACTION_OVER_NODE = 8;
+        ACTION_OVER_IMAGE = 9;
+        ACTION_EMPTY_BRANCH = 10;
+        
+        %%% --- State Machine Constants --- %%%
+        SM_NEXT_STATE = 1;
+        SM_MOUSE_POINTER = 2;
+        SM_CALLBACK_FCN = 3;
+        SM_ACTION_NOW = 1;
+        SM_STATE_NOW = 2;
         
     end
     
@@ -136,7 +136,7 @@ classdef WidgetNeuroTree < handle
         
     end
     
-    %%% --- constructor / destructor --- %%%
+    %% --- constructor / destructor --- %%
     methods 
         
         % method :: WidgetNeuroTree
@@ -219,7 +219,7 @@ classdef WidgetNeuroTree < handle
     end % constructor / destructor
     
     
-    %%% --- user interface methods --- %%%
+    %% --- user interface methods --- %%
     methods
         
         function obj = render(obj)
@@ -510,7 +510,7 @@ classdef WidgetNeuroTree < handle
     end % user interface methods
     
     
-    %%% --- user interface respond methods --- %%%
+    %% --- user interface respond methods --- %%
     methods
         
         function obj = start(obj, varargin)
@@ -810,80 +810,130 @@ classdef WidgetNeuroTree < handle
     end % user interface respond methods
     
     
-    %%% --- user drawing interaction callbacks --- %%%
+    %% --- user drawing interaction callbacks --- %%
     methods
         
         function obj = sminit(obj)
             %SMINIT initialize state machine
             
+            obj.sm_pair = [];
+            obj.sm_table = {};
             obj.sm_state = obj.STATE_IDLE;
-            obj.sm_event = obj.EVENT_NULL;
             
-            % allocate state/event table
-            obj.sm_table = cell(obj.STATE_COUNT - 1,...
-                                obj.EVENT_COUNT - 1);
+            %%% - ACTION / STATE Transition Diagram - %%%
+            % sm_pair = [ACTION_NOW, STATE_NOW];
+            % sm_table = {STATE_NEXT, MOUSE_POINTER, CALLBACK_FUNCTION};
             
-            % fill up state machine table
-            obj.sm_table(obj.STATE_IDLE,...
-                         obj.EVENT_KEY_DIGIT) = {@obj.fcnBranch_create};
-                     
-            obj.sm_table(obj.STATE_DRAWING,...
-                         obj.EVENT_MOUSE_MOVE) = {@obj.fcnBranch_stretch};
-                     
-            obj.sm_table(obj.STATE_DRAWING,...
-                         obj.EVENT_CLICK_DOWN) = {@obj.fcnBranch_extend};
-                     
-            obj.sm_table(obj.STATE_DRAWING,...
-                         obj.EVENT_CLICK_DOUBLE) = {@obj.fcnBranch_complete};
-                     
-            obj.sm_table(obj.STATE_OVER_BRANCH,...
-                         obj.EVENT_CLICK_DOWN) = {@obj.fcnBranch_pickUp};
-                     
-            obj.sm_table(obj.STATE_REPOSITION_BRANCH,...
-                         obj.EVENT_MOUSE_MOVE) = {@obj.fcnBranch_move};
-                     
-            obj.sm_table(obj.STATE_IDLE,...
-                         obj.EVENT_OVER_BRANCH) = {@obj.fcnBranch_overBranch};
-                     
-            obj.sm_table(obj.STATE_OVER_NODE,...
-                         obj.EVENT_OVER_BRANCH) = {@obj.fcnBranch_overBranch};
-                     
-            obj.sm_table(obj.STATE_OVER_BRANCH,...
-                         obj.EVENT_OVER_IMAGE) = {@obj.fcnBranch_overImage};
-                     
-            obj.sm_table(obj.STATE_REPOSITION_BRANCH,...
-                         obj.EVENT_CLICK_UP) = {@obj.fcnBranch_putDown};
-                     
-            obj.sm_table(obj.STATE_OVER_BRANCH,...
-                         obj.EVENT_CLICK_DOUBLE) = {@obj.fcnBranch_select};
-                     
-            obj.sm_table(obj.STATE_SELECTED_BRANCH,...
-                         obj.EVENT_CLICK_DOWN) = {@obj.fcnBranch_deselect};
-                     
-            obj.sm_table(obj.STATE_SELECTED_BRANCH,...
-                         obj.EVENT_KEY_DEL) = {@obj.fcnBranch_delete};
-                     
-                     
-            obj.sm_table(obj.STATE_DRAWING,...
-                         obj.EVENT_KEY_DEL) = {@obj.fcnNode_delete};
-                     
-            obj.sm_table(obj.STATE_OVER_NODE,...
-                         obj.EVENT_CLICK_DOWN) = {@obj.fcnNode_pickUp};
-                     
-            obj.sm_table(obj.STATE_REPOSITION_NODE,...
-                         obj.EVENT_MOUSE_MOVE) = {@obj.fcnNode_move};
-                     
-            obj.sm_table(obj.STATE_IDLE,...
-                         obj.EVENT_OVER_NODE) = {@obj.fcnNode_overNode};
-                     
-            obj.sm_table(obj.STATE_OVER_BRANCH,...
-                         obj.EVENT_OVER_NODE) = {@obj.fcnNode_overNode};
-                     
-            obj.sm_table(obj.STATE_OVER_NODE,...
-                         obj.EVENT_OVER_IMAGE) = {@obj.fcnNode_overImage};
-                     
-            obj.sm_table(obj.STATE_REPOSITION_NODE,...
-                         obj.EVENT_CLICK_UP) = {@obj.fcnNode_putDown};
+            % ACTION_KEY_DIGIT    x STATE_IDLE              -> STATE_DRAWING, mouse=cross @ fcnBranch_create();
+            % ACTION_MOUSE_MOVE   x STATE_DRAWING           -> STATE_DRAWING, mouse=cross @ fcnBranch_stretch();
+            % ACTION_CLICK_DOWN   x STATE_DRAWING           -> STATE_DRAWING, mouse=cross @ fcnBranch_extend();
+            % ACTION_CLICK_DOUBLE x STATE_DRAWING           -> STATE_OVER_NODE, mouse=circle @ fcnBranch_complete();
+            % ACTION_CLICK_DOWN   x STATE_OVER_BRANCH       -> STATE_REPOSITION_BRANCH, mouse=hand @ fcnBranch_pickUp();
+            % ACTION_MOUSE_MOVE   x STATE_REPOSITION_BRANCH -> STATE_REPOSITION_BRANCH, mouse=hand @ fcnBranch_move();
+            % ACTION_CLICK_UP     x STATE_REPOSITION_BRANCH -> STATE_OVER_BRANCH, mouse=hand @ fcnBranch_putDown();
+            % ACTION_CLICK_DOUBLE x STATE_OVER_BRANCH       -> STATE_SELECTED_BRANCH, mouse=arrow @ fcnBranch_select();
+            % ACTION_CLICK_DOWN   x STATE_SELECTED_BRANCH   -> STATE_IDLE, mouse=arrow @ fcnBranch_deselect();
+            % ACTION_KEY_DEL      x STATE_SELECTED_BRANCH   -> STATE_IDLE, mouse=arrow @ fcnBranch_delete();
+            % ACTION_EMPTY_BRANCH x STATE_DRAWING           -> STATE_IDLE, mouse=arrow @ fcnBranch_delete();
+            % ACTION_KEY_DEL      x STATE_DRAWING           -> STATE_DRAWING, mouse=cross @ fcnNode_delete();
+            % ACTION_CLICK_DOWN   x STATE_OVER_NODE         -> STATE_REPOSITION_NODE, mouse=circle @ fcnNode_pickUp();
+            % ACTION_MOUSE_MOVE   x STATE_REPOSITION_NODE   -> STATE_REPOSITION_NODE, mouse=circle @ fcnNode_move();
+            % ACTION_CLICK_UP     x STATE_REPOSITION_NODE   -> STATE_OVER_NODE, mouse=circle @ fcnNode_putDown();
+            % ACTION_OVER_IMAGE   x STATE_OVER_BRANCH       -> STATE_IDLE, mouse=arrow @ [];
+            % ACTION_OVER_IMAGE   x STATE_OVER_NODE         -> STATE_IDLE, mouse=arrow @ [];
+            % ACTION_OVER_BRANCH  x STATE_IDLE              -> STATE_OVER_BRANCH, mouse=hand @ [];
+            % ACTION_OVER_BRANCH  x STATE_OVER_NODE         -> STATE_OVER_BRANCH, mouse=hand @ [];
+            % ACTION_OVER_NODE    x STATE_IDLE              -> STATE_OVER_NODE, mouse=circle @ [];
+            % ACTION_OVER_NODE    x STATE_OVER_BRANCH       -> STATE_OVER_NODE, mouse=circle @ [];                
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_KEY_DIGIT, obj.STATE_IDLE]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_DRAWING, 'cross', @obj.fcnBranch_create}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_MOUSE_MOVE, obj.STATE_DRAWING]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_DRAWING, 'cross', @obj.fcnBranch_stretch}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_CLICK_DOWN, obj.STATE_DRAWING]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_DRAWING, 'cross', @obj.fcnBranch_extend}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_CLICK_DOUBLE, obj.STATE_DRAWING]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_OVER_NODE, 'circle', @obj.fcnBranch_complete}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_CLICK_DOWN, obj.STATE_OVER_BRANCH]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_REPOSITION_BRANCH, 'hand', @obj.fcnBranch_pickUp}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_MOUSE_MOVE, obj.STATE_REPOSITION_BRANCH]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_REPOSITION_BRANCH, 'hand', @obj.fcnBranch_move}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_CLICK_UP, obj.STATE_REPOSITION_BRANCH]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_OVER_BRANCH, 'hand', @obj.fcnBranch_putDown}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_CLICK_DOUBLE, obj.STATE_OVER_BRANCH]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_SELECTED_BRANCH, 'arrow', @obj.fcnBranch_select}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_CLICK_DOWN, obj.STATE_SELECTED_BRANCH]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_IDLE, 'arrow', @obj.fcnBranch_deselect}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_KEY_DEL, obj.STATE_SELECTED_BRANCH]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_IDLE, 'arrow', @obj.fcnBranch_delete}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_EMPTY_BRANCH, obj.STATE_DRAWING]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_IDLE, 'arrow', @obj.fcnBranch_delete}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_KEY_DEL, obj.STATE_DRAWING]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_DRAWING, 'cross', @obj.fcnNode_delete}};
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_CLICK_DOWN, obj.STATE_OVER_NODE]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_REPOSITION_NODE, 'circle', @obj.fcnNode_pickUp}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_MOUSE_MOVE, obj.STATE_REPOSITION_NODE]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_REPOSITION_NODE, 'circle', @obj.fcnNode_move}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_CLICK_UP, obj.STATE_REPOSITION_NODE]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_OVER_NODE, 'circle', @obj.fcnNode_putDown}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_OVER_IMAGE, obj.STATE_OVER_BRANCH]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_IDLE, 'arrow', []}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_OVER_IMAGE, obj.STATE_OVER_NODE]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_IDLE, 'arrow', []}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_OVER_BRANCH, obj.STATE_IDLE]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_OVER_BRANCH, 'hand', []}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_OVER_BRANCH, obj.STATE_OVER_NODE]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_OVER_BRANCH, 'hand', []}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_OVER_NODE, obj.STATE_IDLE]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_OVER_NODE, 'circle', []}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_OVER_NODE, obj.STATE_OVER_BRANCH]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_OVER_NODE, 'circle', []}};
+            
+            
+            % check for disambiguous action/state pair
+            if size(obj.sm_pair, 1) ~= size(unique(obj.sm_pair, 'rows'), 1)
+                error('WidgetNeuroTree:SMINIT','action-state pair list is not unique.');
+            end
             
         end
         
@@ -903,9 +953,6 @@ classdef WidgetNeuroTree < handle
                 % initialize state machine    
                 obj.sminit();
                 
-                % add event listener
-                obj.sm_lh = addlistener(obj, 'sm_event', 'PostSet', @obj.fcnStateMachine_transition);
-                
             elseif strcmp('off', interact)
                 
                 % remove figure callbacks
@@ -914,9 +961,6 @@ classdef WidgetNeuroTree < handle
                         'WindowButtonDownFcn', [],...
                         'WindowButtonUpFcn', [],...
                         'WindowKeyPressFcn', []);
-                 
-               % remove event listener
-               delete(obj.sm_lh);
                
             end
         end
@@ -953,18 +997,18 @@ classdef WidgetNeuroTree < handle
             
             if isgraphics(hobj, 'image')
                 
-                obj.sm_event = obj.EVENT_OVER_IMAGE;
+                obj.fcnStateMachine_transition(obj.ACTION_OVER_IMAGE);
                 
             elseif isgraphics(hobj, 'line')
             
                 % decide between line and point
                 if strcmp(hobj.LineStyle, 'none')
                     
-                    obj.sm_event = obj.EVENT_OVER_NODE;
+                    obj.fcnStateMachine_transition(obj.ACTION_OVER_NODE);
                     
                 elseif strcmp(hobj.LineStyle,'-')
                     
-                    obj.sm_event = obj.EVENT_OVER_BRANCH;
+                    obj.fcnStateMachine_transition(obj.ACTION_OVER_BRANCH);
                     
                 end
                 
@@ -981,11 +1025,11 @@ classdef WidgetNeuroTree < handle
             
             if (obj.keychar >= '0') && (obj.keychar <= '9')
                 
-                obj.sm_event = obj.EVENT_KEY_DIGIT;
+                obj.fcnStateMachine_transition(obj.ACTION_KEY_DIGIT);
                 
             elseif uint8(obj.keychar) == 8 %(DEL)
                 
-                obj.sm_event = obj.EVENT_KEY_DEL;
+                obj.fcnStateMachine_transition(obj.ACTION_KEY_DEL);
                 
             end
             
@@ -998,7 +1042,7 @@ classdef WidgetNeuroTree < handle
             
             obj.hover();
             obj.click();
-            obj.sm_event = obj.EVENT_MOUSE_MOVE;
+            obj.fcnStateMachine_transition(obj.ACTION_MOUSE_MOVE);
             
         end
         
@@ -1013,11 +1057,11 @@ classdef WidgetNeuroTree < handle
             
             if strcmp(clickSelection, 'normal')
                 
-                obj.sm_event = obj.EVENT_CLICK_DOWN;
+                obj.fcnStateMachine_transition(obj.ACTION_CLICK_DOWN);
                 
             elseif strcmp(clickSelection, 'open')
                 
-                obj.sm_event = obj.EVENT_CLICK_DOUBLE;
+                obj.fcnStateMachine_transition(obj.ACTION_CLICK_DOUBLE);
                 
             end
             
@@ -1029,17 +1073,31 @@ classdef WidgetNeuroTree < handle
             % defines state action on mouse right click up
             
             obj.click();
-            obj.sm_event = obj.EVENT_CLICK_UP;
+            obj.fcnStateMachine_transition(obj.ACTION_CLICK_UP);
             
         end
         
         
-        function obj = fcnStateMachine_transition(obj, ~, ~)
+        function obj = fcnStateMachine_transition(obj, sm_action)
             %FCNSTATEMACHINE_TRANSITION execute transition callback
             
-            fcnDrawingCallback = obj.sm_table{obj.sm_state, obj.sm_event};
-            if isa(fcnDrawingCallback, 'function_handle')
-                fcnDrawingCallback();
+            sm_index = (obj.sm_pair(:, obj.SM_ACTION_NOW) == sm_action) & ...
+                       (obj.sm_pair(:, obj.SM_STATE_NOW) == obj.sm_state);
+            
+            if any(sm_index)
+                
+                % get current callbackData
+                callbackData = obj.sm_table{sm_index};
+                
+                % set next state
+                obj.sm_state = callbackData{obj.SM_NEXT_STATE};
+                
+                % set mouse pointer
+                set(obj.ih_figure, 'Pointer', callbackData{obj.SM_MOUSE_POINTER});
+                
+                % execute state machine callback
+                callbackData{obj.SM_CALLBACK_FCN}();
+                
             end
             
             % add granularity (20 ms delay)
@@ -1050,17 +1108,11 @@ classdef WidgetNeuroTree < handle
         
     end % user drawing interaction callbacks
     
-    %%% --- branch callback functions --- %%%
+    %% --- branch callback functions --- %%
     methods
         
         function obj = fcnBranch_create(obj)
             %FCNBRNACH_CREATE allocates new branch in tree
-            
-            % update state transition
-            obj.sm_state = obj.STATE_DRAWING;
-            
-            % update mouse cursor
-            set(obj.ih_figure, 'Pointer', 'cross');
             
             % update branch index
             obj.indexBranch = size(obj.tree, 1) + 1;
@@ -1089,12 +1141,6 @@ classdef WidgetNeuroTree < handle
         function obj = fcnBranch_stretch(obj)
             %FCNBRANCH_STRETCH extend branch without appending node
             
-            % update state transition
-            obj.sm_state = obj.STATE_DRAWING;
-            
-            % update mouse cursor
-            set(obj.ih_figure, 'Pointer', 'cross');
-            
             % update last node in current branch
             obj.tree(obj.indexBranch).stretch(obj.indexNode + 1, obj.point);
             
@@ -1103,9 +1149,6 @@ classdef WidgetNeuroTree < handle
         
         function obj = fcnBranch_extend(obj)
             %FCNBRANCH_EXTEND append node to current branch
-            
-            % update state transition
-            obj.sm_state = obj.STATE_DRAWING;
             
             % update node index
             obj.indexNode = obj.indexNode + 1;
@@ -1124,12 +1167,6 @@ classdef WidgetNeuroTree < handle
         
         function obj = fcnBranch_complete(obj)
             %FCNBRANCH_COMPLETE complete branch drawing
-            
-            % update state transition
-            obj.sm_state = obj.STATE_OVER_NODE;
-            
-            % update mouse pointer
-            set(obj.ih_figure, 'Pointer', 'circle');
             
             % complete branch process
             obj.tree(obj.indexBranch).complete();
@@ -1151,12 +1188,6 @@ classdef WidgetNeuroTree < handle
         function obj = fcnBranch_pickUp(obj)
             %FCNBRANCH_PICKUP pick up last branch position before move
             
-            % update state transition
-            obj.sm_state = obj.STATE_REPOSITION_BRANCH;
-            
-            % update mouse pointer
-            set(obj.ih_figure, 'Pointer', 'hand');
-            
             % set edit point
             obj.editPoint = obj.point;
             
@@ -1175,12 +1206,6 @@ classdef WidgetNeuroTree < handle
         function obj = fcnBranch_move(obj)
             %FCNBRANCH_MOVE shift branch with edit click displacement
             
-            % update state transition
-            obj.sm_state = obj.STATE_REPOSITION_BRANCH;
-            
-            % update mouse pointer
-            set(obj.ih_figure, 'Pointer', 'hand');
-            
             % displacement from pickUp click
             deltaClick = obj.point - obj.editPoint;
             
@@ -1196,12 +1221,6 @@ classdef WidgetNeuroTree < handle
         function obj = fcnBranch_putDown(obj)
             %FCNBRANCH_PUTDOWN release branch after moving
             
-            %update state transition
-            obj.sm_state = obj.STATE_OVER_BRANCH;
-            
-            % update mouse pointer
-            set(obj.ih_figure, 'Pointer', 'hand');
-            
             % update branch properties
             obj.tree(obj.editIndexBranch).interpolate();
             
@@ -1211,41 +1230,8 @@ classdef WidgetNeuroTree < handle
         end
         
         
-        function obj = fcnBranch_overBranch(obj)
-            %FCNBRANCH_OVERBRANCH update mouse pointer 
-            % if hoovering over branch
-            
-            % update state transition
-            obj.sm_state = obj.STATE_OVER_BRANCH;
-            
-            % update mouse pointer
-            set(obj.ih_figure, 'Pointer', 'hand');
-            
-        end
-        
-        
-        function obj = fcnBranch_overImage(obj)
-            % FCNBRNACH_OVERIMAGE update mouse pointer
-            % if hoovering over image
-            
-            % update state transition
-            obj.sm_state = obj.STATE_IDLE;
-            
-            % update mouse pointer
-            set(obj.ih_figure, 'Pointer', 'arrow');
-            
-        end
-        
-        
-        
         function obj = fcnBranch_select(obj)
             %FCNBRANCH_SELECT add highlight to current branch
-            
-            % update state transition
-            obj.sm_state = obj.STATE_SELECTED_BRANCH;
-            
-            % update mouse pointer
-            set(obj.ih_figure, 'Pointer', 'arrow');
             
             obj.tree(obj.editIndexBranch).select();
             
@@ -1258,12 +1244,6 @@ classdef WidgetNeuroTree < handle
         function obj = fcnBranch_deselect(obj)
             %FCNBRANCH_DESELECT remove highlight from current branch
             
-            % update state transition
-            obj.sm_state = obj.STATE_IDLE;
-            
-            % update mouse pointer
-            set(obj.ih_figure, 'Pointer', 'arrow');
-            
             obj.tree(obj.editIndexBranch).deselect();
             
             % update status
@@ -1275,14 +1255,8 @@ classdef WidgetNeuroTree < handle
         function obj = fcnBranch_delete(obj)
             %FCNBRANCH_DELETE remove current branch from tree
             
-            % update state transition
-            obj.sm_state = obj.STATE_IDLE;
-            
-            % update mouse pointer
-            set(obj.ih_figure, 'Pointer', 'arrow');
-            
             % reset mask
-            obj.fcnMask_reset(obj.tree(obj.editIndexBranch).index);
+            %obj.fcnMask_reset(obj.tree(obj.editIndexBranch).index);
                           
             % delete given branch from tree
             obj.tree(obj.editIndexBranch).dispose();
@@ -1311,17 +1285,11 @@ classdef WidgetNeuroTree < handle
     end % branch callback functions
     
     
-    %%% --- nodes callback functions --- %%%
+    %% --- nodes callback functions --- %%
     methods
         
         function obj = fcnNode_pickUp(obj)
             %FCNNODE_PICKUP last node position before move
-            
-            % update state transition
-            obj.sm_state = obj.STATE_REPOSITION_NODE;
-            
-            % update mosue pointer
-            set(obj.ih_figure, 'Pointer', 'circle');
             
             % set edit branch index
             % user data hides branch index (check NeuroTreeBranch
@@ -1341,12 +1309,6 @@ classdef WidgetNeuroTree < handle
         function obj = fcnNode_move(obj)
             %FCNNODE_MOVE shift node with edit click displacement
             
-            % update state transition
-            obj.sm_state = obj.STATE_REPOSITION_NODE;
-            
-            % update mosue pointer
-            set(obj.ih_figure, 'Pointer', 'circle');
-            
             % update branch node
             obj.tree(obj.editIndexBranch).replace(obj.editIndexNode, obj.point);
             
@@ -1355,12 +1317,6 @@ classdef WidgetNeuroTree < handle
         
         function obj = fcnNode_putDown(obj)
             %FCNNODE_PUTDOWN release node after moving
-            
-            % update state transition
-            obj.sm_state = obj.STATE_OVER_NODE;
-            
-            % update mouse pointer
-            set(obj.ih_figure, 'Pointer', 'circle');
             
             % branch properties
             obj.tree(obj.editIndexBranch).properties();
@@ -1371,40 +1327,10 @@ classdef WidgetNeuroTree < handle
         end
         
         
-        function obj = fcnNode_overNode(obj)
-            %FCNNODE_OVERNODE update mouse pointer 
-            % if hoovering over node
-            
-            % update state transition
-            obj.sm_state = obj.STATE_OVER_NODE;
-            
-            % update mouse pointer
-            set(obj.ih_figure, 'Pointer', 'circle');
-            
-        end
-        
-        function obj = fcnNode_overImage(obj)
-            % FCNNODE_OVERIMAGE update mouse pointer
-            % if hoovering over image
-            
-            % update state transition
-            obj.sm_state = obj.STATE_IDLE;
-            
-            % update mouse pointer
-            set(obj.ih_figure, 'Pointer', 'arrow');
-            
-        end
-        
-        
-        
-        
         function obj = fcnNode_delete(obj)
             %FCNNODE_DELETE remove nodes in current branch
             
             if obj.indexNode > 1
-            
-                % update sate transition
-                obj.sm_state = obj.STATE_DRAWING;
                 
                 % remove node
                 obj.tree(obj.indexBranch).remove(obj.indexNode);
@@ -1419,7 +1345,7 @@ classdef WidgetNeuroTree < handle
                 
                 % remove branch
                 obj.editIndexBranch = obj.indexBranch;
-                obj.fcnBranch_delete();
+                obj.fcnStateMachine_transition(obj.ACTION_EMPTY_BRANCH);
                 
             end
             
@@ -1428,7 +1354,7 @@ classdef WidgetNeuroTree < handle
     end % nodes callback functions
     
     
-    %%% --- mask/patch operations --- %%%
+    %% --- mask/patch operations --- %%
     methods
         
         function obj = fcnMask_index(obj, pixels, index, color)
