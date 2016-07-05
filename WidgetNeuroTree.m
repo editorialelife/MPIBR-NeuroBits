@@ -979,6 +979,9 @@ classdef WidgetNeuroTree < handle
         function obj = press(obj)
             
             obj.keychar = get(obj.ih_figure, 'CurrentCharacter');
+            if isempty(obj.keychar)
+                obj.keychar = 0;
+            end
             
         end
         
