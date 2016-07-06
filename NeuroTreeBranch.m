@@ -344,7 +344,7 @@ classdef NeuroTreeBranch < handle
             %EXPORT export current branch properties
             % fpWrite is an open file pointer
             
-            fprintf(fpWrite, '[branch=%d]\n', obj.index);
+            fprintf(fpWrite, 'branch=%d\n', obj.index);
             fprintf(fpWrite, 'depth=%d\n', obj.depth);
             fprintf(fpWrite, 'tag=%d\n', obj.tag);
             fprintf(fpWrite, 'parent=%d\n', obj.parent);
@@ -367,7 +367,7 @@ classdef NeuroTreeBranch < handle
             %LOAD set branch properties from input text
             
             % parse text 
-            obj.index = sscanf(vartxt{1}, '[branch=%d]');
+            obj.index = sscanf(vartxt{1}, 'branch=%d');
             obj.depth = sscanf(vartxt{2}, 'depth=%d');
             obj.tag = sscanf(vartxt{3}, 'tag=%d');
             obj.parent = sscanf(vartxt{4}, 'partent=%d');

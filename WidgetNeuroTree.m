@@ -595,7 +595,6 @@ classdef WidgetNeuroTree < handle
         
         function obj = load(obj)
             %LOAD load tree file
-            
             % choose file to load
             [fileName, filePath] = uigetfile({'*_neuroTree_*.txt', 'WidgetNeuroTree files'},'Pick a file');
             
@@ -606,26 +605,34 @@ classdef WidgetNeuroTree < handle
             txt = txt{:};
             
             % read dilation
-            idx_txt_dilation = strncmp('# dilation[px]:', txt, 15);
-            obj.dilation = sscanf(txt{idx_txt_dilation},'# dilation[px]: %d');
+            queryTxt = 'dilation[px]=';
+            idxTxtDilation = strncmp(queryTxt, txt, length(queryTxt));
+            obj.dilation = sscanf(txt{idxTxtDilation},'dilation[px]=%d');
             
             % read nhood
-            idx_txt_nhood = strncmp('# nhood[px]:', txt, 12);
-            obj.nhood = sscanf(txt{idx_txt_nhood},'# nhood[px]: %d');
+            queryTxt = 'nhood[px]=';
+            idxTxtNhood = strncmp(queryTxt, txt, length(queryTxt));
+            obj.nhood = sscanf(txt{idxTxtNhood},'nhood[px]=%d');
             
             % read branch info
-            idx_txt_branch = strncmp('[', txt, 1);
-            idx_txt_branch = cumsum(idx_txt_branch);
-            branchCount = max(idx_txt_branch);
+            idxTxtBranch = strncmp('branch', txt, 6);
+            idxTxtBranch = cumsum(idxTxtBranch);
+            branchCount = max(idxTxtBranch);
+            
             for b = 1 : branchCount
                 
-                obj.tree = cat(1, obj.tree,...
+                if sum(idxTxtBranch == b) == 10
+                    obj.tree = cat(1, obj.tree,...
                               NeuroTreeBranch('Index', b,...
                                               'Depth', '0',...
                                               'Height', obj.height,...
                                               'Width', obj.width,...
                                               'Parent', obj.ih_axes));
-                obj.tree(b).load(txt(idx_txt_branch == b));
+                                          
+                    obj.tree(b).load(txt(idxTxtBranch == b));
+                else
+                    warning('NeuroTreeBranch:load','incomplete branch data.');
+                end
                 
             end
             
@@ -678,10 +685,10 @@ classdef WidgetNeuroTree < handle
                 fpWrite = fopen([fileOut,'.txt'], 'w');
                 
                 % output settings
-                fprintf(fpWrite, '# file_path: %s\n', obj.path);
-                fprintf(fpWrite, '# file_name: %s\n', obj.name);
-                fprintf(fpWrite, '# dilation[px]: %d\n', obj.dilation);
-                fprintf(fpWrite, '# nhood[px]: %d\n', obj.nhood);
+                fprintf(fpWrite, 'file_path=%s\n', obj.path);
+                fprintf(fpWrite, 'file_name=%s\n', obj.name);
+                fprintf(fpWrite, 'dilation[px]=%d\n', obj.dilation);
+                fprintf(fpWrite, 'nhood[px]=%d\n', obj.nhood);
                 fprintf(fpWrite, '\n');
                 % loop over each branch
                 treeSize = size(obj.tree, 1);
