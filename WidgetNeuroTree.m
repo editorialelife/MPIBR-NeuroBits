@@ -863,6 +863,7 @@ classdef WidgetNeuroTree < handle
             % ACTION_MOUSE_MOVE   x STATE_REPOSITION_BRANCH -> STATE_REPOSITION_BRANCH, mouse=hand @ fcnBranch_move();
             % ACTION_CLICK_UP     x STATE_REPOSITION_BRANCH -> STATE_OVER_BRANCH, mouse=hand @ fcnBranch_putDown();
             % ACTION_CLICK_DOUBLE x STATE_OVER_BRANCH       -> STATE_SELECTED_BRANCH, mouse=arrow @ fcnBranch_select();
+            % ACTION_CLICK_DOUBLE x STATE_OVER_NODE         -> STATE_SELECTED_BRANCH, mouse=arrow, @ fcnBranch_select();
             % ACTION_CLICK_DOWN   x STATE_SELECTED_BRANCH   -> STATE_IDLE, mouse=arrow @ fcnBranch_deselect();
             % ACTION_KEY_DEL      x STATE_SELECTED_BRANCH   -> STATE_IDLE, mouse=arrow @ fcnBranch_delete();
             % ACTION_EMPTY_BRANCH x STATE_DRAWING           -> STATE_IDLE, mouse=arrow @ fcnBranch_delete();
@@ -907,6 +908,10 @@ classdef WidgetNeuroTree < handle
             
             
             obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_CLICK_DOUBLE, obj.STATE_OVER_BRANCH]);
+            obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_SELECTED_BRANCH, 'arrow', @obj.fcnBranch_select}};
+            
+            
+            obj.sm_pair = cat(1, obj.sm_pair, [obj.ACTION_CLICK_DOUBLE, obj.STATE_OVER_NODE]);
             obj.sm_table(size(obj.sm_pair, 1)) = {{obj.STATE_SELECTED_BRANCH, 'arrow', @obj.fcnBranch_select}};
             
             

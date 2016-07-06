@@ -307,14 +307,19 @@ classdef NeuroTreeBranch < handle
         function obj = interpolate(obj)
             %INTERPOLATE convert nodes to pixels
             
-            % calculate cumulative pixel distance along line
-            dNodes = sqrt(sum(diff(obj.nodes, [], 1).^2, 2));
-            csNodes = cat(1, 0, cumsum(dNodes));
+            if size(obj.nodes, 1) == 1
+                sampleNodes = obj.nodes;
+            else
+                
+                % calculate cumulative pixel distance along line
+                dNodes = sqrt(sum(diff(obj.nodes, [], 1).^2, 2));
+                csNodes = cat(1, 0, cumsum(dNodes));
             
-            % resample nodes at sub-pixel intervals
-            sampleCsNodes = linspace(0, csNodes(end), ceil(csNodes(end)/0.5));
-            sampleNodes = interp1(csNodes, obj.nodes, sampleCsNodes);
-            sampleNodes = round(sampleNodes);
+                % resample nodes at sub-pixel intervals
+                sampleCsNodes = linspace(0, csNodes(end), ceil(csNodes(end)/0.5));
+                sampleNodes = interp1(csNodes, obj.nodes, sampleCsNodes);
+                sampleNodes = round(sampleNodes);
+            end
             
             % return pixel indexes
             obj.pixels = sub2ind(obj.range, sampleNodes(:,2), sampleNodes(:,1));
