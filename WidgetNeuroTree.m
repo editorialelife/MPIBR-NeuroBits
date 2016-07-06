@@ -56,6 +56,8 @@ classdef WidgetNeuroTree < handle
         
         hoverHandle
         
+        exported
+        
         %%% --- image figure handlers --- %%%
         ih_figure
         ih_axes
@@ -203,6 +205,8 @@ classdef WidgetNeuroTree < handle
             obj.editIndexNode = 0;
             
             obj.hoverHandle = [];
+            
+            obj.exported = false;
             
         end
         
@@ -572,15 +576,20 @@ classdef WidgetNeuroTree < handle
             set(obj.ui_toggleButton_segment, 'String', 'Segment');
             set(obj.ui_toggleButton_segment, 'Value', 0);
             
-            
-            % evoke automatic export
-            %obj.export();
-            
             % switch off drawing callbacks
             obj.drawing('off');
             
             % clear tree
             if size(obj.tree, 1) > 0
+                
+                % evoke automatic export
+                if obj.exported == false
+                    button = questdlg('Export NeuroTree?','NeuroTree:Clear','Yes','No','Yes');
+                    if strcmp(button, 'Yes')
+                        obj.export();
+                    end
+                end
+            
                 
                 % dispose each branch
                 while ~isempty(obj.tree)
