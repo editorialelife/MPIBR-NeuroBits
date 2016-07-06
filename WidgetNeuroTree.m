@@ -639,6 +639,14 @@ classdef WidgetNeuroTree < handle
         function obj = export(obj)
         	%EXPORT exports current tree
             
+            % update user message
+            set(obj.ui_text_status, 'String', 'exporting NeuroTree ...');
+            obj.ui_grid.align(obj.ui_text_status,...
+                              'VIndex', 3,...
+                              'HIndex', 1:4,...
+                              'Anchor', 'center');
+            
+            
             % check if tree exists
             if obj.indexBranch == 0
                 msg = 'Nothing to export, segment a tree.';
@@ -649,8 +657,7 @@ classdef WidgetNeuroTree < handle
                            filesep,...
                            obj.name,...
                            '_neuroTree_',...
-                           datestr(now,'ddmmmyyyy'),...
-                           '.txt'];
+                           datestr(now,'ddmmmyyyy')];
                        
                 % check if file exists
                 if exist(fileOut, 'file') == 2
@@ -660,11 +667,15 @@ classdef WidgetNeuroTree < handle
                                    filesep,...
                                    obj.name,...
                                    '_neuroTree_',...
-                                   datestr(now,'HHMMSS-ddmmmyyyy'),...
-                                   '.txt'];
+                                   datestr(now,'HHMMSS-ddmmmyyyy')];
                     end
                 end
-                fpWrite = fopen(fileOut, 'w');
+                
+                % print figure to PNG
+                print(obj.ih_figure, '-dpng', '-r300',[fileOut,'.png']);
+                
+                % open text file
+                fpWrite = fopen([fileOut,'.txt'], 'w');
                 
                 % output settings
                 fprintf(fpWrite, '# file_path: %s\n', obj.path);
