@@ -667,7 +667,7 @@ classdef WidgetNeuroTree < handle
                            datestr(now,'ddmmmyyyy')];
                        
                 % check if file exists
-                if exist(fileOut, 'file') == 2
+                if exist([fileOut,'.txt'], 'file') == 2
                     choice = questdlg('Overwrite NeuroTree file?','NeuroTree:Export','Yes','No','Yes');
                     if strcmp(choice, 'No')
                         fileOut = [obj.path,...
@@ -705,7 +705,7 @@ classdef WidgetNeuroTree < handle
                     fileTag = fileTag(1:msgLength);
                     fileTag = [fileTag,'...'];
                 end
-                msg = sprintf('NeuroTree exported to %s', fileTag);
+                msg = sprintf('exported %d branches to %s', b, fileTag);
                 
             end
             
