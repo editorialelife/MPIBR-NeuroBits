@@ -1153,17 +1153,22 @@ classdef WidgetNeuroTree < handle
         function obj = fcnBranch_extend(obj)
             %FCNBRANCH_EXTEND append node to current branch
             
-            % update node index
-            obj.indexNode = obj.indexNode + 1;
+            % check if new point is different from the last one
+            if any(obj.point ~= obj.tree(obj.indexBranch).nodes(end,:))
             
-            % append node in current branch
-            obj.tree(obj.indexBranch).extend(obj.indexNode, obj.point);
+                % update node index
+                obj.indexNode = obj.indexNode + 1;
             
-            % measure branch length
-            obj.tree(obj.indexBranch).measure();
+                % append node in current branch
+                obj.tree(obj.indexBranch).extend(obj.indexNode, obj.point);
             
-            % update status
-            obj.status(obj.indexBranch, obj.indexNode);
+                % measure branch length
+                obj.tree(obj.indexBranch).measure();
+            
+                % update status
+                obj.status(obj.indexBranch, obj.indexNode);
+                
+            end
             
         end
         
