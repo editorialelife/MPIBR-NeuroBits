@@ -412,14 +412,10 @@ classdef WidgetNeuroTree < handle
             
             if strcmp('Segment', get(obj.ui_toggleButton_segment, 'String'))
                 
-                set(obj.ui_toggleButton_segment, 'String', 'Clear');
-                set(obj.ui_toggleButton_segment, 'Value', 1);
                 obj.segment();
                 
             else
                 
-                set(obj.ui_toggleButton_segment, 'String', 'Segment');
-                set(obj.ui_toggleButton_segment, 'Value', 0);
                 obj.clear();
                 
             end
@@ -429,9 +425,6 @@ classdef WidgetNeuroTree < handle
         function obj = fcnCallback_load(obj, ~, ~)
             %FCNCALLBACK_LOAD user interface callback function
             % calls class LOAD method
-            
-            set(obj.ui_toggleButton_segment, 'String', 'Clear');
-            set(obj.ui_toggleButton_segment, 'Value', 1);
                 
             obj.segment();
             obj.load();
@@ -553,6 +546,10 @@ classdef WidgetNeuroTree < handle
         function obj = segment(obj)
             %SEGMENT initialize tree segmentation
             
+            % update toggle ui state
+            set(obj.ui_toggleButton_segment, 'String', 'Clear');
+            set(obj.ui_toggleButton_segment, 'Value', 1);
+            
             % fire get image exent
             notify(obj, 'event_NeuroTree_GetImage');
             
@@ -570,6 +567,11 @@ classdef WidgetNeuroTree < handle
         
         function obj = clear(obj)
         	%CLEAR clean tree and drawing
+            
+            % update toggle ui
+            set(obj.ui_toggleButton_segment, 'String', 'Segment');
+            set(obj.ui_toggleButton_segment, 'Value', 0);
+            
             
             % evoke automatic export
             %obj.export();
@@ -590,6 +592,13 @@ classdef WidgetNeuroTree < handle
                 obj.default();
                 
             end
+            
+            % update status message
+            set(obj.ui_text_status, 'String', 'choose image to segment');
+            obj.ui_grid.align(obj.ui_text_status,...
+                              'VIndex', 3,...
+                              'HIndex', 1:4,...
+                              'Anchor', 'center');
         end
         
         

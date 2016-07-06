@@ -226,6 +226,7 @@
             obj.file = obj.widget_FolderBrowser.list{obj.widget_FolderBrowser.index};
             obj.widget_ImageBrowser.updateFileName(obj.file);
             
+            
         end
         
         % callback :: ImageShow
@@ -234,8 +235,9 @@
         function obj = fcnCallback_ImageShow(obj, ~, ~)
             
             disp('IMAGE_SHOW');
+            obj.widget_NeuroTree.clear();
+            obj.widget_NeuroTree.enable([], 'off');
             obj.widget_NeuroTree.enable(1:2, 'on');
-            %obj.widget_NeuroPuncta.unlockUI();
             
         end
         
@@ -245,8 +247,8 @@
         function obj = fcnCallback_ImageHide(obj, ~, ~)
             
             disp('IMAGE_HIDE');
+            obj.widget_NeuroTree.clear();
             obj.widget_NeuroTree.enable([],'off');
-            %obj.widget_NeuroPuncta.lockUI();
             
         end
         
