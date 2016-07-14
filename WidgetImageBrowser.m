@@ -895,6 +895,11 @@ classdef WidgetImageBrowser < handle
             % update CData 
             set(obj.iw_image, 'CData', obj.cdata);
             
+            % set axes limits
+            set(obj.iw_axes, 'XLim', [0.5, size(obj.cdata,2) + 0.5]);
+            set(obj.iw_axes, 'YLim', [0.5, size(obj.cdata,1) + 0.5]);
+            
+            
             % update fiugre visibility
             set(obj.iw_figure, 'Visible', 'on');
             
