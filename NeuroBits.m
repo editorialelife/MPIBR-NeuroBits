@@ -224,7 +224,7 @@
             disp('FILE_UPDATED');
             % evoke load method in WidgetImageBrowser
             obj.file = obj.widget_FolderBrowser.list{obj.widget_FolderBrowser.index};
-            obj.widget_ImageBrowser.updateFileName(obj.file);
+            obj.widget_ImageBrowser.open(obj.file);
             
             
         end
