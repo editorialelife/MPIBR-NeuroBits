@@ -62,4 +62,11 @@ smb://storage.corp.brain.mpg.de/data/Projects/uImread/testdata
 
 
 ## Current limitations of Bioformats
-Please add
+List of formats supported by bioformat:
+https://www.openmicroscopy.org/site/support/bio-formats5.1/supported-formats.html#term-ratings-legend-and-definitions
+
+Possible disadvantages of open bioformat:
+
+*	conversion to the OME format when opening an image (which guarantees interoperability, but also overhead)
+*	Matlab interface is quite poor at the moment, and extracting specific metadata information it’s quite frustrating.
+*  Write is supported only for a fraction of the bioformat compatible formats.
