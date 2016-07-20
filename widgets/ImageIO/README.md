@@ -47,15 +47,19 @@ function that wrap up around the class for single calls
 smb://storage.corp.brain.mpg.de/data/Projects/uImread/testdata
 
 ## Targeted image file formats
-* TIFF
+* TIFF 
 * LSM
 * CZI
 * MSR
-* OBR
+* OBR (not in bioformats?)
 * XML based single images
 * LIF
-* SIF
-* Sutter TIFF files
-* Slide Book Container
+* SIF (not in bioformats?)
+* Sutter TIFF files (not in bioformats?)
+* Slide Book Container (not in bioformats?)
 * HDF
 * multi TIFF files in a folder
+
+
+## Current limitations of Bioformats
+Please add
