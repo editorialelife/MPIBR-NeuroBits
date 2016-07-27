@@ -1,6 +1,6 @@
 classdef readBio < ImageIO
     methods
-        function obj = getMetaData(obj)
+        function obj = getData(obj)
             %get everything.. loads complete data too
             result = bfopen(obj.fileName);
             ome = result{1,4};
