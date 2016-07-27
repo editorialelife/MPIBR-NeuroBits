@@ -7,6 +7,8 @@ classdef ImageIO < handle
     
     %% --- Metadata Properties --- %%%
     properties
+        filename
+        
         height
         width
         channels
