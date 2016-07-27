@@ -7,7 +7,8 @@ classdef ImageIO < handle
     
     %% --- Metadata Properties --- %%%
     properties
-        filename
+        fileName
+        data
         
         height
         width
@@ -18,7 +19,8 @@ classdef ImageIO < handle
         
         data_type
         
-        scale_size
+        scale_size %x,y,z,t
+        scale_units
         scale_time
         
         time_pixel
@@ -26,7 +28,11 @@ classdef ImageIO < handle
         time_frame
         time_stack
         
-        wavelength
+        zoom
+        gain
+        
+        wavelengthExc
+        wavelengthEm
         refraction_media
         NA
         
