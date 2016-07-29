@@ -20,7 +20,9 @@ classdef TiffWriter < imageIO.ImageIO
     colormap;       % colormap used. Empty array if none
     compression;    % compression scheme used
     
-    isRGB;          % true if the image is RGB
+    isRGB;          % true if the image is RGB. The user has to specify it 
+                    % to distinguish between RGB images or grayscale images
+                    % with 3 stacks. Default is false
     isBig;          % true if the data to write is bigger than 4Gb
     checkExistence; % before writing data, checks if the file exists
   end
@@ -258,9 +260,20 @@ classdef TiffWriter < imageIO.ImageIO
       if ~islogical(data) && ~isfloat(data) && ~obj.isBig
         %doesn't work with logicals / floating points / > 4GB
         try
+          obj.writeFast(data);
         catch ME
+          if strcmpi(ME.identifier,'MATLAB:invalidMEXFile');
+            warning('You probably do not have the Microsoft C++ runtime installed. Install it from https://www.microsoft.com/en-us/download/details.aspx?id=48145')
+          end
+          multitiff('close');
+          error('TiffWriter.writeData: Cannot save file. %s', ME.message)
         end
       else
+        try
+          obj.writeSlow(data);
+        catch ME
+          error('TiffWriter.writeData: Cannot save file. %s', ME.message)
+        end
       end
       
     end
@@ -268,6 +281,55 @@ classdef TiffWriter < imageIO.ImageIO
   
   methods (Access = protected)
     function writeFast(obj, data)
+    %WRITEFAST Write data to file using the mex files which directly access
+    %the tiff library. It enhances speed by not needing to open and close
+    %the tiff file when writing new directories, thus avoiding the O(n^2) time
+    %required to navigate the file.
+      if strcmp(obj.writeMode, 'create') || strcmp(obj.writeMode, 'append')
+        multitiff('create', filename);
+      end
+      numDims = ndims(data);
+      if numDims == 2
+        if isempty(obj.colormap)
+          multitiff('write', data', [], obj.compression, obj.resolution, ...
+            obj.resolutionUnit);
+        else
+          multitiff('write', data', obj.colormap, obj.compression, ...
+            obj.resolution, obj.resolutionUnit);
+        end
+        
+      elseif numDims == 3 && obj.isRGB && dataSize(3) == 3
+        dataToWrite = permute(data,[3 2 1]); %different ordering compared to Matlab
+        if ~isempty(colMap)
+          warning('TiffWriter.writeFast: Colormaps are used only with single channel data!')
+        end
+        multitiff('write', dataToWrite, [], obj.compression, obj.resolution, ...
+          obj.resolutionUnit);
+        
+      else
+        for k = 1:obj.stacks
+          if numDims == 3
+            if isempty(colMap)
+              multitiff('write', squeeze(data(:,:,k))', [], obj.compression, ...
+                obj.resolution, obj.resolutionUnit);
+            else
+              multitiff('write', squeeze(data(:,:,k))', obj.colormap, obj.compression, ...
+                obj.resolution, obj.resolutionUnit);
+            end
+          else
+            dataToWrite = permute( squeeze(data(:,:,:,k)), [3 2 1] );
+            if ~isempty(colMap)
+              warning('TiffWriter.writeFast: Colormaps are used only with single channel data!')
+            end
+            multitiff('write', dataToWrite, [], obj.compression, ...
+              obj.resolution, obj.resolutionUnit);
+          end
+        end
+      end
+      if obj.close
+        multitiff('close');
+      end
+      
     end
     
     function writeSlow(obj, data)
@@ -384,9 +446,6 @@ classdef TiffWriter < imageIO.ImageIO
         % Close the Tiff file
         t.close()
       catch ME
-        if strcmpi(ME.identifier,'MATLAB:invalidMEXFile');
-          warning('You probably do not have the Microsoft C++ runtime installed. Install it from https://www.microsoft.com/en-us/download/details.aspx?id=48145')
-        end
         t.close()
         throw(ME);
       end
