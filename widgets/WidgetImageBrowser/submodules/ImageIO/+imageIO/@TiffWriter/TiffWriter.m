@@ -7,9 +7,11 @@ classdef TiffWriter < imageIO.ImageIO
   %   mex files exist only for Windows and Linux, 64 bit versions. When no
   %   fast method is available (e.g. for logicals, float 32 bit or BigTiff)
   %   the class reverts to the Matlab slow implementation.
+  % 
   %   Author: Stefano.Masneri@brain.mpge.de
   %   Date: 29.07.2016
-  %   SEE ALSO: imageIO.TiffReader, Tiff, 
+  %   SEE ALSO: imageIO.TiffReader, Tiff, imageIO.TiffWriter.TiffWriter,
+  %   imageIO.TiffWriter.writeData
   
   properties
     XResolution;    % resolution on horizontal axis
@@ -41,20 +43,8 @@ classdef TiffWriter < imageIO.ImageIO
     %     argument.
     % INPUT:
     %   filename the filename used to save data on disk
-    %   numImages total number of images that should be written to file
-    %   close (true/false): The file will only be closed if close  is set to true
-    %     By default close is false and the file is left open for further write
-    %     operations. In this case the user has to call obj.close() 
-    %     once he is done with writing to this file.
     %   compression compression used when saved images. default is 'lzw',
     %     other values allowed are 'none', 'lzw', 'deflate', 'packbits'
-    %   writeMode file opening mode. Default is 'create' (to create a new file).
-    %     Other accepted values are 'append', to append to a file previously
-    %     closed, or 'write' to add data to an already opened file. PLEASE NOTE
-    %     that calling 'append' on a file which was already opened will close
-    %     the file and then re-open it, losing the advantages of fast tiff
-    %     writing. If the file is already opoened the correct behaviour is to
-    %     use the 'write' mode.
     %   isRGB explicitly specifies if the data should be saved as an RGB color
     %     image. Default is false.
     %   checkExistence (true/false) specifies if checks should be performed for the existance
@@ -71,9 +61,10 @@ classdef TiffWriter < imageIO.ImageIO
     %     'um', or 'unknown' (the default)
     % OUTPUT:
     %   obj the constructed object
-    %SEE ALSO imageIO.ImageIO.ImageIO, TiffWriter.parseArgs
+    %SEE ALSO imageIO.ImageIO.ImageIO, imageIO.TiffWriter.parseArgs,
+    %   imageIO.TiffWriter.writeData
     
-      %
+      %parse arguments
     
       % Must call explictily because we pass one argument
       obj = obj@imageIO.ImageIO(filename);
@@ -82,6 +73,45 @@ classdef TiffWriter < imageIO.ImageIO
       p = inputParser;
     end
     
+    function success = writeData(obj, data, varargin)
+    %WRITEDATA Write data on file
+    %Writes data on the file linked to the TiffWriter object. Apart from
+    %the mandatoy parameter data, all other parameters are passed as
+    %Name-Value pairs
+    % INPUT:
+    %   data: the data to write
+    %   writeMode: file opening mode. Default is 'create' (to create a new file).
+    %     Other accepted values are 'append', to append to a file previously
+    %     closed, or 'write' to add data to an already opened file. PLEASE NOTE
+    %     that calling 'append' on a file which was already opened will close
+    %     the file and then re-open it, losing the advantages of fast tiff
+    %     writing. If the file is already opoened the correct behaviour is to
+    %     use the 'write' mode.
+    %   close: (true/false): The file will only be closed if close is set to true
+    %     By default close is true. If false, file is left open for further write
+    %     operations. In this case the user has to call obj.close() 
+    %     once he is done with writing to this file.
+    %   numImages total number of images that should be written to file
+    % OUTPUT:
+    %   success: 0 if everything ok. A negative value otherwise
+    % EXAMPLES:
+    %   tw = imageIO.TiffWriter('test.tiff');
+    %   data = uint8(ones(1024, 512, 50));
+    %
+    %   tw.writeData( data ) writes all the 50 images of data on
+    %   tw.writeData( data, 'numImages', 20 ) writes only the first 20 images
+    %   tw.writeData( data, 'numImages', 70 ) writes all the 50
+    %    images of data and issue a warning, because the specified number
+    %    of images is greater than the number of images in
+    %   tw.writeData( data, 'writeMode', 'a') appends data 
+    %   For fast writing of multipage tiff on the same file:  
+    %     tw.writeData( data, 'close', false );
+    %     tw.writeData( newdata, 'writemode', 'write' )
+    %     tw.writeData( otherdata, 'writemode', 'write' )
+    %     tw.close();
+    % SEE ALSO:
+    %   imwrite, imageIO.TiffWriter.TiffWriter
+    end
   end
   
   methods (Static = true)
