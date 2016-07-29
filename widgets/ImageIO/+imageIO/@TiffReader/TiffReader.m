@@ -21,7 +21,8 @@ classdef TiffReader < imageIO.ImageIO
     colormap;       % colormap used. Empty array if none
     compression;    % compression scheme used
     
-    tagNames;       % Cell of available tags
+    tagNames;       % Cell of available tags. Useful if the user wants to access 
+                    % additonal metadata
   end
   
   methods
@@ -40,6 +41,27 @@ classdef TiffReader < imageIO.ImageIO
       
       % Set as many properties from the superclass as possible
       obj = obj.readMetadata();
+    end
+    
+    function img = readImage( obj, n )
+    %READIMAGE read one image plane
+    %This function reads one single plane of the image. If the file has
+    %only one planejust returns that.
+    % INPUT
+    %   n the directory (aka the plane) to read. If bigger than the number
+    %     of stacks, issue a warning and return an empty array. If not
+    %     specified, return the image in the current directory
+    % OUTPUT
+    %   img the image just read
+      if 1 == nargin % n not specified
+        img = obj.tiffPtr.read();
+      elseif n > obj.stacks
+        warning('TiffReader.readImage: Cannot read image. n is bigger than the number of stacks')
+        img = [];
+      else % valid n
+        obj.tiffPtr.setDirectory(n);
+        img = obj.tiffPtr.read();
+      end
     end
   
     function close(obj)
