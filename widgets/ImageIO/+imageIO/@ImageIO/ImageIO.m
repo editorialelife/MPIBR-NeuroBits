@@ -1,4 +1,4 @@
-classdef ImageIO < handle
+classdef (Abstract = true) ImageIO < handle
     %IMAGEIO read/write various image formats
     %   use BioFormats
     %   use TIFF lib
@@ -6,10 +6,11 @@ classdef ImageIO < handle
     
     
     %% --- Metadata Properties --- %%%
-    properties
+    properties (SetAccess = protected)
         fileName = '';          % Image filename
         fileFullPath = '';      % Full filename, together with absolute path
         fileFolder = '';        % Folder containing the image
+        fileExt = '';           % File extension
         data = [];              % TODO Do we really want to have the data???
         
         height = nan;           % Image height / number of rows
@@ -46,7 +47,7 @@ classdef ImageIO < handle
     end
     
     properties (Constant = true)
-      VERSION = '0.1'
+      VERSION = '0.1';
     end
     
     methods
@@ -58,12 +59,15 @@ classdef ImageIO < handle
       % OUTPUT
       %   obj: the returned ImageIO object
       % SEE ALSO
-      %   readBIO
+      %   imageIO.readBIO, imageIO.TiffReader
       
         p = inputParser;
         p.addRequired('filename', @(x) ischar(x))
         
         p.parse(filename);
+        
+        obj.fileFullPath = GetFullPath(filename);
+        [obj.fileFolder, obj.fileName, obj.fileExt] = fileparts(obj.fileFullPath);
       end
       
       function [major, minor] = getVersion(object)
@@ -82,6 +86,7 @@ classdef ImageIO < handle
     
     methods (Abstract = true)
     % Here we have the methods that each subclass MUST implement
+      close(obj);
     end
     
     methods (Access = protected)
