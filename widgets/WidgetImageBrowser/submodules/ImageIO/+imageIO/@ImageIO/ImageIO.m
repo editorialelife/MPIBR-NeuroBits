@@ -75,8 +75,8 @@ classdef ImageIO < handle
         if length(C) ~= 2
           error('ImageIO.getVersion: Error parsing version string')
         end
-        major = str2num(C{1});
-        minor = str2num(C{2});
+        major = str2double(C{1});
+        minor = str2double(C{2});
       end
     end
     
