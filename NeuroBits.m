@@ -22,161 +22,40 @@
         ui_parent
         ui_grid
         
-        ui_panel_FolderBrowser
-        ui_panel_ImageBrowser
-        ui_panel_NeuroTree
-        ui_panel_NeuroPuncta
-        ui_panel_BatchJob
-        
         %%% --- Widget Objects --- %%%
         widget_FolderBrowser
         widget_ImageBrowser
         widget_NeuroTree
         widget_NeuroPuncta
-        widget_BatchJob
+        widget_BatchProcessing
+        
     end
     
     properties (Constant = true, Access = private, Hidden = true)
         
-        GUI_WINDOW_POSITION = [1, 1, 260, 680];
-        VERTICAL_GAP = [5, 5, 5];
-        HORIZONTAL_GAP = [5, 5, 5];
+        UIWINDOW_SIZE = [1, 1, 266, 680];
+        GRID_VGAP = [5, 5, 5];
+        GRID_HGAP = [5, 5, 5];
         BACKGROUND_COLOR = [1, 1, 1];
         
     end
     
+    %% --- class constructor / destructor --- %%
     methods
         
-        % method :: NeuroBits
-        %  input :: class object
-        % action :: class constructor
         function obj = NeuroBits()
+            %NEUROBITS class constructor
             
             % render widget panels
-            obj.renderUI();
+            obj.renderWidgetInterface();
             
             % initialize widget objects
-            obj.renderWidgets();
-            
-            
-        end
-        
-        
-        % method :: renderUI
-        %  input :: class object
-        % action :: render user interface
-        function obj = renderUI(obj)
-            
-            
-            %%% --- Main Figure --- %%%
-            obj.ui_parent = figure(...
-                'Visible', 'on',...
-                'Tag', 'hNeuroBits',...
-                'Name', 'NeuroBits',...
-                'MenuBar', 'none',...
-                'ToolBar', 'none',...
-                'NumberTitle', 'off',...
-                'Color', obj.BACKGROUND_COLOR,...
-                'Resize', 'off',...
-                'Units', 'pixels',...
-                'Position', obj.GUI_WINDOW_POSITION,...
-                'CloseRequestFcn', @obj.fcnCallback_CloseUIWindow);
-            movegui(obj.ui_parent, 'northwest');
-            
-            %%% --- Create Grid --- %%%
-            obj.ui_grid = uiGridLayout(...
-                'Parent', obj.ui_parent,...
-                'VGrid', 5,...
-                'HGrid', 1,...
-                'VGap', obj.VERTICAL_GAP,...
-                'HGap', obj.HORIZONTAL_GAP);
-            
-            %%% --- Folder Browser --- %%%
-            obj.ui_panel_FolderBrowser = uipanel(...
-                'Parent', obj.ui_parent,...
-                'BackgroundColor', obj.BACKGROUND_COLOR,...
-                'BorderType', 'none',...
-                'Units', 'pixels',...
-                'Position', obj.ui_grid.getGrid('VIndex', 1, 'HIndex', 1));
-                                         
-            %%% --- Image Browser --- %%%
-            obj.ui_panel_ImageBrowser = uipanel(...
-                'Parent', obj.ui_parent,...
-                'BackgroundColor', obj.BACKGROUND_COLOR,...
-                'BorderType', 'none',...
-                'Units', 'pixels',...
-                'Position', obj.ui_grid.getGrid('VIndex', 2, 'HIndex', 1));
-            
-            %%% --- DrawTree --- %%%
-            obj.ui_panel_NeuroTree = uipanel(...
-                'Parent', obj.ui_parent,...
-                'BackgroundColor', obj.BACKGROUND_COLOR,...
-                'BorderType', 'none',...
-                'Units', 'pixels',...
-                'Position', obj.ui_grid.getGrid('VIndex', 3, 'HIndex', 1));
-            
-            %%% --- Find Puncta --- %%%
-            obj.ui_panel_NeuroPuncta = uipanel(...
-                'Parent', obj.ui_parent,...
-                'BackgroundColor', obj.BACKGROUND_COLOR,...
-                'BorderType', 'none',...
-                'Units', 'pixels',...
-                'Position', obj.ui_grid.getGrid('VIndex', 4, 'HIndex', 1));
-            
-            
-            %%% --- Batch Processing --- %%%
-            obj.ui_panel_BatchJob = uipanel(...
-                'Parent', obj.ui_parent,...
-                'BackgroundColor', obj.BACKGROUND_COLOR,...
-                'BorderType', 'none',...
-                'Units', 'pixels',...
-                'Position', obj.ui_grid.getGrid('VIndex', 5, 'HIndex', 1));
+            obj.linkWidgets();
             
         end
         
-        % method :: renderWidgets
-        %  input :: class object
-        % action :: initializes widget object
-        function obj = renderWidgets(obj)
-            
-            % start FolderBrowser
-            obj.widget_FolderBrowser = WidgetFolderBrowser(...
-                'Parent', obj.ui_panel_FolderBrowser,...
-                'Extension', '*.lsm');
-            if isa(obj.widget_FolderBrowser, 'WidgetFolderBrowser')
-                addlistener(obj.widget_FolderBrowser, 'event_fileUpdated', @obj.fcnCallback_FileUpdate);
-            end
-            
-            % start ImageBrowser
-            obj.widget_ImageBrowser = WidgetImageBrowser(...
-                'Parent', obj.ui_panel_ImageBrowser);
-            if isa(obj.widget_ImageBrowser, 'WidgetImageBrowser')
-                addlistener(obj.widget_ImageBrowser, 'event_ImageBrowser_Show', @obj.fcnCallback_ImageShow);
-                addlistener(obj.widget_ImageBrowser, 'event_ImageBrowser_Hide', @obj.fcnCallback_ImageHide);
-            end
-            
-            
-            % start NeuroTree
-            obj.widget_NeuroTree = WidgetNeuroTree(...
-                'Parent', obj.ui_panel_NeuroTree);
-            if isa(obj.widget_NeuroTree, 'WidgetNeuroTree')
-            	addlistener(obj.widget_NeuroTree, 'event_NeuroTree_GetImage', @obj.fcnCallback_SegmentTree);
-            end
-            
-            
-            % start NeuroPuncta
-            obj.widget_NeuroPuncta = WidgetNeuroPuncta(...
-                'Parent', obj.ui_panel_NeuroPuncta);
-            if isa(obj.widget_NeuroPuncta, 'WidgetNeuroPuncta')
-                addlistener(obj.widget_NeuroPuncta, 'event_NeuroPuncta_Segment', @obj.fcnCallback_SegmentPuncta);
-            end
-            
-        end
-        
-        % method :: dispose
-        %  input :: class object
-        % action :: class destructor
         function obj = dispose(obj)
+            %DISPOSE class destructor
             
             % dispose WidgetFolderBrowser
             if isa(obj.widget_FolderBrowser, 'WidgetFolderBrowser')
@@ -187,6 +66,22 @@
             if isa(obj.widget_ImageBrowser, 'WidgetImageBrowser')
                 obj.widget_ImageBrowser.dispose();
             end
+            
+            % dispose WidgetNeuroTree
+            if isa(obj.widget_NeuroTree, 'WidgetNeuroTree')
+                obj.widget_NeuroTree.dispose();
+            end
+            
+            % dispose WidgetNeuroPuncta
+            if isa(obj.widget_NeuroPuncta, 'WidgetNeuroPuncta')
+                obj.widget_NeuroPuncta.dispose();
+            end
+            
+            % dispose WidgetBatchProcessing
+            if isa(obj.widget_BatchProcessing, 'WidgetBatchProcessing')
+                obj.widget_BatchProcessing.dispose();
+            end
+            
             
             % remove grid
             if isa(obj.ui_grid, 'uiGridLayout')
@@ -203,14 +98,138 @@
             
         end
         
-        %%% -------------------------- %%%
-        %%% --- CALLBACK FUNCTIONS --- %%%
-        %%% -------------------------- %%%
+        function obj = renderWidgetInterface(obj)
+            %RENDERWIDGETINTERFACE
+            
+            %%% --- Main Figure --- %%%
+            obj.ui_parent = figure(...
+                'Visible', 'on',...
+                'Tag', 'hNeuroBits',...
+                'Name', 'NeuroBits',...
+                'MenuBar', 'none',...
+                'ToolBar', 'none',...
+                'NumberTitle', 'off',...
+                'Color', obj.BACKGROUND_COLOR,...
+                'Resize', 'off',...
+                'Units', 'pixels',...
+                'Position', obj.UIWINDOW_SIZE,...
+                'CloseRequestFcn', @obj.fcnCallback_closeUserInterface);
+            movegui(obj.ui_parent, 'northwest');
+            
+            %%% --- Create Grid --- %%%
+            obj.ui_grid = uiGridLayout(...
+                'Parent', obj.ui_parent,...
+                'VGrid', 5,...
+                'HGrid', 1,...
+                'VGap', obj.GRID_VGAP,...
+                'HGap', obj.GRID_HGAP);
+            
+            %%% --- Folder Browser --- %%%
+            ui_panel = uipanel(...
+                'Parent', obj.ui_parent,...
+                'BackgroundColor', obj.BACKGROUND_COLOR,...
+                'BorderType', 'none',...
+                'Units', 'pixels',...
+                'Position', obj.ui_grid.getGrid('VIndex', 1, 'HIndex', 1));
+            obj.widget_FolderBrowser = WidgetFolderBrowser(...
+                                      'Parent', ui_panel,...
+                                      'Extension', '*.lsm');
+            
+            %%% --- Image Browser --- %%%
+            ui_panel = uipanel(...
+                'Parent', obj.ui_parent,...
+                'BackgroundColor', obj.BACKGROUND_COLOR,...
+                'BorderType', 'none',...
+                'Units', 'pixels',...
+                'Position', obj.ui_grid.getGrid('VIndex', 2, 'HIndex', 1));
+            obj.widget_ImageBrowser = WidgetImageBrowser('Parent', ui_panel);
+            
+            %%% --- DrawTree --- %%%
+            ui_panel = uipanel(...
+                'Parent', obj.ui_parent,...
+                'BackgroundColor', obj.BACKGROUND_COLOR,...
+                'BorderType', 'none',...
+                'Units', 'pixels',...
+                'Position', obj.ui_grid.getGrid('VIndex', 3, 'HIndex', 1));
+            obj.widget_NeuroTree = WidgetNeuroTree('Parent', ui_panel);
+                                   
+            
+            %%% --- Find Puncta --- %%%
+            ui_panel = uipanel(...
+                'Parent', obj.ui_parent,...
+                'BackgroundColor', obj.BACKGROUND_COLOR,...
+                'BorderType', 'none',...
+                'Units', 'pixels',...
+                'Position', obj.ui_grid.getGrid('VIndex', 4, 'HIndex', 1));
+            obj.widget_NeuroPuncta = WidgetNeuroPuncta('Parent', ui_panel);
+            
+            
+            %%% --- Batch Processing --- %%%
+            ui_panel = uipanel(...
+                'Parent', obj.ui_parent,...
+                'BackgroundColor', obj.BACKGROUND_COLOR,...
+                'BorderType', 'none',...
+                'Units', 'pixels',...
+                'Position', obj.ui_grid.getGrid('VIndex', 5, 'HIndex', 1));
+            obj.widget_BatchProcessing = WidgetBatchProcessing('Parent', ui_panel);
+            
+        end
         
-        % callback :: CloseUIWindow
-        %    event :: on close request
-        %   action :: class detructor
-        function obj = fcnCallback_CloseUIWindow(obj, ~, ~)
+        function obj = linkWidgets(obj)
+            %LINKWIDGETS
+            
+            % start FolderBrowser
+            if isa(obj.widget_FolderBrowser, 'WidgetFolderBrowser')
+                
+                addlistener(obj.widget_FolderBrowser,...
+                            'event_fileUpdated',...
+                            @obj.fcnCallback_FileUpdate);
+            end
+            
+            % start ImageBrowser
+            if isa(obj.widget_ImageBrowser, 'WidgetImageBrowser')
+                
+                addlistener(obj.widget_ImageBrowser,...
+                            'event_ImageBrowser_Show',...
+                            @obj.fcnCallback_ImageShow);
+                        
+                addlistener(obj.widget_ImageBrowser,...
+                            'event_ImageBrowser_Hide',...
+                            @obj.fcnCallback_ImageHide);
+                        
+            end
+            
+            
+            % start NeuroTree
+            if isa(obj.widget_NeuroTree, 'WidgetNeuroTree')
+                
+            	addlistener(obj.widget_NeuroTree,...
+                            'event_NeuroTree_GetImage',...
+                            @obj.fcnCallback_SegmentTree);
+                        
+            end
+            
+            
+            % start NeuroPuncta
+            if isa(obj.widget_NeuroPuncta, 'WidgetNeuroPuncta')
+                
+                addlistener(obj.widget_NeuroPuncta,...
+                            'event_NeuroPuncta_Segment',...
+                            @obj.fcnCallback_SegmentPuncta);
+                        
+            end
+            
+        end
+        
+        
+        
+    end
+    
+    %% --- user interface callback --- %%
+    methods
+        
+        function obj = fcnCallback_closeUserInterface(obj, ~, ~)
+            %FCNCALLBACK_closeUserIntarface
             
             obj.dispose();
             
