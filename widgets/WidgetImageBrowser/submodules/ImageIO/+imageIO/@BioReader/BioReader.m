@@ -56,12 +56,17 @@ classdef BioReader < imageIO.ImageIO
     
     function obj = readMetadata(obj)
     %READMETADATA Access the OME metadata and sets the object properties
-    %The function accesses the OME metadata object and from there accesses
-    %all the required metadata. If the metadata is not available a default
-    %value (nan or empty string) is set
+    %The function accesses the OME metadata. The method takes as input the
+    %metadata stored in a Java Hashtable (as they are returned by the 
+    %BioFormat package) object and from there accesses all the required 
+    %metadata. If the metadata is not available a default value is set
     
+      % get OME metadata object
       ome = obj.bfPtr.getMetadataStore();
 
+      %for tiled data: get total number of tiles
+      numTilesTotal = ome.getImageCount();
+      
       %dimensions
       try
         obj.height = double(ome.getPixelsSizeX(0).getValue());
@@ -95,7 +100,7 @@ classdef BioReader < imageIO.ImageIO
       end;
 
       %scales
-      obj.scale_size = zeros(1,4);
+      obj.scale_size = zeros(1,3);
       try
         obj.scale_size(1) = double(ome.getPixelsPhysicalSizeX(0).value());
       catch
