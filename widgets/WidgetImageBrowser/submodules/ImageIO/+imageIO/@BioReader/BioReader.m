@@ -51,19 +51,21 @@ classdef BioReader < imageIO.ImageIO
         
         for row = 1:obj.numTilesRow
           for col = 1:obj.numTilesCol
+            obj.bfPtr.setSeries((row-1) * obj.numTilesCol + col - 1);
+            
             for s = 1:obj.stacks;
               for ch = 1:obj.channels
                 for t = 1:obj.time
                   tileIdx = obj.bfPtr.getIndex(s-1, ch-1, t-1) + 1;
-                  tmp = bfGetPlane(obj.bfPtr, tileIdx);
+                  tmp = bfGetPlane(obj.bfPtr, tileIdx)';
                   assert(size(tmp, 1) == obj.pixPerTileRow && size(tmp, 2) == obj.pixPerTileCol);
                   if 1 ~= row
-                    ovDiffRow = obj.overlap * obj.pixPerTileRow;
+                    ovDiffRow = round(obj.tileOverlap * obj.pixPerTileRow);
                   else
                     ovDiffRow = 0;
                   end
                   if 1 ~= col
-                    ovDiffCol = obj.overlap * obj.pixPerTileCol;
+                    ovDiffCol = round(obj.tileOverlap * obj.pixPerTileCol);
                   else
                     ovDiffCol = 0;
                   end
@@ -156,12 +158,12 @@ classdef BioReader < imageIO.ImageIO
       
       %dimensions
       try
-        obj.height = double(ome.getPixelsSizeX(0).getValue()) * (obj.pixPerTileRow - obj.overlap);
+        obj.height = round(obj.pixPerTileRow * (1 + (obj.numTilesRow - 1) * (1 - obj.tileOverlap)));
       catch
         obj.height = NaN;
       end
       try
-        obj.width = double(ome.getPixelsSizeY(0).getValue()) * (obj.pixPerTileCol - obj.overlap);
+        obj.width = round(obj.pixPerTileCol * (1 + (obj.numTilesCol - 1) * (1 - obj.tileOverlap)));
       catch
         obj.width = NaN;
       end
