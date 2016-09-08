@@ -19,8 +19,19 @@ classdef (Abstract = true) ImageIO < handle
         stacks = nan;           % Image stacks (Z axis)
         time = nan;             % Image timeseries
         tile = nan;             % Image tiles per stack
+        numTilesRow = nan;      % Image tiles in vertical direction
+        numTilesCol = nan;      % Image tiles in horizontal direction
+        rowTilePos = nan;       % vertical position of tile
+        colTilePos = nan;       % horizontal position of tile
+        pixPerTileRow = nan;    % number of rows of pixels in a tile
+        pixPerTileCol = nan;    % number of cols of pixels in a tile
+        tileOverlap = nan;      % overlap between 2 adjacent tiles
         
         data_type = '';         % Image datatype (uint8, int16, ...)
+        
+        pixelSizeX;
+        pixelSizeY;
+        pixelSizeZ;
         
         scale_size %x,y,z,t
         scale_units

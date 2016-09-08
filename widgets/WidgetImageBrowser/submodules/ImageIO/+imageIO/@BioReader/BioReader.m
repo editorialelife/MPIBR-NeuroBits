@@ -26,26 +26,90 @@ classdef BioReader < imageIO.ImageIO
       obj = obj.readMetadata();
     end
     
-    function obj = getData(obj)
-      %get everything.. loads complete data too
-
-      ome = obj.bfPtr{1,4};
-      %result = result{1}; ????
-      
-      %% import data
-      %preallocate data
-      obj.data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.data_type);
-      %fill out data array
-      numPlanes = size(result,1);
-      for k=0:numPlanes-1
-        %extract dimensions out of string
-        try ch = ome.getPlaneTheC(0,k).getValue()+1; catch ch = 1; end
-        try z = ome.getPlaneTheZ(0,k).getValue()+1; catch z = 1; end
-        try t = ome.getPlaneTheT(0,k).getValue()+1; catch t = k+1; end
-        obj.data(:,:,ch,z,t) = result{k+1,1}';
-        %result{i, 1} = [];
-        %result{i, 2} = [];
+    function data = getData(obj, varargin)
+    %GETDATA extracts image data
+    % This function reads data from the bioformat file. If no parameters
+    % are specified for a specific dimension, all the data will be
+    % extracted.
+    % INPUT
+    %   obj: class instance
+    %   varargin: Name-Value arguments. Allowed parameters are 'X', 'Y',
+    %     'C', 'Z', 'T', 'Tile'
+    % OUTPUT
+    %   data: extracted image data
+    % EXAMPLES
+    %   myBR = BioReader('testfile.lsm');
+    %   data = myBR.getData(); %Reads all the data
+    %   data = myBR.getData('X', 1:10) %Reads only the first then rows
+    %   data = myBR.getData('X', 1:2:end) %reads only the odd rows
+    %   data = myBR.getData('C', 1, 'Z', 4:8) %reads tiles 4 to 8, only 1st channel
+    %   data = myBR.getData('Tile', [1:6, 2:4]) %Reads first six rows of
+    %     tiles, and column tiles from 2 to 4
+    
+      if isempty(varargin) % Read all the data
+        data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.data_type);
+        
+        for row = 1:obj.numTilesRow
+          for col = 1:obj.numTilesCol
+            for s = 1:obj.stacks;
+              for ch = 1:obj.channels
+                for t = 1:obj.time
+                  tileIdx = obj.bfPtr.getIndex(s-1, ch-1, t-1) + 1;
+                  tmp = bfGetPlane(obj.bfPtr, tileIdx);
+                  assert(size(tmp, 1) == obj.pixPerTileRow && size(tmp, 2) == obj.pixPerTileCol);
+                  if 1 ~= row
+                    ovDiffRow = obj.overlap * obj.pixPerTileRow;
+                  else
+                    ovDiffRow = 0;
+                  end
+                  if 1 ~= col
+                    ovDiffCol = obj.overlap * obj.pixPerTileCol;
+                  else
+                    ovDiffCol = 0;
+                  end
+                  startR = 1 + (row - 1) * obj.pixPerTileRow - ovDiffRow;
+                  startC = 1 + (col - 1) * obj.pixPerTileCol - ovDiffCol;
+                  endR   = startR + obj.pixPerTileRow - 1;
+                  endC   = startC + obj.pixPerTileCol - 1;
+                  data(startR:endR, startC:endC, ch, s, t) = tmp;
+                end
+              end
+            end
+          end
+        end
+      else
+        %TODO
       end
+    
+%       ome = obj.bfPtr{1,4};
+%       %result = result{1}; ????
+%       
+%       % import data
+%       %preallocate data
+%       data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.data_type);
+%       %fill out data array
+%       numPlanes = size(result,1);
+%       for k=0:numPlanes-1
+%         %extract dimensions out of string
+%         try
+%           ch = ome.getPlaneTheC(0,k).getValue()+1;
+%         catch
+%           ch = 1;
+%         end
+%         try
+%           z = ome.getPlaneTheZ(0,k).getValue()+1;
+%         catch
+%           z = 1;
+%         end
+%         try
+%           t = ome.getPlaneTheT(0,k).getValue()+1;
+%         catch
+%           t = k+1;
+%         end
+%         obj.data(:,:,ch,z,t) = result{k+1,1}';
+%         %result{i, 1} = [];
+%         %result{i, 2} = [];
+%       end
     end
     
     function close(obj)
@@ -63,18 +127,41 @@ classdef BioReader < imageIO.ImageIO
     
       % get OME metadata object
       ome = obj.bfPtr.getMetadataStore();
-
-      %for tiled data: get total number of tiles
-      numTilesTotal = ome.getImageCount();
+      
+      % get Pixels Physical Size
+      try
+        obj.pixelSizeX = double(ome.getPixelsPhysicalSizeX(0).value());
+      catch
+        obj.pixelSizeX = 1;
+      end
+      try
+        obj.pixelSizeY = double(ome.getPixelsPhysicalSizeY(0).value());
+      catch
+        obj.pixelSizeY = 1;
+      end
+      try
+        obj.pixelSizeZ = double(ome.getPixelsPhysicalSizeZ(0).value());
+      catch
+        obj.pixelSizeZ = 1;
+      end
+      
+      
+      %for tiled data: get total number of tiles and accessory info
+      try
+        obj.tile = ome.getImageCount();
+      catch
+        obj.tile = 1;
+      end
+      obj = obj.setTileProperties(ome);
       
       %dimensions
       try
-        obj.height = double(ome.getPixelsSizeX(0).getValue());
+        obj.height = double(ome.getPixelsSizeX(0).getValue()) * (obj.pixPerTileRow - obj.overlap);
       catch
         obj.height = NaN;
       end
       try
-        obj.width = double(ome.getPixelsSizeY(0).getValue());
+        obj.width = double(ome.getPixelsSizeY(0).getValue()) * (obj.pixPerTileCol - obj.overlap);
       catch
         obj.width = NaN;
       end
@@ -97,7 +184,7 @@ classdef BioReader < imageIO.ImageIO
         obj.data_type = char(ome.getPixelsType(0));
       catch
         obj.data_type = 'uint16';
-      end;
+      end
 
       %scales
       obj.scale_size = zeros(1,3);
@@ -201,6 +288,59 @@ classdef BioReader < imageIO.ImageIO
         end
       end
     
+    end
+  end
+  
+  methods (Access = protected)
+    function obj = setTileProperties(obj, ome)
+    %SETTILEPROPERTIES Set all properties related to tiles
+      
+      if 1 == obj.tile
+        obj.rowTilePos = 1;
+        obj.colTilePos = 1;
+        obj.numTilesRow = 1;
+        obj.numTilesCol = 1;
+        obj.tileOverlap = 0;
+        obj.pixPerTileRow = ome.getPixelsSizeX(0).getValue();
+        obj.pixPerTileCol = ome.getPixelsSizeY(0).getValue();
+      else
+        obj.rowTilePos = nan(1, obj.tile);
+        obj.colTilePos = nan(1, obj.tile);
+        try
+          for k = 1:obj.tile
+            obj.rowTilePos(k) = double(ome.getPlanePositionX(k-1,0).value());
+            obj.colTilePos(k) = double(ome.getPlanePositionY(k-1,0).value());
+          end
+          obj.numTilesRow = length(unique(obj.rowTilePos));
+          obj.numTilesCol = length(unique(obj.colTilePos));
+        catch
+          obj.rowTilePos = nan(1, obj.tile);
+          obj.colTilePos = nan(1, obj.tile);
+          obj.numTilesRow = nan;
+          obj.numTilesCol = nan;
+        end
+        try
+          obj.pixPerTileRow = double(ome.getPixelsSizeX(0).getValue());
+          obj.pixPerTileCol = double(ome.getPixelsSizeY(0).getValue());
+        catch
+          obj.pixPerTileRow = NaN;
+          obj.pixPerTileCol = NaN;
+        end
+        try
+          if obj.numTilesRow > 1
+            adjacentDiff = obj.rowTilePos(2) - obj.rowTilePos(1);
+            obj.tileOverlap = 1 - adjacentDiff / (obj.pixPerTileRow * obj.pixelSizeX);
+          elseif obj.numTilesCol > 1
+            adjacentDiff = obj.colTilePos(2) - obj.colTilePos(1);
+            obj.tileOverlap = 1 - adjacentDiff / (obj.pixPerTileCol * obj.pixelSizeY);
+          else
+            obj.tileOverlap = 0;
+          end
+        catch
+          obj.tileOverlap = 0;
+        end
+        
+      end
     end
   end
 end
