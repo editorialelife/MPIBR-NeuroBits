@@ -51,7 +51,7 @@ classdef BioReader < imageIO.ImageIO
         
         for row = 1:obj.numTilesRow
           for col = 1:obj.numTilesCol
-            obj.bfPtr.setSeries((row-1) * obj.numTilesCol + col - 1);
+            obj.bfPtr.setSeries((col-1) * obj.numTilesCol + row - 1);
             
             for s = 1:obj.stacks;
               for ch = 1:obj.channels
