@@ -34,53 +34,26 @@ classdef BioReader < imageIO.ImageIO
     % INPUT
     %   obj: class instance
     %   varargin: Name-Value arguments. Allowed parameters are 'X', 'Y',
-    %     'C', 'Z', 'T', 'Tile'
+    %     'C', 'Z', 'T', 'TileRow', 'TileCol'
     % OUTPUT
-    %   data: extracted image data
+    %   data: image data, up to 5 dimension (in this order: XYCZT). If only one
+    %   	channel is extracted (or the input is single channel), the singleton
+    %   	dimension relative to channel is squeezed.
     % EXAMPLES
     %   myBR = BioReader('testfile.lsm');
     %   data = myBR.getData(); %Reads all the data
     %   data = myBR.getData('X', 1:10) %Reads only the first then rows
     %   data = myBR.getData('X', 1:2:end) %reads only the odd rows
     %   data = myBR.getData('C', 1, 'Z', 4:8) %reads tiles 4 to 8, only 1st channel
-    %   data = myBR.getData('Tile', [1:6, 2:4]) %Reads first six rows of
+    %   data = myBR.getData('TileRow', 1:6, 'TileCol, 2:4) %Reads first six rows of
     %     tiles, and column tiles from 2 to 4
     
       if isempty(varargin) % Read all the data
-        data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.data_type);
-        
-        for row = 1:obj.numTilesRow
-          for col = 1:obj.numTilesCol
-            obj.bfPtr.setSeries((col-1) * obj.numTilesCol + row - 1);
-            
-            for s = 1:obj.stacks;
-              for ch = 1:obj.channels
-                for t = 1:obj.time
-                  tileIdx = obj.bfPtr.getIndex(s-1, ch-1, t-1) + 1;
-                  tmp = bfGetPlane(obj.bfPtr, tileIdx)';
-                  assert(size(tmp, 1) == obj.pixPerTileRow && size(tmp, 2) == obj.pixPerTileCol);
-                  if 1 ~= row
-                    ovDiffRow = round(obj.tileOverlap * obj.pixPerTileRow);
-                  else
-                    ovDiffRow = 0;
-                  end
-                  if 1 ~= col
-                    ovDiffCol = round(obj.tileOverlap * obj.pixPerTileCol);
-                  else
-                    ovDiffCol = 0;
-                  end
-                  startR = 1 + (row - 1) * obj.pixPerTileRow - ovDiffRow;
-                  startC = 1 + (col - 1) * obj.pixPerTileCol - ovDiffCol;
-                  endR   = startR + obj.pixPerTileRow - 1;
-                  endC   = startC + obj.pixPerTileCol - 1;
-                  data(startR:endR, startC:endC, ch, s, t) = tmp;
-                end
-              end
-            end
-          end
-        end
+        data = obj.getAllData();
+      elseif 1 == obj.tile
+        obj.getDataNoTiles(varargin);
       else
-        %TODO
+        obj.getTiledData(varargin);
       end
     
 %       ome = obj.bfPtr{1,4};
