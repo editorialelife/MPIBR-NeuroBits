@@ -55,42 +55,12 @@ classdef BioReader < imageIO.ImageIO
       else
         obj.getTiledData(varargin);
       end
-    
-%       ome = obj.bfPtr{1,4};
-%       %result = result{1}; ????
-%       
-%       % import data
-%       %preallocate data
-%       data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.data_type);
-%       %fill out data array
-%       numPlanes = size(result,1);
-%       for k=0:numPlanes-1
-%         %extract dimensions out of string
-%         try
-%           ch = ome.getPlaneTheC(0,k).getValue()+1;
-%         catch
-%           ch = 1;
-%         end
-%         try
-%           z = ome.getPlaneTheZ(0,k).getValue()+1;
-%         catch
-%           z = 1;
-%         end
-%         try
-%           t = ome.getPlaneTheT(0,k).getValue()+1;
-%         catch
-%           t = k+1;
-%         end
-%         obj.data(:,:,ch,z,t) = result{k+1,1}';
-%         %result{i, 1} = [];
-%         %result{i, 2} = [];
-%       end
     end
     
     function close(obj)
     %CLOSE Close object instances.
     %Close performs the cleanup and release of the instantiated object
-      obj.result.close();
+      obj.bfPtr.close();
     end
     
     function obj = readMetadata(obj)
