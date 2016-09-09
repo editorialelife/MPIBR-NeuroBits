@@ -34,7 +34,7 @@ classdef BioReader < imageIO.ImageIO
     % INPUT
     %   obj: class instance
     %   varargin: Name-Value arguments. Allowed parameters are 'X', 'Y',
-    %     'C', 'Z', 'T', 'TileRow', 'TileCol'
+    %     'C', 'Z', 'T', 'TileRows', 'TileCols'
     % OUTPUT
     %   data: image data, up to 5 dimension (in this order: XYCZT). If only one
     %   	channel is extracted (or the input is single channel), the singleton
@@ -51,9 +51,9 @@ classdef BioReader < imageIO.ImageIO
       if isempty(varargin) % Read all the data
         data = obj.getAllData();
       elseif 1 == obj.tile
-        obj.getDataNoTiles(varargin);
+        data = obj.getDataNoTiles(varargin{:});
       else
-        obj.getTiledData(varargin);
+        data = obj.getTiledData(varargin{:});
       end
     end
     

@@ -70,5 +70,7 @@ for row = tileRow
   end
 end
 
+%squeeze data, to remove singleton dimensions
+data = squeeze(data);
 end
 
