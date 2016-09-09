@@ -4,7 +4,14 @@ function [ data ] = getTiledData( obj, varargin )
 %   images that contain multiple tiles. The user can specify subset
 %   of the images by specifying the dimension and the interval of interest
 %   as a Name-Value pair. If no arguments are given, all the data is
-%   extracted.
+%   extracted. For the Cols and Rows argument, the interval is intented
+%   per-tile. For example, if the user wants to keep only the top left tile,
+%   he won't specify any subset for Rows and Cols (i.e., tahe them all),
+%   but will specify the subset TileRow = 1 and TileCol = 1. On the other
+%   hand, if the user wants to extract an image subsampled of a factor 2
+%   compared to the original, he will specify a subset Rows = 1:2:obj.pixPerTileRow
+%   and Cols = 1:2:obj.pixPerTileCol, and no subset for the tiles (i.e. use
+%   all tiles).
 % INPUT:
 %   obj: the BioReader instance
 % NAME-VALUE ARGUMENTS
@@ -23,7 +30,7 @@ function [ data ] = getTiledData( obj, varargin )
 %   data = obj.getTiledData(); %extract all data
 %   data = obj.getTiledData('C', 1:2); %extract data only from the first
 %     2 channels
-%   data = obj.getTiledData('X', 1:2:obj.width, 'Y', 1:2:obj.height); %
+%   data = obj.getTiledData('Rows', 1:2:obj.pixPerTileCol, 'Cols', 1:2:obj.pixPerTileRow); %
 %     extract data subsampled by a factor 2 in rows and cols
 %   data = obj.getTiledData('TileRow', 1:6, 'TileCol, 2:4) %Reads first six rows of
 %     tiles, and column tiles from 2 to 4
@@ -31,13 +38,13 @@ function [ data ] = getTiledData( obj, varargin )
 %parse input
 p = inputParser();
 p.KeepUnmatched = true;
-p.addParameter('Cols', 1:obj.width, @(x) isvector(x) && all(x > 0) && max(x) <= obj.width);
-p.addParameter('Rows', 1:obj.height, @(x) isvector(x) && all(x > 0) && max(x) <= obj.height);
+p.addParameter('Cols', 1:obj.pixPerTileCol, @(x) isvector(x) && all(x > 0) && max(x) <= obj.pixPerTileCol);
+p.addParameter('Rows', 1:obj.pixPerTileRow, @(x) isvector(x) && all(x > 0) && max(x) <= obj.pixPerTileRow);
 p.addParameter('C', 1:obj.channels, @(x) isvector(x) && all(x > 0) && max(x) <= obj.channels);
 p.addParameter('Z', 1:obj.stacks, @(x) isvector(x) && all(x > 0) && max(x) <= obj.stacks);
 p.addParameter('T', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.time);
-p.addParameter('TileCol', 1:obj.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesCol);
-p.addParameter('TileRow', 1:obj.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesRow);
+p.addParameter('TileCols', 1:obj.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesCol);
+p.addParameter('TileRows', 1:obj.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesRow);
 
 p.parse(varargin{:});
 rows = p.Results.Rows;
@@ -45,55 +52,66 @@ cols = p.Results.Cols;
 channels = p.Results.C;
 stacks = p.Results.Z;
 timeseries = p.Results.T;
-tileCol = p.Results.TileCol;
-tileRow = p.Results.TileRow;
+tileCol = p.Results.TileCols;
+tileRow = p.Results.TileRows;
 
-data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
-  length(time), obj.data_type);
+sizeRows = round(length(rows) * (1 + (max(tileRow) - 1) * (1 - obj.tileOverlap)));
+sizeCols = round(length(cols) * (1 + (max(tileCol) - 1) * (1 - obj.tileOverlap)));
+data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
+  length(timeseries), obj.data_type);
+
+%get index of start of each new tile
+pixelStartTileRow = 1 + round((0:max(tileRow)-1) * (1 - obj.tileOverlap) * length(rows));
+pixelStartTileCol = 1 + round((0:max(tileCol)-1) * (1 - obj.tileOverlap) * length(cols));
 
 % For every combination of Time, Z, Channel
-idxS = 0;
+idxS = 1;
 for s = stacks;
-  idxCh = 0;
+  idxCh = 1;
   for ch = channels
-    idxT = 0;
+    idxT = 1;
     for t = timeseries
       
       %Create the whole 2D image
-      tmpData = zeros(obj.height, obj.width);
       for row = tileRow
         for col = tileCol
           %set series
-          obj.bfPtr.setSeries((col-1) * obj.numTilesCol + row - 1);
+          obj.bfPtr.setSeries((row-1) * obj.numTilesCol + col - 1);
           %set index
           tileIdx = obj.bfPtr.getIndex(s-1, ch-1, t-1) + 1;
           %get plane
-          tmpTile = bfGetPlane(obj.bfPtr, tileIdx)';
-          if 1 ~= row
-            ovDiffRow = round(obj.tileOverlap * obj.pixPerTileRow);
-          else
-            ovDiffRow = 0;
-          end
-          if 1 ~= col
-            ovDiffCol = round(obj.tileOverlap * obj.pixPerTileCol);
-          else
-            ovDiffCol = 0;
-          end
-          startR = 1 + (row - 1) * obj.pixPerTileRow - ovDiffRow;
-          startC = 1 + (col - 1) * obj.pixPerTileCol - ovDiffCol;
-          endR   = startR + length(rows);
-          endC   = startC + length(cols);
-          tmpData(startR:endR, startC:endC) = tmpTile(rows, cols);
+          tmpTile = bfGetPlane(obj.bfPtr, tileIdx);
+          [rr, cc] = size(tmpTile(rows, cols));
+          data(pixelStartTileRow(row) : pixelStartTileRow(row) + rr - 1, ...
+               pixelStartTileCol(col) : pixelStartTileCol(col) + cc - 1, ...
+               idxCh, idxS, idxT) = tmpTile(rows, cols);
         end
       end
-      %Subset the 2D image and set it in output data
-      data(:, :, idxCh, idxS, idxT) = tmpData(rows, cols);
+
       
       idxT = idxT + 1;
     end
     idxCh = idxCh + 1;
   end
   idxS = idxS + 1;
+end
+
+%squeeze data, to remove singleton dimensions
+data = squeeze(data);
+
+%remove zero rows and cols
+if ismatrix(data)
+  data(1:pixelStartTileRow(tileRow(1)) - 1, :) = [];
+  data(:, 1:pixelStartTileCol(tileCol(1)) - 1) = [];
+elseif 3 == ndims(data)
+  data(1:pixelStartTileRow(tileRow(1)) - 1, :, :) = [];
+  data(:, 1:pixelStartTileCol(tileCol(1)) - 1, :) = [];
+elseif 4 == ndims(data)
+  data(1:pixelStartTileRow(tileRow(1)) - 1, :, :, :) = [];
+  data(:, 1:pixelStartTileCol(tileCol(1)) - 1, :, :) = [];
+else % 5 == ndims(data)
+  data(1:pixelStartTileRow(tileRow(1)) - 1, :, :, :, :) = [];
+  data(:, 1:pixelStartTileCol(tileCol(1)) - 1, :, :, :) = [];
 end
 
 end
