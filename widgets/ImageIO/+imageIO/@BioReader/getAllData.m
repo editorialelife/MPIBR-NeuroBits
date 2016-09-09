@@ -20,14 +20,14 @@ else
   for row = 1:obj.numTilesRow
     for col = 1:obj.numTilesCol
       %set series
-      obj.bfPtr.setSeries((col-1) * obj.numTilesCol + row - 1);
+      obj.bfPtr.setSeries((row-1) * obj.numTilesCol + col - 1);
       
       for s = 1:obj.stacks;
         for ch = 1:obj.channels
           for t = 1:obj.time
             %set index
             tileIdx = obj.bfPtr.getIndex(s-1, ch-1, t-1) + 1;
-            tmp = bfGetPlane(obj.bfPtr, tileIdx)';
+            tmp = bfGetPlane(obj.bfPtr, tileIdx);
             assert(size(tmp, 1) == obj.pixPerTileRow && size(tmp, 2) == obj.pixPerTileCol);
             if 1 ~= row
               ovDiffRow = round(obj.tileOverlap * obj.pixPerTileRow);
