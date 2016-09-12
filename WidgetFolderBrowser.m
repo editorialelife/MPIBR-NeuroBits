@@ -336,7 +336,7 @@ classdef WidgetFolderBrowser < handle
         %    event :: on Load File button click
         %   action :: loads single file
         function obj = fcnCallback_LoadFile(obj, ~, ~)
-            [file_name, path_name] = uigetfile(obj.ext, 'Pick a file ...');
+            [file_name, path_name] = uigetfile(regexp(obj.ext,',','split')', 'Pick a file ...');
             if ischar(file_name)
                 obj.loadFile(file_name, path_name);
             end
