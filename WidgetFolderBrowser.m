@@ -232,7 +232,12 @@ classdef WidgetFolderBrowser < handle
         function obj = loadFolder(obj, pathName)
             
             % read folder information
-            folderInfo = dir([pathName, filesep, obj.ext]);
+            tmpExt = regexp(obj.ext, ',', 'split');
+            folderInfo = [];
+            for e = 1 : length(tmpExt)
+                folderInfo = cat(1,folderInfo,dir([pathName, filesep, tmpExt{e}]));
+            end
+            disp(folderInfo);
             
             % clean subdirectories
             folderInfo(cat(1,folderInfo.isdir)) = [];
