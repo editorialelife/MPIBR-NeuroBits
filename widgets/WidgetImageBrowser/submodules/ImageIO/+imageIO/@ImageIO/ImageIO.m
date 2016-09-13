@@ -11,7 +11,6 @@ classdef (Abstract = true) ImageIO < handle
         fileFullPath = '';      % Full filename, together with absolute path
         fileFolder = '';        % Folder containing the image
         fileExt = '';           % File extension
-        data = [];              % TODO Do we really want to have the data???
         
         height = nan;           % Image height / number of rows
         width = nan;            % Image width / number of columns

@@ -90,7 +90,6 @@ classdef BioReader < imageIO.ImageIO
         obj.pixelSizeZ = 1;
       end
       
-      
       %for tiled data: get total number of tiles and accessory info
       try
         obj.tile = ome.getImageCount();
@@ -273,10 +272,15 @@ classdef BioReader < imageIO.ImageIO
         end
         try
           if obj.numTilesRow > 1
-            adjacentDiff = obj.rowTilePos(2) - obj.rowTilePos(1);
+            %get the minimum value above zero
+            rowDiffs = diff(obj.rowTilePos);
+            rowDiffs(rowDiffs <= 0) = Inf;
+            adjacentDiff = min(rowDiffs);
             obj.tileOverlap = 1 - adjacentDiff / (obj.pixPerTileRow * obj.pixelSizeX);
           elseif obj.numTilesCol > 1
-            adjacentDiff = obj.colTilePos(2) - obj.colTilePos(1);
+            colDiffs = diff(obj.colTilePos);
+            colDiffs(colDiffs == 0) = Inf;
+            adjacentDiff = min(colDiffs);
             obj.tileOverlap = 1 - adjacentDiff / (obj.pixPerTileCol * obj.pixelSizeY);
           else
             obj.tileOverlap = 0;
