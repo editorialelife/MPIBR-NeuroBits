@@ -24,11 +24,12 @@ classdef TiffWriter < imageIO.ImageIO
                     % to distinguish between RGB images or grayscale images
                     % with 3 stacks. Default is false
     isBig;          % true if the data to write is bigger than 4Gb
+    bitsPerSample;  % number of bits used to represent one pixel
     checkExistence; % before writing data, checks if the file exists
   end
   
   methods
-    function obj = TiffWriter(filename, map, varargin)
+    function obj = TiffWriter(filename, varargin)
     %TIFFWRITER Constructor of the class
     %The constructor calls the constructor of the superclass, and then
     %parses the input in order to get the information required to write the
@@ -44,8 +45,9 @@ classdef TiffWriter < imageIO.ImageIO
     %     alternative where the user specifies a colormap as the first
     %     argument.
     % INPUT:
-    %   filename the filename used to save data on disk
-    %   map: the colormap used
+    %   filename the filename used to save data on disk - MANDATORY
+    %   map: the colormap used - OPTIONAL
+    % NAME-VALUE INPUT PARAMETERS:
     %   compression compression used when saved images. default is 'lzw',
     %     other values allowed are 'none', 'lzw', 'deflate', 'packbits'
     %   isRGB explicitly specifies if the data should be saved as an RGB color
@@ -87,14 +89,14 @@ classdef TiffWriter < imageIO.ImageIO
         isinteger(uint32(x) ) );
       p.addParameter('resolutionUnit', 'unknown', @(x) any(strcmp(x, {'inch', 'centimeter', ...
         'cm', 'millimeter', 'mm', 'micrometer', 'um', 'unknown'} ) ) );
-      p.parse(map, varargin{:});
+      p.parse(varargin{:});
       
       % set properties
       obj.isBig = p.Results.isBig;
       obj.isRGB = p.Results.isRGB;
       obj.checkExistence = p.Results.checkExistence;
-      
-      obj.colormap = map;
+
+      obj.colormap = p.Results.map;
       obj.resolution = uint32(p.Results.resolution);
       if isscalar(obj.resolution)
         obj.resolution = [obj.resolution obj.resolution];
@@ -125,7 +127,7 @@ classdef TiffWriter < imageIO.ImageIO
         otherwise %paranoia
           obj.compression = Tiff.Compression.PackBits;
       end
-      obj.compression = uint16(compression);
+      obj.compression = uint16(obj.compression);
       
       % Check map
       % Tiff library wants colormap to be a vector of length 256 (for each color
@@ -143,7 +145,7 @@ classdef TiffWriter < imageIO.ImageIO
       % than one we rescale. If it is another type we convert to uint16
       if ~isempty(obj.colormap)
         if isa(obj.colormap, 'double') && max(obj.colormap(:)) <= 1
-          obj.colormap = uint16(65536 * colMap);
+          obj.colormap = uint16(65536 * obj.colormap);
         elseif ~isa(obj.colormap, 'uint16')
           obj.colormap = uint16(obj.colormap);
         end
@@ -213,7 +215,7 @@ classdef TiffWriter < imageIO.ImageIO
       % number of images to write
       if numDims == 2
         obj.stacks = 1;
-      elseif numDims == 3 && p.Results.isRGB && dataSize(3) == 3
+      elseif numDims == 3 && obj.isRGB && dataSize(3) == 3
         obj.stacks = 1;
       else
         tiffImgs = size(data, numDims);
@@ -254,13 +256,13 @@ classdef TiffWriter < imageIO.ImageIO
       
       % Check if we can use fast method
       if ~obj.isBig % if false, recheck!
-        obj.isBig = (bitsPerSample/8 * numDirs * dataSize(1) * dataSize(2)) > 4294967295;
+        obj.isBig = (obj.bitsPerSample/8 * obj.stacks * dataSize(1) * dataSize(2)) > 4294967295;
       end
       
       if ~islogical(data) && ~isfloat(data) && ~obj.isBig
         %doesn't work with logicals / floating points / > 4GB
         try
-          obj.writeFast(data);
+          obj.writeFast(writeMode, close, data);
         catch ME
           if strcmpi(ME.identifier,'MATLAB:invalidMEXFile');
             warning('You probably do not have the Microsoft C++ runtime installed. Install it from https://www.microsoft.com/en-us/download/details.aspx?id=48145')
@@ -277,16 +279,17 @@ classdef TiffWriter < imageIO.ImageIO
       end
       
     end
+    
   end
   
   methods (Access = protected)
-    function writeFast(obj, data)
+    function writeFast(obj, writeMode, close, data)
     %WRITEFAST Write data to file using the mex files which directly access
     %the tiff library. It enhances speed by not needing to open and close
     %the tiff file when writing new directories, thus avoiding the O(n^2) time
     %required to navigate the file.
-      if strcmp(obj.writeMode, 'create') || strcmp(obj.writeMode, 'append')
-        multitiff('create', filename);
+      if strcmp(writeMode, 'create') || strcmp(writeMode, 'append')
+        multitiff('create', obj.fileFullPath);
       end
       numDims = ndims(data);
       if numDims == 2
@@ -300,7 +303,7 @@ classdef TiffWriter < imageIO.ImageIO
         
       elseif numDims == 3 && obj.isRGB && dataSize(3) == 3
         dataToWrite = permute(data,[3 2 1]); %different ordering compared to Matlab
-        if ~isempty(colMap)
+        if ~isempty(obj.colormap)
           warning('TiffWriter.writeFast: Colormaps are used only with single channel data!')
         end
         multitiff('write', dataToWrite, [], obj.compression, obj.resolution, ...
@@ -309,7 +312,7 @@ classdef TiffWriter < imageIO.ImageIO
       else
         for k = 1:obj.stacks
           if numDims == 3
-            if isempty(colMap)
+            if isempty(obj.colormap)
               multitiff('write', squeeze(data(:,:,k))', [], obj.compression, ...
                 obj.resolution, obj.resolutionUnit);
             else
@@ -318,7 +321,7 @@ classdef TiffWriter < imageIO.ImageIO
             end
           else
             dataToWrite = permute( squeeze(data(:,:,:,k)), [3 2 1] );
-            if ~isempty(colMap)
+            if ~isempty(obj.colormap)
               warning('TiffWriter.writeFast: Colormaps are used only with single channel data!')
             end
             multitiff('write', dataToWrite, [], obj.compression, ...
@@ -326,7 +329,7 @@ classdef TiffWriter < imageIO.ImageIO
           end
         end
       end
-      if obj.close
+      if close
         multitiff('close');
       end
       
@@ -366,7 +369,7 @@ classdef TiffWriter < imageIO.ImageIO
       % setup tiff tag
       tagstruct.ImageLength = size(data,1);
       tagstruct.ImageWidth = size(data,2);
-      tagstruct.BitsPerSample = bitsPerSample;
+      tagstruct.BitsPerSample = obj.bitsPerSample;
       tagstruct.SamplesPerPixel = samplesPerPixel;
       tagstruct.RowsPerStrip = size(data,2);
       tagstruct.PlanarConfiguration = Tiff.PlanarConfiguration.Chunky;
