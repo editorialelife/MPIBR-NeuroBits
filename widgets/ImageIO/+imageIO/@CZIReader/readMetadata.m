@@ -13,7 +13,7 @@ function obj = readMetadata( obj )
 
   %Read file metadata
   keepGoing = true; %Stop once we reach the end of file
-  currOffset = 0;
+  currOffset = 32;
   while keepGoing
     % Read segment header - ID, AllocatedSize, UsedSize
     ID = fread(obj.cziPtr, 16, '*char')';
@@ -23,11 +23,11 @@ function obj = readMetadata( obj )
       if obj.segmentTypes(end) == obj.ID_ZISRAWSUBBLOCK
         obj.imageSubblocks = obj.imageSubblocks + 1;
       end
-      % Check siz of segment, set the offset
+      % Check size of segment, set the offset
       obj.offsetToSegments = [obj.offsetToSegments, currOffset];
-      AllocSize = fread(obj.cziPtr, 1, 'int64');
-      currOffset = currOffset + AllocSize;
-
+      AllocSize = int64(fread(obj.cziPtr, 1, 'int64'));
+      currOffset = currOffset + AllocSize + 32; % + 32 to include header
+      
       %Check how much of the segment is actually used
       UsedSize = fread(obj.cziPtr, 1, 'int64');
 
@@ -43,7 +43,7 @@ function obj = readMetadata( obj )
 
   % Now go through all the segments and extract the information we need
   for k = 1:length(obj.segmentTypes)
-    fseek(obj.cziPtr, 16 + obj.offsetToSegments(k), 'bof'); % +16 to skip ID
+    fseek(obj.cziPtr, obj.offsetToSegments(k), 'bof');
     switch obj.segmentTypes(k)
       case obj.ID_ZISRAWFILE
         obj = obj.readRawFileSegm();
