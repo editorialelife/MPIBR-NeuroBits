@@ -3,15 +3,15 @@ function obj = readRawFileSegm( obj )
 %   Extract information from ZISRAWFILE segments. For the moment, read all
 %   fields, even the ones we do not care about, just for safety check
 
-  Major = fread(obj.cziPtr, 1, 'int32'); % Should be always one
-  Minor = fread(obj.cziPtr, 1, 'int32'); % Should be always zero
+  Major = int32(fread(obj.cziPtr, 1, 'int32')); % Should be always one
+  Minor = int32(fread(obj.cziPtr, 1, 'int32')); % Should be always zero
   Reserved = fread(obj.cziPtr, 2, 'int32');
-  PrimaryFileGuid = fread(obj.cziPtr, 4, 'int32'); % Unique Guid of Master file (FilePart 0)
-  FileGuid = fread(obj.cziPtr, 4, 'int32'); % Unique per file
-  FilePart = fread(obj.cziPtr, 1, 'int32'); % Part number in multi-file scenarios
-  DirectoryPosition = fread(obj.cziPtr, 1, 'int64'); % File position of the SubBlockDirectory Segment
-  MetadataPosition = fread(obj.cziPtr, 1, 'int64'); % File position of the Metadata Segment
-  UpdatePending = fread(obj.cziPtr, 1, 'int32'); % either 0 or 0xffff
+  PrimaryFileGuid = fread(obj.cziPtr, 4, '*char')'; % Unique Guid of Master file (FilePart 0)
+  FileGuid = fread(obj.cziPtr, 4, '*char'); % Unique per file
+  FilePart = int32(fread(obj.cziPtr, 1, 'int32')); % Part number in multi-file scenarios
+  DirectoryPosition = int64(fread(obj.cziPtr, 1, 'int64')); % File position of the SubBlockDirectory Segment
+  MetadataPosition = int64(fread(obj.cziPtr, 1, 'int64')); % File position of the Metadata Segment
+  UpdatePending = int32(fread(obj.cziPtr, 1, 'int32')); % either 0 or 0xffff
                                                  % This flag indicates a currently inconsistent
                                                  % situation (e.g. updating Index, Directory or
                                                  % Metadata segment).
@@ -19,7 +19,7 @@ function obj = readRawFileSegm( obj )
                                                  % reset (in case that a writer is still accessing the
                                                  % file), or try a recovery procedure by scanning
                                                  % all segments.
-  AttachmentDirectoryPosition = fread(obj.cziPtr, 1, 'int64'); % File position of the
+  AttachmentDirectoryPosition = int64(fread(obj.cziPtr, 1, 'int64')); % File position of the
                                                                % AttachmentDirectory Segment
   
 	% NOTE
