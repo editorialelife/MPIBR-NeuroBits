@@ -1,7 +1,7 @@
 function obj = readRawFileSegm( obj )
 %READRAWFILESEGM Read metadata for segment of type ZISRAWFILE
 %   Extract information from ZISRAWFILE segments. For the moment, read all
-%   fields, even the ones we do not care about, just for safety check
+%   fields, even the unnecessary ones, and use them for sanity check.
 
   Major = int32(fread(obj.cziPtr, 1, 'int32')); % Should be always one
   Minor = int32(fread(obj.cziPtr, 1, 'int32')); % Should be always zero
@@ -20,7 +20,17 @@ function obj = readRawFileSegm( obj )
   
   FilePart = int32(fread(obj.cziPtr, 1, 'int32')); % Part number in multi-file scenarios
   DirectoryPosition = int64(fread(obj.cziPtr, 1, 'int64')); % File position of the SubBlockDirectory Segment
+  
+  if DirectoryPosition ~= obj.offsetDirectorySegm - 32 %32 is the ehader size
+    error('CZIReader.readRawFileSegm: Inconsistent offset for Directory segment')
+  end
+  
   MetadataPosition = int64(fread(obj.cziPtr, 1, 'int64')); % File position of the Metadata Segment
+  
+  if MetadataPosition ~= obj.offsetMetadataSegm - 32 %32 is the ehader size
+    error('CZIReader.readRawFileSegm: Inconsistent offset for Metadata segment')
+  end
+  
   UpdatePending = int32(fread(obj.cziPtr, 1, 'int32')); % either 0 or 0xffff
                                                  % This flag indicates a currently inconsistent
                                                  % situation (e.g. updating Index, Directory or
@@ -35,9 +45,9 @@ function obj = readRawFileSegm( obj )
                                                  
   AttachmentDirectoryPosition = int64(fread(obj.cziPtr, 1, 'int64')); % File position of the
                                                                % AttachmentDirectory Segment
-  
-  % MAYBE ADD CHECKS ON *Position fields to be equal to corresponding
-  % offsets in obj.offsetToSegments (except the 32 bit difference given by
-  % the header)                                                
+                                                               
+  if AttachmentDirectoryPosition ~= obj.offsetAttachDirSegm - 32 %32 is the ehader size
+    error('CZIReader.readRawFileSegm: Inconsistent offset for AttachDirectory segment')
+  end                                               
 end
 

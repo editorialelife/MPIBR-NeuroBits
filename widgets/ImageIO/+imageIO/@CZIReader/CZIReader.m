@@ -10,10 +10,13 @@ classdef CZIReader < imageIO.ImageIO
   %   SEE ALSO: imageIO.imageIO
   
   properties
-    cziPtr = 0;         % Pointer to the CZI file (returned by fopen)
-    segmentTypes;       % SegmentTypes present in the file
-    offsetToSegments;   % Offsets (from BOF) to the start of the data
-    imageSubblocks = 0; % Total number of image subblock (ZISRAWSUBBLOCK segments)
+    cziPtr = 0;              % Pointer to the CZI file (returned by fopen)
+    segmentTypes;            % SegmentTypes present in the file
+    offsetToSegments;        % Offsets (from BOF) to the start of the data
+    imageSubblocks = 0;      % Total number of image subblock (ZISRAWSUBBLOCK segments)
+    offsetMetadataSegm = 0;  % Offset to the Metadata segment (1 per file)
+    offsetDirectorySegm = 0; % Offset to the Directory segment (1 per file)
+    offsetAttachDirSegm = 0; % Offset to the Attachment segment (1 per file)
   end
   
   properties (Constant = true)
