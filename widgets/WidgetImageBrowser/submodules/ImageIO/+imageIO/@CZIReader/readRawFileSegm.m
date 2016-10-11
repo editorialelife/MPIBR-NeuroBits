@@ -5,9 +5,19 @@ function obj = readRawFileSegm( obj )
 
   Major = int32(fread(obj.cziPtr, 1, 'int32')); % Should be always one
   Minor = int32(fread(obj.cziPtr, 1, 'int32')); % Should be always zero
+  
+  if (Major ~= 1 || Minor ~= 0)
+    error('CZIReader.readRawFileSegm: Major and Minor fields are not correct')
+  end
+  
   Reserved = fread(obj.cziPtr, 2, 'int32');
   PrimaryFileGuid = fread(obj.cziPtr, 4, 'int32'); % Unique Guid of Master file (FilePart 0)
   FileGuid = fread(obj.cziPtr, 4, 'int32'); % Unique per file
+  
+  if ~isequal(PrimaryFileGuid, FileGuid)
+    warning('CZIReader.readRawFileSegm: multifile dataset. Currently unsupported')
+  end
+  
   FilePart = int32(fread(obj.cziPtr, 1, 'int32')); % Part number in multi-file scenarios
   DirectoryPosition = int64(fread(obj.cziPtr, 1, 'int64')); % File position of the SubBlockDirectory Segment
   MetadataPosition = int64(fread(obj.cziPtr, 1, 'int64')); % File position of the Metadata Segment
@@ -19,13 +29,15 @@ function obj = readRawFileSegm( obj )
                                                  % reset (in case that a writer is still accessing the
                                                  % file), or try a recovery procedure by scanning
                                                  % all segments.
+  if 0 ~= UpdatePending
+    error('CZIReader.readRawFileSegm: UpdatePending field set')
+  end
+                                                 
   AttachmentDirectoryPosition = int64(fread(obj.cziPtr, 1, 'int64')); % File position of the
                                                                % AttachmentDirectory Segment
   
-	% NOTE
-  % Single file: PrimaryFileGuid and the FileGuid are identical. The FilePart is 0.
-  % Multi file: In the master file, the PrimaryFileGuid and the FileGuid are identical. In file Parts, the
-  %   PrimaryFileGuid is the Guid of the master file and FileParts are > 0.
-  
+  % MAYBE ADD CHECKS ON *Position fields to be equal to corresponding
+  % offsets in obj.offsetToSegments (except the 32 bit difference given by
+  % the header)                                                
 end
 
