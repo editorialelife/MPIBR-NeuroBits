@@ -13,6 +13,7 @@ classdef CZIReader < imageIO.ImageIO
     cziPtr = 0;         % Pointer to the CZI file (returned by fopen)
     segmentTypes;       % SegmentTypes present in the file
     offsetToSegments;   % Offsets (from BOF) to the start of the data
+    imageSubblocks = 0; % Total number of image subblock (ZISRAWSUBBLOCK segments)
   end
   
   properties (Constant = true)
@@ -54,6 +55,7 @@ classdef CZIReader < imageIO.ImageIO
   
   methods (Access = protected)
     obj = readMetadata(obj);   %IMPLEMENTED IN SEPARATE FILE
+    obj = readRawFileSegm(obj);   %IMPLEMENTED IN SEPARATE FILE
   end
   
 end

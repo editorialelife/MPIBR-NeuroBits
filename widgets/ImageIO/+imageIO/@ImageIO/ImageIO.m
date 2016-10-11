@@ -16,6 +16,7 @@ classdef (Abstract = true) ImageIO < handle
         width = nan;            % Image width / number of columns
         channels = nan;         % Number of image channels
         stacks = nan;           % Image stacks (Z axis)
+        series = nan;           % number of series
         time = nan;             % Image timeseries
         tile = nan;             % Image tiles per stack
         numTilesRow = nan;      % Image tiles in vertical direction
