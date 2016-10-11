@@ -26,6 +26,27 @@ function obj = readMetadata( obj )
       % Check size of segment, set the offset
       obj.offsetToSegments = [obj.offsetToSegments, currOffset];
       AllocSize = int64(fread(obj.cziPtr, 1, 'int64'));
+      
+      if obj.segmentTypes(end) == obj.ID_ZISRAWDIRECTORY
+        if 0 == obj.offsetDirectorySegm
+          obj.offsetDirectorySegm = obj.offsetToSegments(end);
+        else
+          error('CZIReader.readMetadata: obj.offsetDirectorySegm already set!')
+        end
+      elseif obj.segmentTypes(end) == obj.ID_ZISRAWMETADATA
+        if 0 == obj.offsetMetadataSegm
+          obj.offsetMetadataSegm = obj.offsetToSegments(end);
+        else
+          error('CZIReader.readMetadata: obj.offsetMetadataSegm already set!')
+        end
+      elseif obj.segmentTypes(end) == obj.ID_ZISRAWATTDIR
+        if 0 == obj.offsetAttachDirSegm
+          obj.offsetAttachDirSegm = obj.offsetToSegments(end);
+        else
+          error('CZIReader.readMetadata: obj.offsetAttachDirSegm already set!')
+        end
+      end
+      
       currOffset = currOffset + AllocSize + 32; % + 32 to include header
       
       %Check how much of the segment is actually used
@@ -50,6 +71,7 @@ function obj = readMetadata( obj )
       case obj.ID_ZISRAWDIRECTORY
       case obj.ID_ZISRAWSUBBLOCK
       case obj.ID_ZISRAWMETADATA
+        obj = obj.readMetadataSegm();
       case obj.ID_ZISRAWATTACH
       case obj.ID_ZISRAWATTDIR
       case obj.ID_DELETED %do nothing
