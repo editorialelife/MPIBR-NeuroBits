@@ -87,11 +87,56 @@ function obj = readMetadataSegm( obj )
       % one of Gray64ComplexFloat or Bgr192ComplexFloat
       warning('CZIReader.readMetadataSegm: Pixel type not supported')
   end
+  % now the dimensions
+  try
+    obj.channels = str2double(imgInfo.SizeC.Text);
+  catch
+    obj.channels = 1;
+  end
+  try
+    obj.stacks = str2double(imgInfo.SizeZ.Text);
+  catch
+    obj.stacks = 1;
+  end
+  try
+    obj.series = str2double(imgInfo.SizeS.Text);
+  catch
+    obj.series = 1;
+  end
+  try
+    obj.time = str2double(imgInfo.SizeT.Text);
+  catch
+    obj.time = 1;
+  end
+  try
+    obj.tile = str2double(imgInfo.SizeM.Text);
+  catch
+    obj.tile = 1;
+  end
+  obj.pixPerTileRow = str2double(imgInfo.SizeY.Text); % mandatory
+  obj.pixPerTileCol = str2double(imgInfo.SizeX.Text); % mandatory
+  
+  %% The field "Experiment" contains information about the tiles
+  try
+    tileInfo = top.Experiment.ExperimentBlocks.AcquisitionBlock.TilesSetup.PositionGroups.PositionGroup;
+    obj.numTilesRow = str2double(tileInfo.TilesY.Text);
+    obj.numTilesCol = str2double(tileInfo.TilesX.Text);
+    obj.tileOverlap = str2double(tileInfo.TileAcquisitionOverlap.Text);
+    obj.width = round( (obj.numTilesCol) * ...
+    	(1 - obj.tileOverlap) * obj.pixPerTileCol + obj.pixPerTileCol);
+    obj.height = round( (obj.numTilesRow) * ...
+    	(1 - obj.tileOverlap) * obj.pixPerTileRow + obj.pixPerTileRow);
+  catch
+    disp('CZIReader.readMetadataSegm: field Experiment not available')
+    % assume single tile
+    obj.height = obj.pixPerTileRow;
+    obj.width = obj.pixPerTileCol;
+  end
   
   %% The field "DisplaySetting" has info related to the Channels
   ch = top.DisplaySetting.Channels.Channel;
   for k = 1:length(ch) %check all channels
-    obj.channelInfo = [obj.channelInfo, ChannelInfo(ch{k})];
+    obj.channelInfo = [obj.channelInfo, ChannelInfo(ch{k}, 'CZI')];
   end
   
   % The field "Scaling" 

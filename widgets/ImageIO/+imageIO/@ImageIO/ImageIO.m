@@ -29,7 +29,7 @@ classdef (Abstract = true) ImageIO < handle
         
         channelInfo;            % (if available) color info of each channel
         
-        datatype = '';         % Image datatype (uint8, int16, ...)
+        datatype = '';          % Image datatype (uint8, int16, ...)
         
         scaleSize %x,y,z        % Pixel physical size along X axis
         scaleUnits

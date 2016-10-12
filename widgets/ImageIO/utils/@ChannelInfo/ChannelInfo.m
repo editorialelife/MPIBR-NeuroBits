@@ -8,9 +8,9 @@ classdef ChannelInfo
   % Date: 12.10.2016
   
   properties (SetAccess = private)
-    dyeName = '';         % name of the dye used
-    color = nan;          % RGB triplet representing the color used
-    gamma = 1;            % transparency level (1 = fully opaque)
+    dyeName;                % name of the dye used
+    color;                  % RGB triplet representing the color used
+    gamma;                  % transparency level (1 = fully opaque)
   end
   
   methods
@@ -24,10 +24,18 @@ classdef ChannelInfo
     %   CZI
     %   
       if strcmpi('CZI', whereFrom)
-        obj.gamma = str2double(data.Gamma.Text);
-        obj.dyeName = data.DyeName.Text;
+        try
+          obj.gamma = str2double(data.Gamma.Text);
+        catch
+          obj.gamma = 1;
+        end
+        try
+          obj.dyeName = data.DyeName.Text;
+        catch
+          obj.dyeName = '';
+        end
         colHex = data.Color.Text;
-        obj.color = [hex2dec(colHex(2:3)), hex2dec(colHex(4:5)), hex2dec(colHex(6:7))];
+        obj.color = [hex2dec(colHex(2:3)), hex2dec(colHex(4:5)), hex2dec(colHex(6:7)), 255*obj.gamma];
       else
         warning('ChannelInfo.ChannelInfo: Unsupported input filetype')
       end
