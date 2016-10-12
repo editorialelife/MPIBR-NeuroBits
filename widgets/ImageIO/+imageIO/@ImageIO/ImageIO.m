@@ -29,34 +29,31 @@ classdef (Abstract = true) ImageIO < handle
         
         channelInfo;            % (if available) color info of each channel
         
-        data_type = '';         % Image datatype (uint8, int16, ...)
+        datatype = '';         % Image datatype (uint8, int16, ...)
         
-        pixelSizeX;             % Pixel physical size along X axis
-        pixelSizeY;             % Pixel physical size along Y axis
-        pixelSizeZ;             % Pixel physical size along Z axis
+        scaleSize %x,y,z        % Pixel physical size along X axis
+        scaleUnits
+        scaleTime
         
-        scale_size %x,y,z,t
-        scale_units
-        scale_time
-        
-        time_pixel
-        time_line
-        time_frame
-        time_stack
+        timePixel
+        timeLine
+        timeFrame
+        timeStack
         
         zoom = nan;
         gain = nan;
         
         wavelengthExc = nan;
         wavelengthEm = nan;
-        refraction_media
+        refractionMedia = '';
+        refractionIndex = nan;
         NA = nan;               % Numerical aperture
         
-        microscope_name = '';
-        microscope_type = '';
+        microscopeName = '';
+        microscopeType = '';
         
-        objective_magnification;
-        objective_name;
+        objectiveMagnification;
+        objectiveName;
     end
     
     properties (Constant = true)
