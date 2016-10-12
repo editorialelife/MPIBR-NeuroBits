@@ -27,6 +27,7 @@ classdef (Abstract = true) ImageIO < handle
         pixPerTileCol = nan;    % number of cols of pixels in a tile
         tileOverlap = nan;      % overlap between 2 adjacent tiles
         
+        channelInfo;            % (if available) color info of each channel
         
         data_type = '';         % Image datatype (uint8, int16, ...)
         
