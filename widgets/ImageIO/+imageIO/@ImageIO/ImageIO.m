@@ -27,11 +27,12 @@ classdef (Abstract = true) ImageIO < handle
         pixPerTileCol = nan;    % number of cols of pixels in a tile
         tileOverlap = nan;      % overlap between 2 adjacent tiles
         
+        
         data_type = '';         % Image datatype (uint8, int16, ...)
         
-        pixelSizeX;
-        pixelSizeY;
-        pixelSizeZ;
+        pixelSizeX;             % Pixel physical size along X axis
+        pixelSizeY;             % Pixel physical size along Y axis
+        pixelSizeZ;             % Pixel physical size along Z axis
         
         scale_size %x,y,z,t
         scale_units
@@ -53,8 +54,8 @@ classdef (Abstract = true) ImageIO < handle
         microscope_name = '';
         microscope_type = '';
         
-        objective_magnification
-        objective_name 
+        objective_magnification;
+        objective_name;
     end
     
     properties (Constant = true)
