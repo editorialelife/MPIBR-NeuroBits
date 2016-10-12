@@ -125,51 +125,51 @@ classdef BioReader < imageIO.ImageIO
         obj.channels = NaN;
       end
       try
-        obj.data_type = char(ome.getPixelsType(0));
+        obj.dataType = char(ome.getPixelsType(0));
       catch
-        obj.data_type = 'uint16';
+        obj.dataType = 'uint16';
       end
 
       %scales
-      obj.scale_size = zeros(1,3);
+      obj.scaleSize = zeros(1,3);
       try
-        obj.scale_size(1) = double(ome.getPixelsPhysicalSizeX(0).value());
+        obj.scaleSize(1) = double(ome.getPixelsPhysicalSizeX(0).value());
       catch
-        obj.scale_size(1) = NaN;
+        obj.scaleSize(1) = NaN;
       end
       try
-        obj.scale_size(2) = double(ome.getPixelsPhysicalSizeY(0).value());
+        obj.scaleSize(2) = double(ome.getPixelsPhysicalSizeY(0).value());
       catch
-        obj.scale_size(2) = NaN;
+        obj.scaleSize(2) = NaN;
       end
       try
-        obj.scale_size(3) = double(ome.getPixelsPhysicalSizeZ(0).value());
+        obj.scaleSize(3) = double(ome.getPixelsPhysicalSizeZ(0).value());
       catch
-        obj.scale_size(3) = NaN;
+        obj.scaleSize(3) = NaN;
       end
 
       %scaling units
       try
-        obj.scale_units{1} = char(ome.getPixelsPhysicalSizeY(0).unit().getSymbol());
+        obj.scaleUnits{1} = char(ome.getPixelsPhysicalSizeY(0).unit().getSymbol());
       catch
-        obj.scale_units{1} = 'Unknown';
+        obj.scaleUnits{1} = 'Unknown';
       end
       try
-        obj.scale_units{2} = char(ome.getPixelsPhysicalSizeX(0).unit().getSymbol());
+        obj.scaleUnits{2} = char(ome.getPixelsPhysicalSizeX(0).unit().getSymbol());
       catch
-        obj.scale_units{2} = 'Unknown';
+        obj.scaleUnits{2} = 'Unknown';
       end
       try
-        obj.scale_units{3} = char(ome.getPixelsPhysicalSizeZ(0).unit().getSymbol());
+        obj.scaleUnits{3} = char(ome.getPixelsPhysicalSizeZ(0).unit().getSymbol());
       catch
-        obj.scale_units{3} = 'Unknown';
+        obj.scaleUnits{3} = 'Unknown';
       end
 
       %objective properties
       try
-        obj.refraction_media = char(ome.getObjectiveImmersion(0,0));
+        obj.refractionMedia = char(ome.getObjectiveImmersion(0,0));
       catch
-        obj.refraction_media = 'Unknown';
+        obj.refractionMedia = 'Unknown';
       end
       try
         obj.NA = double(ome.getObjectiveLensNA(0,0));
@@ -177,19 +177,19 @@ classdef BioReader < imageIO.ImageIO
         obj.NA = NaN;
       end
       try
-        obj.objective_name = char(ome.getObjectiveModel(0,0));
+        obj.objectiveName = char(ome.getObjectiveModel(0,0));
       catch
-        obj.objective_name = 'Unknown';
+        obj.objectiveName = 'Unknown';
       end
       try
-        obj.refraction_media = double(ome.getObjectiveSettingsRefractiveIndex(0));
+        obj.refractiveIndex = double(ome.getObjectiveSettingsRefractiveIndex(0));
       catch
-        obj.refraction_media = NaN;
+        obj.refractiveIndex = NaN;
       end
       try
-        obj.objective_magnification = double(ome.getObjectiveNominalMagnification(0,0));
+        obj.objectiveMagnification = double(ome.getObjectiveNominalMagnification(0,0));
       catch
-        obj.objective_magnification = NaN;
+        obj.objectiveMagnification = NaN;
       end
 
       %acquisition properties
