@@ -10,5 +10,5 @@ function obj = readMetadataSegm( obj )
   empty   = int32(fread(obj.cziPtr, 62, 'int32')); % spare space
 
   xmlData = fread(obj.cziPtr, xmlSize, '*char')';
-  disp(xmlData);
+  [parseResult, p] = xmlreadstring(xmlData);
 end
