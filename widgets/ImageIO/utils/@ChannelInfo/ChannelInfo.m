@@ -7,7 +7,7 @@ classdef ChannelInfo
   % Author: Stefano.Masneri@brain.mpg.de
   % Date: 12.10.2016
   
-  properties
+  properties (SetAccess = private)
     dyeName = '';         % name of the dye used
     color = nan;          % RGB triplet representing the color used
     gamma = 1;            % transparency level (1 = fully opaque)
@@ -23,10 +23,13 @@ classdef ChannelInfo
     % Currently supported Image Formats:
     %   CZI
     %   
-      if strcmpi('CZI', wherefrom)
+      if strcmpi('CZI', whereFrom)
+        obj.gamma = str2double(data.Gamma.Text);
+        obj.dyeName = data.DyeName.Text;
+        colHex = data.Color.Text;
+        obj.color = [hex2dec(colHex(2:3)), hex2dec(colHex(4:5)), hex2dec(colHex(6:7))];
       else
-        warning('ChannelInfo.ChannelInfo: Unsupported input filetype'
-        obj = [];
+        warning('ChannelInfo.ChannelInfo: Unsupported input filetype')
       end
     end
   end
