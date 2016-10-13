@@ -4,6 +4,9 @@ function obj = readMetadata( obj )
 %   This function parses the file according to the CZI file specifications,
 %   and stores header and segment information that is hten used to fill all
 %   the metadata fields of the object.
+%
+% AUTHOR: Stefano Masneri
+% Date: 13.10.2016
 
   %open file for reading
   [obj.cziPtr, errmsg] = fopen(obj.fileFullPath);

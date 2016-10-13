@@ -4,7 +4,10 @@ function obj = readMetadataSegm( obj )
 %   segment contains the header, namely the size of the XML and the size of
 %   the Attachment. After that there is the xml field and the optional
 %   attachment field
-  
+%
+% AUTHOR: Stefano Masneri
+% Date: 13.10.2016
+
   % Get xml info
   xmlSize = int32(fread(obj.cziPtr, 1, 'int32'));
   attSize = int32(fread(obj.cziPtr, 1, 'int32'));  % currently unused
