@@ -23,22 +23,45 @@ classdef CZIDirectoryEntry
   end
   
   methods
-    function obj = CZIDirectoryEntry(cziPtr)
+    function obj = CZIDirectoryEntry()
       %CZIDIRECTORYENTRY Constructor
-      % The function reads from file the fields related to the
-      % DirectoryEntry
-      % INPUT
-      %   cziPtr: file identifier of the czi file. It is assumed that the
-      %     position in the file is at the start at the DimensionEntry
-      %     field
-      % OUTPUT
-      %   obj: the instance of the class
+      % does nothing
+    end
+    
+    function obj = init(obj, cziPtr)
+    %INIT initializes the CZIDirectoryEntry object
+    % The function reads from file the fields related to the
+    % DirectoryEntry
+    % INPUT
+    %   cziPtr: file identifier of the czi file. It is assumed that the
+    %     position in the file is at the start at the DimensionEntry
+    %     field
+    % OUTPUT
+    %   obj: the instance of the class
       
       obj.schemaType = deblank(fread(cziPtr, 2, '*char')');
-      obj.pixelType = int32(fread(cziPtr, 1, 'int32'));
-      obj.filePosition = int32(fread(cziPtr, 1, 'int32'));
-      obj.compression = float(fread(cziPtr, 1, 'float'));
+      if ~strcmpi(obj.schemaType, 'DV')
+        error('CZIDirectoryEntry: problem parsing data')
+      end
+      pt = int32(fread(cziPtr, 1, 'int32'));
+      obj.pixelType = CZIPixelTypes(pt);
+      obj.filePosition = int64(fread(cziPtr, 1, 'int64'));
+      fread(cziPtr, 1, 'int32'); % FilePart, Reserved.
+      cpr = int32(fread(cziPtr, 1, 'int32'));
+      if cpr >= 1000
+        obj.compression = CZICompression(1000);
+      elseif cpr >= 100
+        obj.compression = CZICompression(100);
+      else
+        obj.compression = CZICompression(cpr);
+      end
+      fread(cziPtr, 6, 'uint8'); % PyramidTypes + spare bytes, Reserved.
       obj.dimensionCount = int32(fread(cziPtr, 1, 'int32'));
+      
+      obj.dimensionEntries = repmat(CZIDimensionEntry(), 1, obj.dimensionCount);
+      for k = 1:obj.dimensionCount
+        obj.dimensionEntries(k) = obj.dimensionEntries(k).init(cziPtr);
+      end
     end
   end
   

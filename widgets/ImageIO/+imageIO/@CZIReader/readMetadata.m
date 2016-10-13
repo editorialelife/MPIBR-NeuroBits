@@ -23,26 +23,26 @@ function obj = readMetadata( obj )
     if ~isempty(ID)
       obj.segmentTypes = [obj.segmentTypes, setSegmenType(ID)];
 
-      if obj.segmentTypes(end) == obj.ID_ZISRAWSUBBLOCK
+      if obj.segmentTypes(end) == CZISegments.ZISRAWSUBBLOCK
         obj.imageSubblocks = obj.imageSubblocks + 1;
       end
       % Check size of segment, set the offset
       obj.offsetToSegments = [obj.offsetToSegments, currOffset];
       AllocSize = int64(fread(obj.cziPtr, 1, 'int64'));
       
-      if obj.segmentTypes(end) == obj.ID_ZISRAWDIRECTORY
+      if obj.segmentTypes(end) == CZISegments.ZISRAWDIRECTORY
         if 0 == obj.offsetDirectorySegm
           obj.offsetDirectorySegm = obj.offsetToSegments(end);
         else
           error('CZIReader.readMetadata: obj.offsetDirectorySegm already set!')
         end
-      elseif obj.segmentTypes(end) == obj.ID_ZISRAWMETADATA
+      elseif obj.segmentTypes(end) == CZISegments.ZISRAWMETADATA
         if 0 == obj.offsetMetadataSegm
           obj.offsetMetadataSegm = obj.offsetToSegments(end);
         else
           error('CZIReader.readMetadata: obj.offsetMetadataSegm already set!')
         end
-      elseif obj.segmentTypes(end) == obj.ID_ZISRAWATTDIR
+      elseif obj.segmentTypes(end) == CZISegments.ZISRAWATTDIR
         if 0 == obj.offsetAttachDirSegm
           obj.offsetAttachDirSegm = obj.offsetToSegments(end);
         else
@@ -69,18 +69,18 @@ function obj = readMetadata( obj )
   for k = 1:length(obj.segmentTypes)
     fseek(obj.cziPtr, obj.offsetToSegments(k), 'bof');
     switch obj.segmentTypes(k)
-      case obj.ID_ZISRAWFILE
+      case CZISegments.ZISRAWFILE
         obj = obj.readRawFileSegm();
-      case obj.ID_ZISRAWDIRECTORY
+      case CZISegments.ZISRAWDIRECTORY
         obj = obj.readRawDirSegm();
-      case obj.ID_ZISRAWSUBBLOCK
-        % Don't do anything at the moment. We have specific methods to read
-        % data
-      case obj.ID_ZISRAWMETADATA
+      case CZISegments.ZISRAWSUBBLOCK
+        % Don't do anything at the moment. We have specific methods to read data
+      case CZISegments.ZISRAWMETADATA
         obj = obj.readMetadataSegm();
-      case obj.ID_ZISRAWATTACH
-      case obj.ID_ZISRAWATTDIR
-      case obj.ID_DELETED %do nothing
+      case CZISegments.ZISRAWATTACH
+        obj = obj.readAttachSegm();
+      case CZISegments.ZISRAWATTDIR
+      case CZISegments.DELETED %do nothing
       otherwise
         error('Unrecognized Segment type')
     end
@@ -91,19 +91,19 @@ function segmType = setSegmenType(ID)
   ID = deblank(ID);
   switch ID
     case 'ZISRAWFILE'
-      segmType = 1; return;
+      segmType = CZISegments(1); return;
     case 'ZISRAWDIRECTORY'
-      segmType = 2; return;
+      segmType = CZISegments(2); return;
     case 'ZISRAWSUBBLOCK'
-      segmType = 3; return;
+      segmType = CZISegments(3); return;
     case 'ZISRAWMETADATA'
-      segmType = 4; return;
+      segmType = CZISegments(4); return;
     case 'ZISRAWATTACH'
-      segmType = 5; return;
+      segmType = CZISegments(5); return;
     case 'ZISRAWATTDIR'
-      segmType = 6; return;
+      segmType = CZISegments(6); return;
     case 'DELETED'
-      segmType = 7; return;
+      segmType = CZISegments(7); return;
     otherwise
       error('Unrecognized Segment type')
   end

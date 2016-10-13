@@ -7,10 +7,14 @@ function obj = readRawDirSegm( obj )
 
   % Get entry info
   entryCount = int32(fread(obj.cziPtr, 1, 'int32'));
-  reserved = int32(fread(obj.cziPtr, 31, 'int32'));  % currently unused
+  fread(obj.cziPtr, 31, 'int32');  % reserved
 
   % Now read all entries. Each item is a copy of the DirectoryEntry in the referenced
   % SubBlock segment.
+  obj.directoryEntries = repmat(CZIDirectoryEntry(), 1, entryCount);
+  for k = 1:entryCount
+    obj.directoryEntries(k) = obj.directoryEntries(k).init(obj.cziPtr);
+  end
 
 end
 
