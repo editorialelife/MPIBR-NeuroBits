@@ -17,20 +17,7 @@ classdef CZIReader < imageIO.ImageIO
     offsetMetadataSegm = 0;  % Offset to the Metadata segment (1 per file)
     offsetDirectorySegm = 0; % Offset to the Directory segment (1 per file)
     offsetAttachDirSegm = 0; % Offset to the Attachment segment (1 per file)
-  end
-  
-  properties (Constant = true)
-    ID_ZISRAWFILE = 1;      % File Header segment, occurs only once per file. 
-                            %   The segment is always located atposition 0
-    ID_ZISRAWDIRECTORY = 2; % Directory segment containing a sequence of "DirectoryEntry" items.
-    ID_ZISRAWSUBBLOCK = 3;  % Contains an ImageSubBlock containing an XML part, 
-                            %   optional pixel data and binary attachments described by 
-                            %   the AttachmentSchema within the XML part
-    ID_ZISRAWMETADATA = 4;  % Contains Metadata consisting of an XML part and binary
-                            %   attachments described by the AttachmentSchema within the XML part
-    ID_ZISRAWATTACH = 5;    % Any kind of namend Attachment, some names are reserved for internal use.
-    ID_ZISRAWATTDIR = 6;    % Attachments directory.
-    ID_DELETED = 7;         % Indicates that the segment has been deleted (dropped) and should be skipped.
+    directoryEntries;        % Directory entry info associated to each subblock
   end
   
   methods
@@ -57,8 +44,10 @@ classdef CZIReader < imageIO.ImageIO
   end
   
   methods (Access = protected)
-    obj = readMetadata(obj);   %IMPLEMENTED IN SEPARATE FILE
-    obj = readRawFileSegm(obj);   %IMPLEMENTED IN SEPARATE FILE
+    obj = readRawMetadataSegm(obj);      %IMPLEMENTED IN SEPARATE FILE
+    obj = readRawFileSegm(obj);          %IMPLEMENTED IN SEPARATE FILE
+    obj = readRawAttachSegm(obj);        %IMPLEMENTED IN SEPARATE FILE
+    obj = readRawDirSegm(obj);           %IMPLEMENTED IN SEPARATE FILE
   end
   
 end

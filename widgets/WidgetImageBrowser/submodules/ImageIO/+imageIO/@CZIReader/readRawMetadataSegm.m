@@ -1,4 +1,4 @@
-function obj = readMetadataSegm( obj )
+function obj = readRawMetadataSegm( obj )
 %READMETADATASEGM Read metadata for segment of type ZISRAWMETADATA
 %   Extract information from ZISRAWMETADATA segments. The first part of the
 %   segment contains the header, namely the size of the XML and the size of
@@ -125,10 +125,10 @@ function obj = readMetadataSegm( obj )
     obj.numTilesRow = str2double(tileInfo.TilesY.Text);
     obj.numTilesCol = str2double(tileInfo.TilesX.Text);
     obj.tileOverlap = str2double(tileInfo.TileAcquisitionOverlap.Text);
-    obj.width = round( (obj.numTilesCol) * ...
-    	(1 - obj.tileOverlap) * obj.pixPerTileCol + obj.pixPerTileCol);
-    obj.height = round( (obj.numTilesRow) * ...
-    	(1 - obj.tileOverlap) * obj.pixPerTileRow + obj.pixPerTileRow);
+    obj.width = round((obj.numTilesCol - 1) * (1 - obj.tileOverlap) * obj.pixPerTileCol + ...
+      obj.pixPerTileCol);
+    obj.height = round((obj.numTilesRow - 1) * (1 - obj.tileOverlap) * obj.pixPerTileRow + ...
+      obj.pixPerTileRow);
   catch
     disp('CZIReader.readMetadataSegm: field Experiment not available')
     % assume single tile

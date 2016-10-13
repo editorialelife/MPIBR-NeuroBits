@@ -1,4 +1,4 @@
-classdef CZIPixelTypes
+classdef CZIPixelTypes < uint16
 %CZIPIXELTYPES Enumeration class describing pixel types used by CZI File
 %Format
 %

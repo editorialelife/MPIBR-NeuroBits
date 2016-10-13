@@ -1,4 +1,4 @@
-classdef CZICompression
+classdef CZICompression < uint16
 %CZIPIXELTYPES Enumeration class describing compression algos used by CZI File
 %Format
 %
