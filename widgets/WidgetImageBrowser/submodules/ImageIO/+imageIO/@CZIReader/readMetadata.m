@@ -76,9 +76,9 @@ function obj = readMetadata( obj )
       case CZISegments.ZISRAWSUBBLOCK
         % Don't do anything at the moment. We have specific methods to read data
       case CZISegments.ZISRAWMETADATA
-        obj = obj.readMetadataSegm();
+        obj = obj.readRawMetadataSegm();
       case CZISegments.ZISRAWATTACH
-        obj = obj.readAttachSegm();
+        obj = obj.readRawAttachSegm();
       case CZISegments.ZISRAWATTDIR
       case CZISegments.DELETED %do nothing
       otherwise
