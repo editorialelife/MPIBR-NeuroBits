@@ -44,10 +44,12 @@ classdef CZIReader < imageIO.ImageIO
   end
   
   methods (Access = protected)
-    obj = readRawMetadataSegm(obj);      %IMPLEMENTED IN SEPARATE FILE
-    obj = readRawFileSegm(obj);          %IMPLEMENTED IN SEPARATE FILE
-    obj = readRawAttachSegm(obj);        %IMPLEMENTED IN SEPARATE FILE
-    obj = readRawDirSegm(obj);           %IMPLEMENTED IN SEPARATE FILE
+    obj = readRawFileSegm(obj);          % IMPLEMENTED IN SEPARATE FILE
+    obj = readRawDirSegm(obj);           % IMPLEMENTED IN SEPARATE FILE
+    obj = readRawSubblockSegm(obj);      % TODO
+    obj = readRawMetadataSegm(obj);      % IMPLEMENTED IN SEPARATE FILE
+    obj = readRawAttachSegm(obj);        % IMPLEMENTED IN SEPARATE FILE
+    obj = readRawAttDirSegm(obj);        % TODO
   end
   
 end
