@@ -69,7 +69,10 @@ function obj = readMetadata( obj )
       case obj.ID_ZISRAWFILE
         obj = obj.readRawFileSegm();
       case obj.ID_ZISRAWDIRECTORY
+        obj = obj.readRawDirSegm();
       case obj.ID_ZISRAWSUBBLOCK
+        % Don't do anything at the moment. We have specific methods to read
+        % data
       case obj.ID_ZISRAWMETADATA
         obj = obj.readMetadataSegm();
       case obj.ID_ZISRAWATTACH
