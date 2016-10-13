@@ -2,6 +2,10 @@ function obj = readRawFileSegm( obj )
 %READRAWFILESEGM Read metadata for segment of type ZISRAWFILE
 %   Extract information from ZISRAWFILE segments. For the moment, read all
 %   fields, even the unnecessary ones, and use them for sanity check.
+%
+% AUTHOR: Stefano Masneri
+% Date: 13.10.2016
+
 
   Major = int32(fread(obj.cziPtr, 1, 'int32')); % Should be always one
   Minor = int32(fread(obj.cziPtr, 1, 'int32')); % Should be always zero
