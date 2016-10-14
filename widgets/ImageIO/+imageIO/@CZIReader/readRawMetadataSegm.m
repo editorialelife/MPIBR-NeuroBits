@@ -142,5 +142,19 @@ function obj = readRawMetadataSegm( obj )
     obj.channelInfo = [obj.channelInfo, ChannelInfo(ch{k}, 'CZI')];
   end
   
-  % The field "Scaling" 
+  % The field "Scaling" contain info about the pixels physical size
+  scale = top.Scaling.Items.Distance;
+  obj.scaleSize = ones(1,3);
+  for k = 1:length(scale)
+    switch scale{k}.Attributes.Id
+      case 'X'
+        obj.scaleSize(1) = str2double(scale{k}.Value.Text);
+      case 'Y'
+        obj.scaleSize(2) = str2double(scale{k}.Value.Text);
+      case 'Z'
+        obj.scaleSize(3) = str2double(scale{k}.Value.Text);
+      otherwise
+        warning('CZIReader.readRawMetadataSegm: unrecognized dimension for scale')
+    end
+  end
 end
