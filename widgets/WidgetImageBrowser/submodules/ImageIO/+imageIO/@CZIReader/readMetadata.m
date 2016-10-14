@@ -18,7 +18,7 @@ function obj = readMetadata( obj )
   keepGoing = true; %Stop once we reach the end of file
   currOffset = 32;
   while keepGoing
-    % Read segment header - ID, AllocatedSize, UsedSize
+    % Read segment header: ID, AllocatedSize, UsedSize
     ID = fread(obj.cziPtr, 16, '*char')';
     if ~isempty(ID)
       obj.segmentTypes = [obj.segmentTypes, setSegmenType(ID)];
@@ -72,15 +72,17 @@ function obj = readMetadata( obj )
       case CZISegments.ZISRAWFILE
         obj = obj.readRawFileSegm();
       case CZISegments.ZISRAWDIRECTORY
-        obj = obj.readRawDirSegm();
+        obj = obj.readRawDirSegm(); % Summary of subblock metadata
       case CZISegments.ZISRAWSUBBLOCK
         % Don't do anything at the moment. We have specific methods to read data
       case CZISegments.ZISRAWMETADATA
-        obj = obj.readRawMetadataSegm();
+        obj = obj.readRawMetadataSegm(); % Main method accessing all metadata 
       case CZISegments.ZISRAWATTACH
-        obj = obj.readRawAttachSegm();
+        obj = obj.readRawAttachSegm(); % Maybe remove? we are not using this info
       case CZISegments.ZISRAWATTDIR
-      case CZISegments.DELETED %do nothing
+        % Don't do anything, the information is redundant!
+      case CZISegments.DELETED
+        % Don't do anything, the specification says to ignore this segment
       otherwise
         error('Unrecognized Segment type')
     end

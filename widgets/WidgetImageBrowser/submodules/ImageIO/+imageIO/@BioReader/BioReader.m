@@ -43,8 +43,8 @@ classdef BioReader < imageIO.ImageIO
     %   myBR = BioReader('testfile.lsm');
     %   data = myBR.getData(); %Reads all the data
     %   data = myBR.getData('X', 1:10) %Reads only the first then rows
-    %   data = myBR.getData('X', 1:2:end) %reads only the odd rows
-    %   data = myBR.getData('C', 1, 'Z', 4:8) %reads tiles 4 to 8, only 1st channel
+    %   data = myBR.getData('X', 1:2:end) %Reads only the odd rows
+    %   data = myBR.getData('C', 1, 'Z', 4:8) %Reads stacks 4 to 8, only 1st channel
     %   data = myBR.getData('TileRow', 1:6, 'TileCol, 2:4) %Reads first six rows of
     %     tiles, and column tiles from 2 to 4
     

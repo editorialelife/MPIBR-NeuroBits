@@ -18,10 +18,6 @@ classdef CZIDirectoryEntry
                         % CZIDimensionEntry objects
   end
   
-  properties (Constant = true)
-    
-  end
-  
   methods
     function obj = CZIDirectoryEntry()
       %CZIDIRECTORYENTRY Constructor
