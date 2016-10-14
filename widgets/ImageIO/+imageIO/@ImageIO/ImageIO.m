@@ -2,6 +2,7 @@ classdef (Abstract = true) ImageIO < handle
     %IMAGEIO read/write various image formats
     %   use BioFormats
     %   use TIFF lib
+    %   use CZI File Specification
     %   metadata
     
     
@@ -31,8 +32,8 @@ classdef (Abstract = true) ImageIO < handle
         
         datatype = '';          % Image datatype (uint8, int16, ...)
         
-        scaleSize %x,y,z        % Pixel physical size along X axis
-        scaleUnits
+        scaleSize %x,y,z        % Pixel physical size
+        scaleUnits              % Unit of measurement of scaleSize
         scaleTime
         
         timePixel

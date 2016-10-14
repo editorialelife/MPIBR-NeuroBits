@@ -2,7 +2,7 @@ function [ data ] = getAllData( obj )
 %GETALLDATA Get all the image data
 %   This method extracts all the image data from a BioReader object
 
-data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.data_type);
+data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.datatype);
 
 if 1 == obj.numTilesRow && 1 == obj.numTilesCol
   for s = 1:obj.stacks;

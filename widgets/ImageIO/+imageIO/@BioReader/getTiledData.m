@@ -58,7 +58,7 @@ tileRow = p.Results.TileRows;
 sizeRows = round(length(rows) * (1 + (max(tileRow) - 1) * (1 - obj.tileOverlap)));
 sizeCols = round(length(cols) * (1 + (max(tileCol) - 1) * (1 - obj.tileOverlap)));
 data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
-  length(timeseries), obj.data_type);
+  length(timeseries), obj.datatype);
 
 %get index of start of each new tile
 pixelStartTileRow = 1 + round((0:max(tileRow)-1) * (1 - obj.tileOverlap) * length(rows));
