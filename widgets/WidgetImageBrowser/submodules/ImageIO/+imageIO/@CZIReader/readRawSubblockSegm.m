@@ -1,4 +1,4 @@
-function [ img ] = readRawSubblockSegm( obj, offsetInFile, dirEntry )
+function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
 %READRAWSUBBLOCKSEGM Reads the data from a subblocjk segment
 %   This function extracts only the data from a Subblock segment.
 %   Metadata related to this segment (channels, position, datatype) should
@@ -6,7 +6,6 @@ function [ img ] = readRawSubblockSegm( obj, offsetInFile, dirEntry )
 %   the CZIReader object.
 %   INPUT
 %     obj: a CZIReader instance
-%     offsetInFile: the offset of this segment from beginning of file
 %     dirEntry: directory entry associated to this block.
 %   OUTPUT
 %     img: data extracted from the subblock
@@ -15,12 +14,26 @@ function [ img ] = readRawSubblockSegm( obj, offsetInFile, dirEntry )
 % Date: 13.10.2016
 
   % Position the file pointer
-  fseek(obj.cziPtr, offsetInFile, 'bof');
+  fseek(obj.cziPtr, dirEntry.filePosition + 32, 'bof'); % + 32 to ignore header
 
   % Read sites
   metadataSize = int32(fread(obj.cziPtr, 1, 'int32'));
   attachSize   = int32(fread(obj.cziPtr, 1, 'int32'));
   dataSize     = int64(fread(obj.cziPtr, 1, 'int64'));
+  switch obj.datatype
+    case 'int16'
+      dataSize = dataSize / 2;
+    case 'uint16'
+      dataSize = dataSize / 2;
+    case 'int32'
+      dataSize = dataSize / 4;
+    case 'uint32'
+      dataSize = dataSize / 4;
+    case 'float'
+      dataSize = dataSize / 4;
+    case 'double'
+      dataSize = dataSize / 8;
+  end
   
   % skip directory entry
   sizeDirEntry = 32 + dirEntry.dimensionCount * 20;
@@ -36,7 +49,7 @@ function [ img ] = readRawSubblockSegm( obj, offsetInFile, dirEntry )
   sbMetadata = fread(obj.cziPtr, metadataSize, '*char')';
   
   % Data
-  img = cast(fread(obj.cziPtr, dataSize, obj.dataType), obj.dataType);
+  blkData = cast(fread(obj.cziPtr, dataSize, obj.datatype), obj.datatype);
   
   % Attachments (ignore for the moment?)
 

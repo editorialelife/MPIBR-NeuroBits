@@ -42,7 +42,7 @@ stacks = p.Results.Z;
 timeseries = p.Results.T;
 
 data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
-  length(time), obj.data_type);
+  length(time), obj.datatype);
 
 for row = tileRow
   for col = tileCol

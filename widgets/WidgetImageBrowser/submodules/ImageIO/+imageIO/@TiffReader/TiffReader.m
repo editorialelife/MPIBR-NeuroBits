@@ -96,14 +96,14 @@ classdef TiffReader < imageIO.ImageIO
       bps = obj.tiffPtr.getTag('BitsPerSample');
       switch sampleFormat
         case 1 % UInt
-          obj.data_type = ['uint' num2str(bps)];
+          obj.datatype = ['uint' num2str(bps)];
         case 2 % Int
-          obj.data_type = ['int' num2str(bps)];
+          obj.datatype = ['int' num2str(bps)];
         case 3 % IEEEFP
           if 64 == bps
-            obj.data_type = 'double';
+            obj.datatype = 'double';
           elseif 32 == bps
-            obj.data_type = 'float';
+            obj.datatype = 'float';
           else
             warning('TiffReader.readMetadata: unrecognized BitsPerSample value')
           end

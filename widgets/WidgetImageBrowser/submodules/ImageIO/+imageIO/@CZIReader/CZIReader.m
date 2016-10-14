@@ -52,7 +52,7 @@ classdef CZIReader < imageIO.ImageIO
     %   varargin: Name-Value arguments. Allowed parameters are 'X', 'Y',
     %     'C', 'Z', 'T', 'S', 'TileRows', 'TileCols'
     % OUTPUT
-    %   data: image data, up to 6 dimension (in this order: XYCZT). If only one
+    %   data: image data, up to 6 dimension (in this order: XYCZTS). If only one
     %   	channel is extracted (or the input is single channel), the singleton
     %   	dimension relative to channel is squeezed.
     % EXAMPLES
@@ -75,11 +75,12 @@ classdef CZIReader < imageIO.ImageIO
   end
   
   methods (Access = protected)
-    obj = readRawFileSegm(obj);          % IMPLEMENTED IN SEPARATE FILE
-    obj = readRawDirSegm(obj);           % IMPLEMENTED IN SEPARATE FILE
-    obj = readRawSubblockSegm(obj);      % IMPLEMENTED IN SEPARATE FILE
-    obj = readRawMetadataSegm(obj);      % IMPLEMENTED IN SEPARATE FILE
-    obj = readRawAttachSegm(obj);        % IMPLEMENTED IN SEPARATE FILE
+    obj = readRawFileSegm(obj);               % IMPLEMENTED IN SEPARATE FILE
+    obj = readRawDirSegm(obj);                % IMPLEMENTED IN SEPARATE FILE
+    obj = readRawSubblockSegm(obj, dirEntry); % IMPLEMENTED IN SEPARATE FILE
+    obj = readRawMetadataSegm(obj);           % IMPLEMENTED IN SEPARATE FILE
+    obj = readRawAttachSegm(obj);             % IMPLEMENTED IN SEPARATE FILE
+    data = getAllData(obj);                   % IMPLEMENTED IN SEPARATE FILE
   end
   
 end
