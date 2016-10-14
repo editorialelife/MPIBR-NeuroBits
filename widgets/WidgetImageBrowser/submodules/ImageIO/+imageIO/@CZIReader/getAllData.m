@@ -11,7 +11,31 @@ data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, ...
 % Now go through all the directory entries
 for k = 1:length(obj.directoryEntries)
   dirEntry = obj.directoryEntries(k);
+  % Get image
   tmpImg = obj.readRawSubblockSegm(dirEntry);
+  % Get position
+  C = dirEntry.C;
+  Z = dirEntry.Z;
+  T = dirEntry.T;
+  S = dirEntry.S;
+  row = obj.rowIndex(dirEntry.YPos);
+  col = obj.colIndex(dirEntry.XPos);
+  % Manage overlap
+  if 1 ~= row
+    ovDiffRow = round(obj.tileOverlap * obj.pixPerTileRow);
+  else
+    ovDiffRow = 0;
+  end
+  if 1 ~= col
+    ovDiffCol = round(obj.tileOverlap * obj.pixPerTileCol);
+  else
+    ovDiffCol = 0;
+  end
+  startR = 1 + (row - 1) * obj.pixPerTileRow - ovDiffRow;
+  startC = 1 + (col - 1) * obj.pixPerTileCol - ovDiffCol;
+  endR   = startR + obj.pixPerTileRow - 1;
+  endC   = startC + obj.pixPerTileCol - 1;
+  data(startR:endR, startC:endC, C, Z, T, S) = tmpImg;
 end
 
 end

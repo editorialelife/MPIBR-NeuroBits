@@ -34,7 +34,7 @@ classdef (Abstract = true) ImageIO < handle
         
         scaleSize %x,y,z        % Pixel physical size
         scaleUnits              % Unit of measurement of scaleSize
-        scaleTime
+        scaleTime               % 
         
         timePixel
         timeLine

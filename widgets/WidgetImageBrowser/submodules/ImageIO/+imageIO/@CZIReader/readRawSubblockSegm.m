@@ -16,7 +16,7 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
   % Position the file pointer
   fseek(obj.cziPtr, dirEntry.filePosition + 32, 'bof'); % + 32 to ignore header
 
-  % Read sites
+  % Read sizes
   metadataSize = int32(fread(obj.cziPtr, 1, 'int32'));
   attachSize   = int32(fread(obj.cziPtr, 1, 'int32'));
   dataSize     = int64(fread(obj.cziPtr, 1, 'int64'));
@@ -46,10 +46,11 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
   end
   
   % Metadata
-  sbMetadata = fread(obj.cziPtr, metadataSize, '*char')';
+  fread(obj.cziPtr, metadataSize, '*char');
   
   % Data
   blkData = cast(fread(obj.cziPtr, dataSize, obj.datatype), obj.datatype);
+  blkData = reshape(blkData, obj.pixPerTileRow, obj.pixPerTileCol);
   
   % Attachments (ignore for the moment?)
 

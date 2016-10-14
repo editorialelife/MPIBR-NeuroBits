@@ -18,6 +18,10 @@ classdef CZIReader < imageIO.ImageIO
     offsetDirectorySegm = 0; % Offset to the Directory segment (1 per file)
     offsetAttachDirSegm = 0; % Offset to the Attachment segment (1 per file)
     directoryEntries;        % Directory entry info associated to each subblock
+    rowIndex;                % maps the absolute Y position of the subblock to 
+                             % the index row position in the tiled image
+    colIndex;                % maps the absolute X position of the subblock to 
+                             % the index column position in the tiled image
   end
   
   methods
@@ -73,14 +77,17 @@ classdef CZIReader < imageIO.ImageIO
       end
     end
   end
+
+  methods
+    data = getAllData(obj);                   % IMPLEMENTED IN SEPARATE FILE
+  end
   
   methods (Access = protected)
     obj = readRawFileSegm(obj);               % IMPLEMENTED IN SEPARATE FILE
     obj = readRawDirSegm(obj);                % IMPLEMENTED IN SEPARATE FILE
     obj = readRawSubblockSegm(obj, dirEntry); % IMPLEMENTED IN SEPARATE FILE
     obj = readRawMetadataSegm(obj);           % IMPLEMENTED IN SEPARATE FILE
-    obj = readRawAttachSegm(obj);             % IMPLEMENTED IN SEPARATE FILE
-    data = getAllData(obj);                   % IMPLEMENTED IN SEPARATE FILE
+    obj = readRawAttachSegm(obj);             % IMPLEMENTED IN SEPARATE FILE   
   end
   
 end
