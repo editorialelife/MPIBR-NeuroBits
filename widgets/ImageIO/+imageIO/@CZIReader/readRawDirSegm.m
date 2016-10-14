@@ -1,5 +1,5 @@
 function obj = readRawDirSegm( obj )
-%READRAWFILESEGM Read metadata for segment of type ZISRAWDIRECTORY
+%READRAWDIRSEGM Read metadata for segment of type ZISRAWDIRECTORY
 %   Extract information from ZISRAWDIRECTORY segments. 
 %
 % AUTHOR: Stefano Masneri

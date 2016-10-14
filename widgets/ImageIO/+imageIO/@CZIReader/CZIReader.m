@@ -41,15 +41,45 @@ classdef CZIReader < imageIO.ImageIO
         fclose(obj.cziPtr);
       end
     end
+    
+    function data = getData(obj, varargin)
+    %GETDATA extracts image data
+    % This function reads data from the bioformat file. If no parameters
+    % are specified for a specific dimension, all the data will be
+    % extracted.
+    % INPUT
+    %   obj: class instance
+    %   varargin: Name-Value arguments. Allowed parameters are 'X', 'Y',
+    %     'C', 'Z', 'T', 'S', 'TileRows', 'TileCols'
+    % OUTPUT
+    %   data: image data, up to 6 dimension (in this order: XYCZT). If only one
+    %   	channel is extracted (or the input is single channel), the singleton
+    %   	dimension relative to channel is squeezed.
+    % EXAMPLES
+    %   myCZI = CZIReader('testfile.czi');
+    %   data = myCZI.getData(); %Reads all the data
+    %   data = myCZI.getData('X', 1:10) %Reads only the first then rows
+    %   data = myCZI.getData('X', 1:2:end) %Reads only the odd rows
+    %   data = myCZI.getData('C', 1, 'Z', 4:8) %Reads stacks 4 to 8, only 1st channel
+    %   data = myCZI.getData('TileRow', 1:6, 'TileCol, 2:4) %Reads first six rows of
+    %     tiles, and column tiles from 2 to 4
+    
+      if isempty(varargin) % Read all the data
+        data = obj.getAllData();
+      elseif 1 == obj.tile
+        data = obj.getDataNoTiles(varargin{:});
+      else
+        data = obj.getTiledData(varargin{:});
+      end
+    end
   end
   
   methods (Access = protected)
     obj = readRawFileSegm(obj);          % IMPLEMENTED IN SEPARATE FILE
     obj = readRawDirSegm(obj);           % IMPLEMENTED IN SEPARATE FILE
-    obj = readRawSubblockSegm(obj);      % TODO
+    obj = readRawSubblockSegm(obj);      % IMPLEMENTED IN SEPARATE FILE
     obj = readRawMetadataSegm(obj);      % IMPLEMENTED IN SEPARATE FILE
     obj = readRawAttachSegm(obj);        % IMPLEMENTED IN SEPARATE FILE
-    obj = readRawAttDirSegm(obj);        % TODO
   end
   
 end
