@@ -13,11 +13,11 @@ for k = 1:length(obj.directoryEntries)
   dirEntry = obj.directoryEntries(k);
   % Get image
   tmpImg = obj.readRawSubblockSegm(dirEntry);
-  % Get position
-  C = dirEntry.C;
-  Z = dirEntry.Z;
-  T = dirEntry.T;
-  S = dirEntry.S;
+  % Get positions (all zero based)
+  C = 1 + dirEntry.C; 
+  Z = 1 + dirEntry.Z;
+  T = 1 + dirEntry.T;
+  S = 1 + dirEntry.S;
   row = obj.rowIndex(dirEntry.YPos);
   col = obj.colIndex(dirEntry.XPos);
   % Manage overlap
