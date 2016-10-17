@@ -50,7 +50,7 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
   
   % Data
   blkData = cast(fread(obj.cziPtr, dataSize, obj.datatype), obj.datatype);
-  blkData = reshape(blkData, obj.pixPerTileRow, obj.pixPerTileCol);
+  blkData = reshape(blkData, obj.pixPerTileRow, obj.pixPerTileCol)';
   
   % Attachments (ignore for the moment?)
 
