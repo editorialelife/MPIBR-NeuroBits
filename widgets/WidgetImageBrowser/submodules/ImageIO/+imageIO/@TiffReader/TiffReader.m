@@ -43,6 +43,22 @@ classdef TiffReader < imageIO.ImageIO
       obj = obj.readMetadata();
     end
     
+    function data = read(obj)
+    %READ read all the image data
+    %This function reads all the planes of the image. If the file has
+    %only one plane just returns that.
+    % INPUT
+    %   
+    % OUTPUT
+    %   data: the whole image content
+      
+      data = zeros(height, width, channels, stacks, obj.datatype);
+      for k = 1:stacks
+        data(:, :, :, k) = obj.readImage(k);
+      end
+    
+    end
+    
     function img = readImage( obj, n )
     %READIMAGE read one image plane
     %This function reads one single plane of the image. If the file has
@@ -79,7 +95,7 @@ classdef TiffReader < imageIO.ImageIO
         obj.stacks = length(imgInfo);
         obj.height = imgInfo(1).Height;
         obj.width = imgInfo(1).Width;
-        obj.channel = length(imgInfo(1).BitsPerSample);
+        obj.channels = length(imgInfo(1).BitsPerSample);
         obj.time = nan; % Or should we set 1?
         obj.tile = 1;   % Standard TIFF does not have multitiled images
         obj.XResolution = imgInfo(1).XResolution;
@@ -89,7 +105,7 @@ classdef TiffReader < imageIO.ImageIO
         error('TiffReader.TiffReader: Cannot read metadata. %s', ME.message)
       end
       % now use the Tiff pointer
-      obj.compression = obj.tiffPtr.compression;
+      obj.compression = obj.tiffPtr.Compression;
       obj.tagNames = obj.tiffPtr.getTagNames;
       % retrieve datatype
       sampleFormat = obj.tiffPtr.getTag('SampleFormat');
