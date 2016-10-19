@@ -65,28 +65,31 @@ function obj = readMetadata( obj )
     end
   end
 
-  % Now go through all the segments and extract the information we need
-  for k = 1:length(obj.segmentTypes)
-    fseek(obj.cziPtr, obj.offsetToSegments(k), 'bof');
-    switch obj.segmentTypes(k)
-      case CZISegments.ZISRAWFILE
-        obj = obj.readRawFileSegm();
-      case CZISegments.ZISRAWDIRECTORY
-        obj = obj.readRawDirSegm(); % Summary of subblock metadata
-      case CZISegments.ZISRAWSUBBLOCK
-        % Don't do anything at the moment. We have specific methods to read data
-      case CZISegments.ZISRAWMETADATA
-        obj = obj.readRawMetadataSegm(); % Main method accessing all metadata 
-      case CZISegments.ZISRAWATTACH
-        obj = obj.readRawAttachSegm(); % Maybe remove? we are not using this info
-      case CZISegments.ZISRAWATTDIR
-        % Don't do anything, the information is redundant!
-      case CZISegments.DELETED
-        % Don't do anything, the specification says to ignore this segment
-      otherwise
-        error('Unrecognized Segment type')
-    end
-  end
+  % Now go through the segments and extract the information we need
+  % First read The file block
+  offset = obj.offsetToSegments(obj.segmentTypes == CZISegments.ZISRAWFILE);
+  assert( 1 == length(offset))
+  fseek(obj.cziPtr, offset, 'bof');
+  obj = obj.readRawFileSegm();
+
+  % Then read the metadata block
+  offset = obj.offsetToSegments(obj.segmentTypes == CZISegments.ZISRAWMETADATA);
+  assert( 1 == length(offset))
+  fseek(obj.cziPtr, offset, 'bof');
+  obj = obj.readRawMetadataSegm(); % Main method accessing all metadata
+
+  % Then the directory block 
+  offset = obj.offsetToSegments(obj.segmentTypes == CZISegments.ZISRAWDIRECTORY);
+  assert( 1 == length(offset))
+  fseek(obj.cziPtr, offset, 'bof');
+  obj = obj.readRawDirSegm(); % Summary of subblock metadata
+
+  % Finally the attachment info 
+  offset = obj.offsetToSegments(obj.segmentTypes == CZISegments.ZISRAWATTACH);
+  assert( 1 == length(offset))
+  fseek(obj.cziPtr, offset, 'bof');
+  obj = obj.readRawAttachSegm(); % Maybe remove? we are not using this info
+
 end
 
 function segmType = setSegmenType(ID)
