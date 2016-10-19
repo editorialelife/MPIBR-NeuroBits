@@ -103,16 +103,18 @@ classdef TiffReader < imageIO.ImageIO
           img = obj.tiffPtr.read();
         end
       else
-        imageSize = obj.height * obj.width * obj.channels * obj.bps / 8;
+        imageSize = obj.height * obj.width * obj.channels;
+        precision = [ obj.datatype '=>'  obj.datatype ];
         if n > obj.stacks
           warning('TiffReader.readImage: Cannot read image. n is bigger than the number of stacks')
           img = [];
         else
           if nargin > 1 % n specified
-            fseek(obj.filePtr, obj.offsetToImg + (k-1)*imageSize, 'bof');
+            fseek(obj.filePtr, obj.offsetToImg + (n-1)*imageSize*obj.bps/8, 'bof');
           end
-          img = fread(obj.filePtr, imageSize, obj.datatype);
-          img = reshape(img, [obj.height, obj.width, obj.channels]);
+          img = fread(obj.filePtr, imageSize, precision);
+          img = reshape(img, [obj.width, obj.height, obj.channels]);
+          img = img';
         end
       end
     end
