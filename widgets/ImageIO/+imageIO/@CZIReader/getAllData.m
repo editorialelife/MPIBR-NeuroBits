@@ -31,8 +31,8 @@ for k = 1:length(obj.directoryEntries)
   else
     ovDiffCol = 0;
   end
-  startR = 1 + (row - 1) * obj.pixPerTileRow - ovDiffRow;
-  startC = 1 + (col - 1) * obj.pixPerTileCol - ovDiffCol;
+  startR = 1 + (row - 1) * (obj.pixPerTileRow - ovDiffRow);
+  startC = 1 + (col - 1) * (obj.pixPerTileCol - ovDiffCol);
   endR   = startR + obj.pixPerTileRow - 1;
   endC   = startC + obj.pixPerTileCol - 1;
   data(startR:endR, startC:endC, C, Z, T, S) = tmpImg;

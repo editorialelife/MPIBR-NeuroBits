@@ -79,5 +79,9 @@ function obj = readRawDirSegm( obj )
   obj.rowIndex = containers.Map(sort(unique(YPos), 'ascend'), 1:obj.numTilesRow);
   obj.colIndex = containers.Map(sort(unique(XPos), 'ascend'), 1:obj.numTilesCol);
   
+  %now sort the directory entries according to their M field, so that tiles
+  %with higher M are read later and will overwrite overlapping pixels
+  [~, idx] = sort([obj.directoryEntries.M]);
+  obj.directoryEntries = obj.directoryEntries(idx);
 end
 
