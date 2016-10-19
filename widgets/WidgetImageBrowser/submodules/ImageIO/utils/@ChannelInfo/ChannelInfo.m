@@ -34,13 +34,17 @@ classdef ChannelInfo
         catch
           obj.dyeName = '';
         end
-        colHex = data.Color.Text;
-        if length(colHex) > 7
-          obj.color = [hex2dec(colHex(4:5)), hex2dec(colHex(6:7)), ...
-            hex2dec(colHex(8:9)), hex2dec(colHex(2:3)) / 255];
-        else
-          obj.color = [hex2dec(colHex(2:3)), hex2dec(colHex(4:5)), ...
-            hex2dec(colHex(6:7)), 255*obj.gamma];
+        try
+          colHex = data.Color.Text;
+          if length(colHex) > 7
+            obj.color = [hex2dec(colHex(4:5)), hex2dec(colHex(6:7)), ...
+              hex2dec(colHex(8:9)), hex2dec(colHex(2:3)) / 255];
+          else
+            obj.color = [hex2dec(colHex(2:3)), hex2dec(colHex(4:5)), ...
+              hex2dec(colHex(6:7)), 255*obj.gamma];
+          end
+        catch
+          obj.color = [255 255 255 255]; % white, arbitrary
         end
       else
         warning('ChannelInfo.ChannelInfo: Unsupported input filetype')
