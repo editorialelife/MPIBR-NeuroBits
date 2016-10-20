@@ -20,7 +20,10 @@ function obj = readRawDirSegm( obj )
   XPos = zeros(1, entryCount);
   YPos = zeros(1, entryCount);
   for k = 1:entryCount
-    [obj, XPos, YPos] = obj.analyzeDirEntry( k, XPos, YPos );
+    dirEntry = obj.directoryEntries(k);
+    obj.directoryEntries(k) = obj.analyzeDirEntry( dirEntry );
+    XPos(k) = obj.directoryEntries(k).XPos;
+    YPos(k) = obj.directoryEntries(k).YPos;
   end
   
   % Check correspondences between values obtained here and metadata info
