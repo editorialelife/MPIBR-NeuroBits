@@ -65,7 +65,7 @@ if obj.wrongMetadata
   for k = 1:length(obj.directoryEntries)
     dirEntry = obj.directoryEntries(k);
     % Get image
-    tmpImg = obj.readRawSubblockSegm(dirEntry);
+    tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntry);
     % Get positions (all zero based)
     C = 1 + dirEntry.C; 
     Z = 1 + dirEntry.Z;
