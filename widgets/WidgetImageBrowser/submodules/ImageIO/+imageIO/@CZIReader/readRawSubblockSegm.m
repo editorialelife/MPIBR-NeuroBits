@@ -1,5 +1,5 @@
 function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
-%READRAWSUBBLOCKSEGM Reads the data from a subblocjk segment
+%READRAWSUBBLOCKSEGM Reads the data from a subblock segment
 %   This function extracts only the data from a Subblock segment.
 %   Metadata related to this segment (channels, position, datatype) should
 %   have been retrieved previously and are assumed to be already known to
@@ -14,7 +14,9 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
 % Date: 13.10.2016
 
   % Position the file pointer
-  fseek(obj.cziPtr, dirEntry.filePosition + 32, 'bof'); % + 32 to ignore header
+  if nargin > 1
+    fseek(obj.cziPtr, dirEntry.filePosition + 32, 'bof'); % + 32 to ignore header
+  end
 
   % Read sizes
   metadataSize = int32(fread(obj.cziPtr, 1, 'int32'));
@@ -37,10 +39,16 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
       error('CZIReader.readRawSubblockSegm: unsupported datatype');
   end
   
-  % skip directory entry
-  sizeDirEntry = 32 + dirEntry.dimensionCount * 20;
-  dirEntry = CZIDirectoryEntry();
-  dirEntry = dirEntry.init(obj.cziPtr);%= fread(obj.cziPtr, sizeDirEntry, 'uint8');
+  % skip directory entry, if already specified
+  if nargin > 1
+    sizeDirEntry = 32 + dirEntry.dimensionCount * 20;
+    fread(obj.cziPtr, sizeDirEntry, 'uint8');
+  else
+    dirEntry = CZIDirectoryEntry();
+    dirEntry = dirEntry.init(obj.cziPtr);
+    dirEntry = obj.analyzeDirEntry(dirEntry);
+    sizeDirEntry = 32 + dirEntry.dimensionCount * 20;
+  end
   
   % skip fill bytes, if any
   fill = max(256 - (sizeDirEntry + 16), 0);
