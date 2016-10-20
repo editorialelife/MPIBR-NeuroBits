@@ -1,4 +1,4 @@
-function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
+function [ blkData, obj ] = readRawSubblockSegm( obj, varargin )
 %READRAWSUBBLOCKSEGM Reads the data from a subblock segment
 %   This function extracts only the data from a Subblock segment.
 %   If metadata related to this segment (channels, position, datatype)
@@ -6,15 +6,24 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
 %   parameter.
 %   INPUT
 %     obj: a CZIReader instance
+%   NAME-VALUE PARAMETERS
 %     dirEntry: directory entry associated to this block.
+%     idx specify index of the segments. Used to update the directory entry
 %   OUTPUT
 %     blkData: data extracted from the subblock
 %
 % AUTHOR: Stefano Masneri
 % Date: 13.10.2016
 
+  p = inputParser;
+  p.addParameter('dirEntry', []);
+  p.addParameter('idx', [], @(x) (x > 0));
+  p.parse(varargin{:});
+  k = p.Results.idx;
+  dirEntry = p.Results.dirEntry;
+
   % Position the file pointer
-  if nargin > 1
+  if ~isempty(dirEntry)
     fseek(obj.cziPtr, dirEntry.filePosition + 32, 'bof'); % + 32 to ignore header
   end
 
@@ -40,14 +49,16 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
   end
   
   % skip directory entry, if already specified
-  if nargin > 1
+  if ~isempty(dirEntry)
     sizeDirEntry = 32 + dirEntry.dimensionCount * 20;
     fread(obj.cziPtr, sizeDirEntry, 'uint8');
-  else
+  elseif ~isempty(k)
     dirEntry = CZIDirectoryEntry();
     dirEntry = dirEntry.init(obj.cziPtr);
     dirEntry = dirEntry.analyzeDirEntry();
     sizeDirEntry = 32 + dirEntry.dimensionCount * 20;
+  else
+    error('CZIReader.readRawSubblockSegm: must have as input parameter either a dirEntry or an index');
   end
   
   % skip fill bytes, if any
@@ -56,9 +67,9 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
     unused = fread(obj.cziPtr, fill, '*char')';
   end
   
-  % Metadata - ignore for the moment
+  % Metadata
   metadata = fread(obj.cziPtr, metadataSize, '*char')';
-  if ~isempty(metadata) && obj.wrongMetadata
+  if ~isempty(metadata) && obj.wrongMetadata && ~isempty(k);
     metadataStruct = xml2struct(metadata);
     stitchBounds = metadataStruct.METADATA.Tags.LastStitchingBounds.Text;
     indX = strfind(stitchBounds, 'StartX');
@@ -69,13 +80,16 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
     indStop = strfind(stitchBounds, '"');
     indStop = indStop(indStop > indY);
     dirEntry.YPos = str2double(stitchBounds(indStop(1)+1 : indStop(2)-1));
+    obj.directoryEntries(k) = dirEntry;
   end
   
   % Data
-  if nargout > 0
+  if nargout == 1
     datatype = [obj.datatype '=>' obj.datatype];
     blkData = fread(obj.cziPtr, dataSize, datatype);
     blkData = reshape(blkData, obj.pixPerTileRow, obj.pixPerTileCol)';
+  else
+    blkData = [];
   end
   
   % Attachments - ignore for the moment
