@@ -37,16 +37,18 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
   
   % skip directory entry
   sizeDirEntry = 32 + dirEntry.dimensionCount * 20;
-  fread(obj.cziPtr, sizeDirEntry, 'uint8');
+  dirEntry = CZIDirectoryEntry();
+  dirEntry = dirEntry.init(obj.cziPtr);%= fread(obj.cziPtr, sizeDirEntry, 'uint8');
   
   % skip fill bytes, if any
-  fill = max(256 - sizeDirEntry, 0);
+  fill = max(256 - (sizeDirEntry + 16), 0);
   if fill > 0
-    fread(obj.cziPtr, fill, 'uint8');
+    unused = fread(obj.cziPtr, fill, '*char')';
   end
   
   % Metadata - ignore for the moment
-  fread(obj.cziPtr, metadataSize, '*char');
+  metadata = fread(obj.cziPtr, metadataSize, '*char')';
+  metadataStruct = xml2struct(metadata);
   
   % Data
   blkData = cast(fread(obj.cziPtr, dataSize, obj.datatype), obj.datatype);
