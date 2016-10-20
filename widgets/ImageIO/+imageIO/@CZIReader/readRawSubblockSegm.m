@@ -1,14 +1,14 @@
 function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
 %READRAWSUBBLOCKSEGM Reads the data from a subblock segment
 %   This function extracts only the data from a Subblock segment.
-%   Metadata related to this segment (channels, position, datatype) should
-%   have been retrieved previously and are assumed to be already known to
-%   the CZIReader object.
+%   If metadata related to this segment (channels, position, datatype)
+%   has been retrieved previously it will be stored in the dirEntry
+%   parameter.
 %   INPUT
 %     obj: a CZIReader instance
 %     dirEntry: directory entry associated to this block.
 %   OUTPUT
-%     img: data extracted from the subblock
+%     blkData: data extracted from the subblock
 %
 % AUTHOR: Stefano Masneri
 % Date: 13.10.2016
@@ -46,7 +46,7 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
   else
     dirEntry = CZIDirectoryEntry();
     dirEntry = dirEntry.init(obj.cziPtr);
-    dirEntry = obj.analyzeDirEntry(dirEntry);
+    dirEntry = dirEntry.analyzeDirEntry();
     sizeDirEntry = 32 + dirEntry.dimensionCount * 20;
   end
   
@@ -58,8 +58,17 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
   
   % Metadata - ignore for the moment
   metadata = fread(obj.cziPtr, metadataSize, '*char')';
-  if ~isempty(metadata)
+  if ~isempty(metadata) && obj.wrongMetadata
     metadataStruct = xml2struct(metadata);
+    stitchBounds = metadataStruct.METADATA.Tags.LastStitchingBounds.Text;
+    indX = strfind(stitchBounds, 'StartX');
+    indStop = strfind(stitchBounds, '"');
+    indStop = indStop(indStop > indX);
+    dirEntry.XPos = str2double(stitchBounds(indStop(1)+1 : indStop(2)-1));
+    indY = strfind(stitchBounds, 'StartY');
+    indStop = strfind(stitchBounds, '"');
+    indStop = indStop(indStop > indY);
+    dirEntry.YPos = str2double(stitchBounds(indStop(1)+1 : indStop(2)-1));
   end
   
   % Data
