@@ -21,7 +21,7 @@ function obj = readRawDirSegm( obj )
   YPos = zeros(1, entryCount);
   for k = 1:entryCount
     dirEntry = obj.directoryEntries(k);
-    obj.directoryEntries(k) = obj.analyzeDirEntry( dirEntry );
+    obj.directoryEntries(k) = dirEntry.analyzeDirEntry();
     XPos(k) = obj.directoryEntries(k).XPos;
     YPos(k) = obj.directoryEntries(k).YPos;
   end

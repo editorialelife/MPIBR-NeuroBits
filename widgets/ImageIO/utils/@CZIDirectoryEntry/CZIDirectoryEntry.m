@@ -71,6 +71,8 @@ classdef CZIDirectoryEntry
         obj.dimensionEntries(k) = obj.dimensionEntries(k).init(cziPtr);
       end
     end
+    
+    obj = analyzeDirEntry(obj); % IMPLEMENTED IN SEPARATE FILE
   end
   
 end
