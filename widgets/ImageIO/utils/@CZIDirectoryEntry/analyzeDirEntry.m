@@ -1,31 +1,31 @@
-function dirEntry = analyzeDirEntry( obj, dirEntry )
+function obj = analyzeDirEntry( obj )
 %ANALYZEDIRENTRY Check the directoryEntry and set all its properties
 
-for m = 1:dirEntry.dimensionCount
-  dimEntry = dirEntry.dimensionEntries(m);
+for m = 1:obj.dimensionCount
+  dimEntry = obj.dimensionEntries(m);
   switch dimEntry.dimension
     case 'X' % Pixel index / offset in the X direction. Used for tiled images
-      dirEntry.XPos = dimEntry.startCoordinate;
+      obj.XPos = dimEntry.startCoordinate;
     case 'Y' % Pixel index / offset in the Y direction. Used for tiled images
-      dirEntry.YPos = dimEntry.startCoordinate;
+      obj.YPos = dimEntry.startCoordinate;
     case 'C' % Channel in a Multi-Channel data set
-      dirEntry.C = dimEntry.start;
+      obj.C = dimEntry.start;
       if dimEntry.size > 1
         disp('Size of C > 1 for this block')
       end
     case 'Z' % Slice index (Z – direction).
-      dirEntry.Z = dimEntry.startCoordinate;
+      obj.Z = dimEntry.startCoordinate;
       if dimEntry.size > 1
         disp('Size of Z > 1 for this block')
       end
     case 'T' % Time point in a sequentially acquired series of data.
-      dirEntry.T = dimEntry.startCoordinate;
+      obj.T = dimEntry.startCoordinate;
     case 'R' % Rotation – used in acquisition modes where the data is recorded
       %  from various angles.
       disp('Dimension R currently not supported')
     case 'S' % Scene – for clustering items in X/Y direction (data belonging to
       %  contiguous regions of interests in a mosaic image).
-      dirEntry.S = dimEntry.start;
+      obj.S = dimEntry.start;
     case 'I' % Illumination - illumination direction index (e.g. from left=0, from
       %   right=1).
       disp('Dimension I currently not supported')
@@ -34,7 +34,7 @@ for m = 1:dirEntry.dimensionCount
       %BPos = [BPos dimEntry.startCoordinate];
     case 'M' % Mosaic tile index – this index uniquely identifies all tiles in a
       %   specific plane
-      dirEntry.M = dimEntry.startCoordinate;
+      obj.M = dimEntry.startCoordinate;
       if dimEntry.size > 1
         disp('Size of M > 1 for this block')
       end
