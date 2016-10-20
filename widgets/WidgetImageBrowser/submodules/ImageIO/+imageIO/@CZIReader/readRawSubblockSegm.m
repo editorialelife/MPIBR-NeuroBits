@@ -33,6 +33,8 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
       dataSize = dataSize / 4;
     case 'double'
       dataSize = dataSize / 8;
+    otherwise
+      error('CZIReader.readRawSubblockSegm: unsupported datatype');
   end
   
   % skip directory entry
@@ -53,8 +55,11 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
   end
   
   % Data
-  blkData = cast(fread(obj.cziPtr, dataSize, obj.datatype), obj.datatype);
-  blkData = reshape(blkData, obj.pixPerTileRow, obj.pixPerTileCol)';
+  if nargout > 0
+    datatype = [obj.datatype '=>' obj.datatype];
+    blkData = fread(obj.cziPtr, dataSize, datatype);
+    blkData = reshape(blkData, obj.pixPerTileRow, obj.pixPerTileCol)';
+  end
   
   % Attachments - ignore for the moment
   % fread(obj.cziPtr, attachSize, '*char');
