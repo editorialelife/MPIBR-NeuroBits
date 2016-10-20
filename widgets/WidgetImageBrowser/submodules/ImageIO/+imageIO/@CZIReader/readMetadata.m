@@ -84,10 +84,20 @@ function obj = readMetadata( obj )
   fseek(obj.cziPtr, offset, 'bof');
   obj = obj.readRawDirSegm(); % Summary of subblock metadata
 
+  % If the info retrieved from metadata and directory block contradicts
+  % each other, check also the subblocks
+  if obj.wrongMetadata
+    offsets = obj.offsetToSegments(obj.segmentTypes == CZISegments.ZISRAWSUBBLOCK);
+    for k = 1:length(offsets)
+      fseek(obj.cziPtr, offsets(k), 'bof');
+      [~, obj] = obj.readRawSubblockSegm('idx', k);
+    end
+  end
+  
   % Finally the attachment info 
-  offset = obj.offsetToSegments(obj.segmentTypes == CZISegments.ZISRAWATTACH);
-  for k = 1:length(offset)
-    fseek(obj.cziPtr, offset(k), 'bof');
+  offsets = obj.offsetToSegments(obj.segmentTypes == CZISegments.ZISRAWATTACH);
+  for k = 1:length(offsets)
+    fseek(obj.cziPtr, offsets(k), 'bof');
     obj = obj.readRawAttachSegm(); % Maybe remove? we are not using this info
   end
 
