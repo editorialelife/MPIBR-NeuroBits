@@ -90,6 +90,7 @@ function obj = readMetadata( obj )
     offset = obj.offsetToSegments(obj.segmentTypes == CZISegments.ZISRAWSUBBLOCK);
     for k = 1:length(offset)
       fseek(obj.cziPtr, offset, 'bof');
+      obj.readRawSubblockSegm();
     end
   end
   
