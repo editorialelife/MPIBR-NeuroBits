@@ -36,13 +36,30 @@ classdef (Abstract = true) ImageIO < handle
         scaleUnits              % Unit of measurement of scaleSize
         scaleTime               % 
         
-        timePixel
-        timeLine
-        timeFrame
-        timeStack
+        timePixel               % Time it takes to acquire a single pixel, 
+                                % especially relevant in point-scanning devices 
+                                % in which each physical location of the sample 
+                                % is measured at a different time (focused laser beam is scanned across the sample)
+        timeLine                % Time it takes to acquire a single line of pixels, 
+                                % again mainly for point scanning devices. The value
+                                % usually differs from timePixel * numberOfPixels
+                                % since only a portion of the scan period can be 
+                                % used for data acquisition
+        timeFrame               % Time it takes to acquire a single frame
+        timeStack               % Time it takes to acquire a stack 
         
-        zoom = nan;
-        gain = nan;
+        zoom = nan;             % In a point scanning device the observed field
+                                % can be changed by simply changing the range of 
+                                % the scanning process (in contrast to a camera 
+                                % based system, where the magnification is fixed). 
+        gain = nan;             % Many light-detectors have the ability to "amplify"
+                                % the signal. This is usually described by a single
+                                % "gain" parameter, though the physical meaning of 
+                                % this parameter depends on the type of detector. 
+                                % For point scanning devices these are photo 
+                                % multiplier tubes (PMT), the gain is then typically 
+                                % the voltage used to accelerate the free electrons 
+                                % towards the next cathode
         
         wavelengthExc = nan;
         wavelengthEm = nan;

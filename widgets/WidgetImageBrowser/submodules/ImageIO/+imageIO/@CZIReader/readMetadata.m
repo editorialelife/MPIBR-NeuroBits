@@ -86,9 +86,10 @@ function obj = readMetadata( obj )
 
   % Finally the attachment info 
   offset = obj.offsetToSegments(obj.segmentTypes == CZISegments.ZISRAWATTACH);
-  assert( 1 == length(offset))
-  fseek(obj.cziPtr, offset, 'bof');
-  obj = obj.readRawAttachSegm(); % Maybe remove? we are not using this info
+  for k = 1:length(offset)
+    fseek(obj.cziPtr, offset(k), 'bof');
+    obj = obj.readRawAttachSegm(); % Maybe remove? we are not using this info
+  end
 
 end
 

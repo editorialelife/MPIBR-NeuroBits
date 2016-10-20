@@ -22,6 +22,9 @@ classdef CZIReader < imageIO.ImageIO
                              % the index row position in the tiled image
     colIndex;                % maps the absolute X position of the subblock to 
                              % the index column position in the tiled image
+    wrongMetadata = false;   % set to true if the information acquired from the 
+                             % metadata block and the directory block is
+                             % contradictory
   end
   
   methods

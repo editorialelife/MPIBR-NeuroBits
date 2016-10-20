@@ -5,8 +5,8 @@ function [ data ] = getAllData( obj )
 % AUTHOR: Stefano Masneri
 % Date: 13.10.2016
 
-data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, ...
-  obj.series, obj.datatype);
+ data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, ...
+   obj.series, obj.datatype);
 
 % Now go through all the directory entries
 for k = 1:length(obj.directoryEntries)
