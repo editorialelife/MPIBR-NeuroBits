@@ -24,12 +24,12 @@ function obj = readRawDirSegm( obj )
   end
   
   % Check correspondences between values obtained here and metadata info
-  if length(unique(XPos)) == obj.numTilesCol
+  if length(unique(XPos)) ~= obj.numTilesCol
     warning('CZIReader.readRawDirSegm: inaccurate metadata information for number of horizontal tiles.')
     obj.numTilesCol = length(unique(XPos));
     obj.wrongMetadata = true;
   end
-  if length(unique(YPos)) == obj.numTilesRow
+  if length(unique(YPos)) ~= obj.numTilesRow
     warning('CZIReader.readRawDirSegm: inaccurate metadata information for number of vertical tiles.')
     obj.numTilesRow = length(unique(YPos));
     obj.wrongMetadata = true;
