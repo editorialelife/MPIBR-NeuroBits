@@ -48,14 +48,16 @@ function [ blkData ] = readRawSubblockSegm( obj, dirEntry )
   
   % Metadata - ignore for the moment
   metadata = fread(obj.cziPtr, metadataSize, '*char')';
-  metadataStruct = xml2struct(metadata);
+  if ~isempty(metadata)
+    metadataStruct = xml2struct(metadata);
+  end
   
   % Data
   blkData = cast(fread(obj.cziPtr, dataSize, obj.datatype), obj.datatype);
   blkData = reshape(blkData, obj.pixPerTileRow, obj.pixPerTileCol)';
   
   % Attachments - ignore for the moment
-  fread(obj.cziPtr, attachSize, '*char');
+  % fread(obj.cziPtr, attachSize, '*char');
   
 end
 
