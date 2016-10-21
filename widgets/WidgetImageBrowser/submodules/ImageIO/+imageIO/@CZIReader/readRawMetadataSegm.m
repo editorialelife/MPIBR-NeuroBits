@@ -138,6 +138,9 @@ function obj = readRawMetadataSegm( obj )
   
   %% The field "DisplaySetting" has info related to the Channels
   ch = top.DisplaySetting.Channels.Channel;
+  if isstruct(ch)
+    ch = {ch};
+  end
   for k = 1:length(ch) %check all channels
     obj.channelInfo = [obj.channelInfo, ChannelInfo(ch{k}, 'CZI')];
   end
