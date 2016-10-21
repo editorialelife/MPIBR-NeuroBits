@@ -47,30 +47,25 @@ series = p.Results.S;
 data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
   length(time), length(series), obj.datatype);
 
-for row = tileRow
-  for col = tileCol
-    %set series
-    obj.bfPtr.setSeries((col-1) * obj.numTilesCol + row - 1);
-    
-    idxS = 0;
-    for s = stacks;
-      idxCh = 0;
-      for ch = channels
-        idxT = 0;
-        for t = timeseries
-          %set index
-          tileIdx = obj.bfPtr.getIndex(s-1, ch-1, t-1) + 1;
-          %get plane
-          tmp = bfGetPlane(obj.bfPtr, tileIdx)';
-          
-          data(:, :, idxCh, idxS, idxT) = tmp(rows, cols);
-          idxT = idxT + 1;
-        end
-        idxCh = idxCh + 1;
+idxZ = 1;
+for z = stacks;
+  idxCh = 1;
+  for ch = channels
+    idxT = 1;
+    for t = timeseries
+      idxS = 1;
+      for s = series
+        %get directory entry
+        dirEntry = obj.directoryEntries(obj.dirEntryIndices(z, ch, t, s));
+        tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntry);
+        data(:, :, idxCh, idxZ, idxT, indS) = tmpImg(rows, cols);
+        idxS = idxS + 1;
       end
-      idxS = idxS + 1;
+      idxT = idxT + 1;
     end
+    idxCh = idxCh + 1;
   end
+  idxS = idxS + 1;
 end
 
 %squeeze data, to remove singleton dimensions
