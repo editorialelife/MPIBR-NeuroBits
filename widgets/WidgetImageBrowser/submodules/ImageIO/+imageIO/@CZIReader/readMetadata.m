@@ -92,6 +92,35 @@ function obj = readMetadata( obj )
       fseek(obj.cziPtr, offsets(k), 'bof');
       [~, obj] = obj.readRawSubblockSegm('idx', k);
     end
+    
+    % now, fix the metadata
+    obj.tilesPos = zeros(length(obj.directoryEntries), 3); %row, col, S
+    for k = 1:length(obj.directoryEntries)
+      dirEntry = obj.directoryEntries(k);
+      col = 1 + dirEntry.XPos;
+      row = 1 + dirEntry.YPos;
+      S = 1 + dirEntry.S;
+      obj.tilesPos(k, :) = [row, col, S];
+      if 1 == k % get tile size
+        tileH = dirEntry.dimensionEntries(1).size;
+        tileW = dirEntry.dimensionEntries(2).size;
+      end
+    end
+    tileOffsets = min(obj.tilesPos);
+    tileOffsets(3) = 0; % Series, we don't care about it when computing offsets
+    
+    % add offset to get index starting from 0
+    obj.tilesPos = bsxfun(@minus, obj.tilesPos, tileOffsets);
+    obj.height = max(obj.tilesPos(:,1)) + tileH;
+    obj.width = max(obj.tilesPos(:,2)) + tileW;
+    
+    % Sanity check
+    assert(obj.height == obj.pixPerTileRow);
+    assert(obj.width == obj.pixPerTileCol);
+    
+    % Fix size of single tile
+    obj.pixPerTileRow = tileH;
+    obj.pixPerTileCol = tileW;
   end
   
   % Finally the attachment info 
