@@ -44,6 +44,8 @@ function [ blkData, obj ] = readRawSubblockSegm( obj, varargin )
       dataSize = dataSize / 4;
     case 'double'
       dataSize = dataSize / 8;
+    case 'int8'   % do nothing
+    case 'uint8'  % do nothing
     otherwise
       error('CZIReader.readRawSubblockSegm: unsupported datatype');
   end
