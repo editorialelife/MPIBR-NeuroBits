@@ -129,7 +129,18 @@ function obj = readMetadata( obj )
     fseek(obj.cziPtr, offsets(k), 'bof');
     obj = obj.readRawAttachSegm(); % Maybe remove? we are not using this info
   end
-
+  
+  % To speedup the data reading process, create a multidimensional array
+  % that has the Z, C, T, S dimensions as axis, and the index of the
+  % directoryEntry as value
+  obj.dirEntryIndices = zeros(obj.channels, obj.stacks, obj.time, obj.series);
+  for k = 1:length(obj.directoryEntries)
+    C = 1 + obj.directoryEntries(k).C; 
+    Z = 1 + obj.directoryEntries(k).Z;
+    T = 1 + obj.directoryEntries(k).T;
+    S = 1 + obj.directoryEntries(k).S;
+    obj.dirEntryIndices(C, Z, T, S) = k;
+  end
 end
 
 function segmType = setSegmenType(ID)

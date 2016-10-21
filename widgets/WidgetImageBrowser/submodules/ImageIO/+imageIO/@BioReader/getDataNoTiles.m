@@ -44,31 +44,28 @@ timeseries = p.Results.T;
 data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
   length(time), obj.datatype);
 
-for row = tileRow
-  for col = tileCol
-    %set series
-    obj.bfPtr.setSeries((col-1) * obj.numTilesCol + row - 1);
-    
-    idxS = 0;
-    for s = stacks;
-      idxCh = 0;
-      for ch = channels
-        idxT = 0;
-        for t = timeseries
-          %set index
-          tileIdx = obj.bfPtr.getIndex(s-1, ch-1, t-1) + 1;
-          %get plane
-          tmp = bfGetPlane(obj.bfPtr, tileIdx)';
-          
-          data(:, :, idxCh, idxS, idxT) = tmp(rows, cols);
-          idxT = idxT + 1;
-        end
-        idxCh = idxCh + 1;
-      end
-      idxS = idxS + 1;
+%set series
+obj.bfPtr.setSeries(0);
+
+idxS = 1;
+for s = stacks;
+  idxCh = 1;
+  for ch = channels
+    idxT = 1;
+    for t = timeseries
+      %set index
+      tileIdx = obj.bfPtr.getIndex(s-1, ch-1, t-1) + 1;
+      %get plane
+      tmp = bfGetPlane(obj.bfPtr, tileIdx)';
+      
+      data(:, :, idxCh, idxS, idxT) = tmp(rows, cols);
+      idxT = idxT + 1;
     end
+    idxCh = idxCh + 1;
   end
+  idxS = idxS + 1;
 end
+
 
 %squeeze data, to remove singleton dimensions
 data = squeeze(data);

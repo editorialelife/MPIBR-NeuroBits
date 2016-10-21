@@ -25,6 +25,10 @@ classdef CZIReader < imageIO.ImageIO
     tilesPos;                % position of each tile in the grid. This is required 
                              % because in some cases (e.g. after stitching)
                              % the tiles are not arranged in a grid
+    dirEntryIndices;         % maps each directory entry as position in a 
+                             % multidimensional array, where the dimension
+                             % are specified by time, channel, stack and
+                             % series
     wrongMetadata = false;   % set to true if the information acquired from the 
                              % metadata block and the directory block is
                              % contradictory
