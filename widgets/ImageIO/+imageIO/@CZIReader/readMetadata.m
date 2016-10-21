@@ -139,7 +139,7 @@ function obj = readMetadata( obj )
     Z = 1 + obj.directoryEntries(k).Z;
     T = 1 + obj.directoryEntries(k).T;
     S = 1 + obj.directoryEntries(k).S;
-    obj.dirEntryIndices(C, Z, T, S) = [obj.dirEntryIndices(C, Z, T, S),  k];
+    obj.dirEntryIndices{C, Z, T, S} = [obj.dirEntryIndices{C, Z, T, S},  k];
   end
 end
 
