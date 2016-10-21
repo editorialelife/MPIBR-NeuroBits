@@ -87,8 +87,7 @@ for s = stacks;
                idxCh, idxS, idxT) = tmpTile(rows, cols);
         end
       end
-
-      
+   
       idxT = idxT + 1;
     end
     idxCh = idxCh + 1;

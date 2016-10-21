@@ -26,7 +26,7 @@ classdef CZIReader < imageIO.ImageIO
                              % because in some cases (e.g. after stitching)
                              % the tiles are not arranged in a grid
     dirEntryIndices;         % maps each directory entry as position in a 
-                             % multidimensional array, where the dimension
+                             % multidimensional cell array, where the dimension
                              % are specified by time, channel, stack and
                              % series
     wrongMetadata = false;   % set to true if the information acquired from the 
