@@ -24,6 +24,9 @@ classdef TiffReader < imageIO.ImageIO
     tagNames;       % Cell of available tags. Useful if the user wants to access 
                     % additonal metadata
     isImageJFmt;    % true if the Tiff is non-standard and was created via imageJ
+    endianness='l'; % specify if data is stored as little-endian or big-endian
+                    % used only if 'isImageJFmt' is true. Can be either 'l'
+                    % or 'b'
     offsetToImg;    % offset to first image in the stack. Used only if isImageJFmt is true
   end
   
@@ -49,6 +52,12 @@ classdef TiffReader < imageIO.ImageIO
       
       if obj.isImageJFmt % handle file differently
         obj.filePtr = fopen(obj.fileFullPath);
+        endianness = fread(obj.filePtr, 2, '*char')';
+        if strcmpi(endianness, 'MM')
+          obj.endianness = 'b';
+        else %'II'
+          obj.endianness = 'b';
+        end
         fseek(obj.filePtr, obj.offsetToImg, 'bof');
       end
     end
@@ -69,7 +78,7 @@ classdef TiffReader < imageIO.ImageIO
         imageSize = obj.height * obj.width * obj.channels;
         precision = [ obj.datatype '=>'  obj.datatype ];
         for k = 1:obj.stacks
-          image = fread(obj.filePtr, imageSize, precision);
+          image = fread(obj.filePtr, imageSize, precision, obj.endianness);
           image = reshape(image, [obj.width, obj.height, obj.channels]);
           data(:, :, :, k) = image';
         end
@@ -190,6 +199,7 @@ classdef TiffReader < imageIO.ImageIO
         off = obj.tiffPtr.getTag('StripOffsets');
         obj.offsetToImg = off(1);
       end
+      
     end
   end
   
