@@ -8,8 +8,8 @@ function [ data ] = getDataNoTiles( obj, varargin )
 % INPUT:
 %   obj: the CZIReader instance
 % NAME-VALUE ARGUMENTS
-%   'X' or 'Cols': Specify which columns to extract
-%   'Y' or 'Rows': Specify which rows to extract
+%   'Cols': Specify which columns to extract
+%   'Rows': Specify which rows to extract
 %   'C': Specify which channels to extract
 %   'Z': Specify which planes to extract
 %   'T': Specify which timeseries to extract
@@ -45,7 +45,7 @@ timeseries = p.Results.T;
 series = p.Results.S;
 
 data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
-  length(time), length(series), obj.datatype);
+  length(timeseries), length(series), obj.datatype);
 
 idxZ = 1;
 for z = stacks;
@@ -56,7 +56,7 @@ for z = stacks;
       idxS = 1;
       for s = series
         %get directory entry
-        dirEntry = obj.directoryEntries(obj.dirEntryIndices(z, ch, t, s));
+        dirEntry = obj.directoryEntries(obj.dirEntryIndices(ch, z, t, s));
         tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntry);
         data(:, :, idxCh, idxZ, idxT, indS) = tmpImg(rows, cols);
         idxS = idxS + 1;
@@ -65,7 +65,7 @@ for z = stacks;
     end
     idxCh = idxCh + 1;
   end
-  idxS = idxS + 1;
+  idxZ = idxZ + 1;
 end
 
 %squeeze data, to remove singleton dimensions
