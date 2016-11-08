@@ -18,10 +18,24 @@ my @punctaStatsFiles = glob("$path_name/punctaStats*.txt");
 # loop through list
 foreach my $ntFile (@neuroTreeFiles)
 {
+    # extranct name for neuroTree file
     my $name = $ntFile =~ m/$path_name\/?(.*)\_neuroTree\_.*.txt/ ? $1 : "<unknown>";
-    my @tmp = grep {/\_$name\_/} @punctaStatsFiles;
-    my $psFile = $tmp[0];
     
+    # find corresponding punctaStats file
+    my $psFile = "<unknown>";
+    my $nsQry = $name;
+    $nsQry =~ s/[^A-Za-z0-9\_\-]//g;
+    foreach my $psQry (@punctaStatsFiles)
+    {
+        my $tmp = $psQry;
+        $tmp =~ s/$path_name\///;
+        $tmp =~ s/\.txt//;
+        $tmp =~ s/[^A-Za-z0-9\_\-]//g;
+        
+        $psFile = $psQry if($tmp =~ m/.*\_$name\_.*/);
+    }
+    
+    # process files
     ParseNeuroTreeFile($ntFile, \%{$hash{$name}});
     ParsePunctaStatsFile($psFile, \%{$hash{$name}});
 }
@@ -116,35 +130,76 @@ sub PrintCustomTable($)
 {
     my $hash_ref = $_[0];
     
-    
     # print header
-    print "#file\tSoma.Area\tSoma.Puncta";
+    print "#file";
+    print "\tDensity.Total"; # puncta.(arbor + soma)/ (span.arbor + area.soma)
+    print "\tPuncta.Soma\tArea.Soma\tDensity.Soma"; # puncta.soma / area.soma
+    print "\tPuncta.Arbor\tSpan.Arbor\tDensity.Arbor"; # puncta.arbor / span.arbor
+    print "\tRatio.Puncta.(Arbor/Soma)"; # puncta.arbor / puncta.soma
+    print "\tRatio.Area.(Arbor/Soma)"; # span.arbor / area.soma
+    print "\tRatio.Density.(Arbor/Soma)"; # density.arbor / density.soma
     for (my $k = 1; $k < 10; $k++)
     {
-        print "\tOrder.$k.Span\tOrder.$k.Puncta";
+        print "\tPuncta.Order.$k";
+        print "\tSpan.Order.$k";
+        print "\tDensity.Order.$k";
     }
-    print "\tArbor.Span\tArbor.Puncta";
     print "\n";
     
     # print data
     foreach my $file (keys %{$hash_ref})
     {
-        print $hash_ref->{$file}{"name"},"\t";
+        # file
+        my $file_name = $hash_ref->{$file}{"name"};
         
-        my $arbor_span = 0;
-        my $puncta_count = 0;
-        for (my $depth = 0; $depth < 10; $depth++)
+        # soma
+        my $area_soma = exists($hash_ref->{$file}{"span"}{0}) ? $hash_ref->{$file}{"span"}{0} : 0;
+        my $puncta_soma = exists($hash_ref->{$file}{"puncta"}{0}) ? $hash_ref->{$file}{"puncta"}{0} : 0;
+        my $density_soma = ($area_soma > 0) ? ($puncta_soma / $area_soma) : "NaN";
+        
+        # arbor
+        my $span_arbor = 0;
+        my $puncta_arbor = 0;
+        my @span_branch_list = (0) x 9;
+        my @puncta_branch_list = (0) x 9;
+        my @density_branch_list = ("NaN") x 9;
+        
+        for (my $depth = 1; $depth < 10; $depth++)
         {
-            my $span = exists($hash_ref->{$file}{"span"}{$depth}) ? $hash_ref->{$file}{"span"}{$depth} : 0;
-            $arbor_span += $span if($depth > 0);
+            # current branch data
+            my $span_branch = exists($hash_ref->{$file}{"span"}{$depth}) ? $hash_ref->{$file}{"span"}{$depth} : 0;
+            my $puncta_branch = exists($hash_ref->{$file}{"puncta"}{$depth}) ? $hash_ref->{$file}{"puncta"}{$depth} : 0;
+            my $density_branch = ($span_branch > 0) ? ($puncta_branch / $span_branch) : "NaN";
             
-            my $count = exists($hash_ref->{$file}{"puncta"}{$depth}) ? $hash_ref->{$file}{"puncta"}{$depth} : 0;
-            $puncta_count += $count if($depth > 0);
+            # update lists
+            $span_branch_list[$depth - 1] = $span_branch;
+            $puncta_branch_list[$depth - 1] = $puncta_branch;
+            $density_branch_list[$depth - 1] = $density_branch;
             
-            print $span,"\t",$count,"\t";
+            # accumulate arbor span and puncta
+            $span_arbor += $span_branch;
+            $puncta_arbor += $puncta_branch;
+            
         }
-        print $arbor_span,"\t",$puncta_count;
         
+        my $density_arbor = ($span_arbor > 0) ? ($puncta_arbor / $span_arbor) : "NaN";
+        my $ratio_density = ($density_soma eq "NaN" || $density_arbor eq "NaN" || $density_soma == 0) ? "NaN" : ($density_arbor / $density_soma);
+        
+        # output
+        
+        print $file_name;
+        print "\t",($puncta_soma + $puncta_arbor)/($area_soma + $span_arbor); # puncta.(arbor + soma)/ (span.arbor + area.soma)
+        print "\t",$puncta_soma,"\t",$area_soma,"\t",$density_soma; # puncta.soma / area.soma
+        print "\t",$puncta_arbor,"\t",$span_arbor,"\t",$density_arbor; # puncta.arbor / span.arbor
+        print "\t",$puncta_arbor / $puncta_soma; # puncta.arbor / puncta.soma
+        print "\t",$span_arbor / $area_soma; # span.arbor / area.soma
+        print "\t",$ratio_density; # density.arbor / density.soma
+        for (my $k = 1; $k < 10; $k++)
+        {
+            print "\t",$puncta_branch_list[$k - 1];
+            print "\t",$span_branch_list[$k - 1];
+            print "\t",$density_branch_list[$k - 1];
+        }
         print "\n";
         
     }
