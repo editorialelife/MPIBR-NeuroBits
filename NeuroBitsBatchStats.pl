@@ -23,16 +23,9 @@ foreach my $ntFile (@neuroTreeFiles)
     
     # find corresponding punctaStats file
     my $psFile = "<unknown>";
-    my $nsQry = $name;
-    $nsQry =~ s/[^A-Za-z0-9\_\-]//g;
     foreach my $psQry (@punctaStatsFiles)
     {
-        my $tmp = $psQry;
-        $tmp =~ s/$path_name\///;
-        $tmp =~ s/\.txt//;
-        $tmp =~ s/[^A-Za-z0-9\_\-]//g;
-        
-        $psFile = $psQry if($tmp =~ m/.*\_$name\_.*/);
+        $psFile = $psQry if(index($psQry, $name) >= 0);
     }
     
     # process files
@@ -198,15 +191,16 @@ sub PrintCustomTable($)
         
         my $density_arbor = ($span_arbor > 0) ? ($puncta_arbor / $span_arbor) : "NaN";
         my $ratio_density = ($density_soma eq "NaN" || $density_arbor eq "NaN" || $density_soma == 0) ? "NaN" : ($density_arbor / $density_soma);
-        
+        my $ratio_puncta = ($puncta_soma > 0) ? ($puncta_arbor / $puncta_soma) : "NaN";
+        my $ratio_area = ($area_soma > 0) ? ($span_arbor / $area_soma) : "NaN";
         # output
         
         print $file_name;
         print "\t",($puncta_soma + $puncta_arbor)/($area_soma + $span_arbor); # puncta.(arbor + soma)/ (span.arbor + area.soma)
         print "\t",$puncta_soma,"\t",$area_soma,"\t",$density_soma; # puncta.soma / area.soma
         print "\t",$puncta_arbor,"\t",$span_arbor,"\t",$density_arbor; # puncta.arbor / span.arbor
-        print "\t",$puncta_arbor / $puncta_soma; # puncta.arbor / puncta.soma
-        print "\t",$span_arbor / $area_soma; # span.arbor / area.soma
+        print "\t",$ratio_puncta; # puncta.arbor / puncta.soma
+        print "\t",$ratio_area; # span.arbor / area.soma
         print "\t",$ratio_density; # density.arbor / density.soma
         for (my $k = 1; $k < 10; $k++)
         {
