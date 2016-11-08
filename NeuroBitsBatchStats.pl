@@ -120,8 +120,10 @@ sub ParsePunctaStatsFile($$)
         my @line = split("\t", $_);
         
         my $depth = $line[2];
+        my $distance = $line[5];
         
         $hash_ref->{"puncta"}{$depth} = exists($hash_ref->{"puncta"}{$depth}) ? $hash_ref->{"puncta"}{$depth} + 1 : 1;
+        push(@{$hash_ref->{"distance"}{$depth}}, $distance);
     }
     close($fh);
 }
@@ -143,6 +145,8 @@ sub PrintCustomTable($)
         print "\tPuncta.Order.$k";
         print "\tSpan.Order.$k";
         print "\tDensity.Order.$k";
+        print "\tPuncta.Previous.$k";
+        print "\tDistance.$k";
     }
     print "\n";
     
@@ -163,6 +167,9 @@ sub PrintCustomTable($)
         my @span_branch_list = (0) x 9;
         my @puncta_branch_list = (0) x 9;
         my @density_branch_list = ("NaN") x 9;
+        my @distance_branch_list = ();
+        my @prev_puncta_list = (0) x 9;
+        my $prev_puncta_arbor = $puncta_soma;
         
         for (my $depth = 1; $depth < 10; $depth++)
         {
@@ -170,6 +177,13 @@ sub PrintCustomTable($)
             my $span_branch = exists($hash_ref->{$file}{"span"}{$depth}) ? $hash_ref->{$file}{"span"}{$depth} : 0;
             my $puncta_branch = exists($hash_ref->{$file}{"puncta"}{$depth}) ? $hash_ref->{$file}{"puncta"}{$depth} : 0;
             my $density_branch = ($span_branch > 0) ? ($puncta_branch / $span_branch) : "NaN";
+            
+            for(my $i = $depth; $i < 10; $i++)
+            {
+                my @distance_branch = exists($hash_ref->{$file}{"distance"}{$i}) ? @{$hash_ref->{$file}{"distance"}{$i}} : ();
+                push(@{$distance_branch_list[$depth - 1]}, @distance_branch);
+            }
+            
             
             # update lists
             $span_branch_list[$depth - 1] = $span_branch;
@@ -199,6 +213,8 @@ sub PrintCustomTable($)
             print "\t",$puncta_branch_list[$k - 1];
             print "\t",$span_branch_list[$k - 1];
             print "\t",$density_branch_list[$k - 1];
+            print "\t",scalar(@{$distance_branch_list[$k - 1]});
+            print "\t",join(";", sort({$a <=> $b} @{$distance_branch_list[$k - 1]}));
         }
         print "\n";
         
