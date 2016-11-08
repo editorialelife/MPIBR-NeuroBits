@@ -53,19 +53,30 @@ function [lsm, iTIFF, iLSM] = readLSMInfo(filename)
     end
     
     % parse LSM Tag
-    if iTIFF(1).UnknownTags.ID ~= 34412
-        error('readLSMInfo::LSM tag 34412 missing.');
+    if isfield(iTIFF(1), 'UnknownTags')
+        
+        if iTIFF(1).UnknownTags.ID == 34412
+            
+            lsmTagOffset = iTIFF(1).UnknownTags.Offset;
+            fid = fopen(filename, 'r');
+            fseek(fid, lsmTagOffset, 'bof');
+            iLSM = parseLSMTag(fid, lsm.byteOrder);
+            fclose(fid);
+
+            lsm.xResolution = iLSM.VoxelSizeX * 1e6;
+            lsm.yResolution = iLSM.VoxelSizeY * 1e6;
+            lsm.unitResolution = 'um';
+            
+        end
+    else
+        
+        iLSM = 'readLSMInfo :: LSM tag 34412 is missing.';
+     
+        %error('readLSMInfo::LSM tag 34412 missing.');
+           
     end
     
-    lsmTagOffset = iTIFF(1).UnknownTags.Offset;
-    fid = fopen(filename, 'r');
-    fseek(fid, lsmTagOffset, 'bof');
-    iLSM = parseLSMTag(fid, lsm.byteOrder);
-    fclose(fid);
     
-    lsm.xResolution = iLSM.VoxelSizeX * 1e6;
-    lsm.yResolution = iLSM.VoxelSizeY * 1e6;
-    lsm.unitResolution = 'um';
 end
 
 
