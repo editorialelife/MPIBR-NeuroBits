@@ -162,7 +162,6 @@ sub PrintCustomTable($)
         my @density_branch_list = ("NaN") x 9;
         my @distance_branch_list = ();
         my @prev_puncta_list = (0) x 9;
-        my $prev_puncta_arbor = $puncta_soma;
         
         for (my $depth = 1; $depth < 10; $depth++)
         {
@@ -207,7 +206,7 @@ sub PrintCustomTable($)
             print "\t",$puncta_branch_list[$k - 1];
             print "\t",$span_branch_list[$k - 1];
             print "\t",$density_branch_list[$k - 1];
-            print "\t",scalar(@{$distance_branch_list[$k - 1]});
+            print "\t",$puncta_soma + $puncta_arbor - scalar(@{$distance_branch_list[$k - 1]});
             print "\t",join(";", sort({$a <=> $b} @{$distance_branch_list[$k - 1]}));
         }
         print "\n";
