@@ -10,24 +10,28 @@ classdef TiffReader < imageIO.ImageIO
   %   SEE ALSO: imageIO.TiffWriter, Tiff
   
   properties
-    tiffPtr;         % pointer to a Matlab Tiff class
-    filePtr;         % pointer to a file. Used in some special cases
+    tiffPtr;                    % pointer to a Matlab Tiff class
+    filePtr;                    % pointer to a file. Used in some special cases
+    
     % Other properties. Assuming that for multistack images they remain
     % constant over the stack
-    XResolution;    % resolution on horizontal axis
-    YResolution;    % resolution on vertical haxis
-    resolutionUnit; % unit of measurement for resolution (none, inch, centimeter)
-    bps;            % bits per sample used
-    colormap;       % colormap used. Empty array if none
-    compression;    % compression scheme used
+    XResolution;                % resolution on horizontal axis
+    YResolution;                % resolution on vertical haxis
+    resolutionUnit;             % unit of measurement for resolution (none, inch, centimeter)
+    bps;                        % bits per sample used
+    colormap;                   % colormap used. Empty array if none
+    compression;                % compression scheme used
     
-    tagNames;       % Cell of available tags. Useful if the user wants to access 
-                    % additonal metadata
-    isImageJFmt;    % true if the Tiff is non-standard and was created via imageJ
-    endianness='l'; % specify if data is stored as little-endian or big-endian
-                    % used only if 'isImageJFmt' is true. Can be either 'l'
-                    % or 'b'
-    offsetToImg;    % offset to first image in the stack. Used only if isImageJFmt is true
+    tagNames;                   % Cell of available tags. Useful if the user wants to access 
+                                % additonal metadata
+    isImageJFmt  = false;       % true if the Tiff is non-standard and was created via imageJ
+    isSutterMOM1 = false;       % true if the Tiff is non-standard and from SutterMOM v1
+    isSutterMOM2 = false;       % true if the Tiff is non-standard and from SutterMOM v2
+    
+    endianness='l';             % specify if data is stored as little-endian or big-endian
+                                % used only if 'isImageJFmt' is true. Can be either 'l'
+                                % or 'b'
+    offsetToImg;                % offset to first image in the stack. Used only if isImageJFmt is true
   end
   
   methods
@@ -178,12 +182,13 @@ classdef TiffReader < imageIO.ImageIO
         warning('TiffReader.readMetadata: unsupported sample format')
       end
       
-      % check for custom ImageJ multitiff format -_-'
+      % check for custom multitiff formats -_-'
       try
         imageDesc = obj.tiffPtr.getTag('ImageDescription');
       catch
         imageDesc = '';
       end
+      %check if it's imageJ specific format
       if length(imageDesc) > 7 && strcmpi('ImageJ', imageDesc(1:6))
         % look for number of images
         obj.isImageJFmt = true;
@@ -193,6 +198,9 @@ classdef TiffReader < imageIO.ImageIO
         if ~isempty(k)
           obj.stacks = str2double(imageDesc(k(1)+7 : m(1)));
         end
+      %check if it's sutterMOM specific format
+      elseif 0
+        % TODO
       end
       
       if obj.isImageJFmt
