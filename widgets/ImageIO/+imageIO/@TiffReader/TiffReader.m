@@ -198,14 +198,15 @@ classdef TiffReader < imageIO.ImageIO
         if ~isempty(k)
           obj.stacks = str2double(imageDesc(k(1)+7 : m(1)));
         end
-      %check if it's sutterMOM specific format
-      elseif 0
-        % TODO
-      end
-      
-      if obj.isImageJFmt
         off = obj.tiffPtr.getTag('StripOffsets');
         obj.offsetToImg = off(1);
+      %check if it's sutterMOM specific format
+      elseif length(imageDesc) > 1000 && ~isempty(strfind('MOMconfig', imageDesc))
+        obj.isSutterMOM1 = true;
+        obj = obj.readSutterMetadata(imageDesc);
+      elseif length(imageDesc) > 1000 && ~isempty(strfind('scanimage.SI.', imageDesc))
+        obj.isSutterMOM2 = true;
+        obj = obj.readSutterMetadata(imageDesc);
       end
       
     end
