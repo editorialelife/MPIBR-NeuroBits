@@ -72,7 +72,11 @@ classdef TiffReader < imageIO.ImageIO
     % OUTPUT
     %   data: the whole image content
       
-      data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.datatype);
+      if obj.isSutterMOM1 || obj.isSutterMOM2
+        data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.datatype);
+      else
+        data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.datatype);
+      end
       
       if obj.isImageJFmt
         fseek(obj.filePtr, obj.offsetToImg, 'bof');
@@ -82,6 +86,16 @@ classdef TiffReader < imageIO.ImageIO
           image = fread(obj.filePtr, imageSize, precision, obj.endianness);
           image = reshape(image, [obj.width, obj.height, obj.channels]);
           data(:, :, :, k) = image';
+        end
+      elseif obj.isSutterMOM1 || obj.isSutterMOM2
+        idx = 0;
+        for k = 1:obj.stacks
+          for l = 1:obj.time
+            for m = 1:channels
+              data(:, :, m, k, l) = obj.readImage(idx);
+              idx = idx + 1;
+            end
+          end
         end
       else
         for k = 1:obj.stacks
@@ -102,17 +116,7 @@ classdef TiffReader < imageIO.ImageIO
     % OUTPUT
     %   img the image just read
     
-      if ~obj.isImageJFmt
-        if 1 == nargin % n not specified
-          img = obj.tiffPtr.read();
-        elseif n > obj.stacks
-          warning('TiffReader.readImage: Cannot read image. n is bigger than the number of stacks')
-          img = [];
-        else % valid n
-          obj.tiffPtr.setDirectory(n);
-          img = obj.tiffPtr.read();
-        end
-      else
+      if obj.isImageJFmt
         imageSize = obj.height * obj.width * obj.channels;
         precision = [ obj.datatype '=>'  obj.datatype ];
         if n > obj.stacks
@@ -126,6 +130,16 @@ classdef TiffReader < imageIO.ImageIO
           img = reshape(img, [obj.width, obj.height, obj.channels]);
           img = img';
         end
+      else
+        if 1 == nargin % n not specified
+          img = obj.tiffPtr.read();
+        elseif n > obj.stacks
+          warning('TiffReader.readImage: Cannot read image. n is bigger than the number of stacks')
+          img = [];
+        else % valid n
+          obj.tiffPtr.setDirectory(n);
+          img = obj.tiffPtr.read();
+        end  
       end
     end
   
