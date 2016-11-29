@@ -45,9 +45,6 @@ classdef TiffReader < imageIO.ImageIO
       % Must call explictily because we pass one argument
       obj = obj@imageIO.ImageIO(filename);
       
-      % Is a valid Tiff as default behaviour
-      obj.isImageJFmt = false;
-      
       % Use Matlab interface
       obj.tiffPtr = Tiff(obj.fileFullPath, 'r');
       
@@ -60,7 +57,7 @@ classdef TiffReader < imageIO.ImageIO
         if strcmpi(endianness, 'MM')
           obj.endianness = 'b';
         else %'II'
-          obj.endianness = 'b';
+          obj.endianness = 'l';
         end
         fseek(obj.filePtr, obj.offsetToImg, 'bof');
       end
@@ -147,12 +144,22 @@ classdef TiffReader < imageIO.ImageIO
       %First get usual info with imfinfo
       try
         imgInfo = imfinfo(obj.fileFullPath);
+        % Dimensions
         obj.stacks = length(imgInfo);
         obj.height = imgInfo(1).Height;
         obj.width = imgInfo(1).Width;
         obj.channels = length(imgInfo(1).BitsPerSample);
         obj.time = nan; % Or should we set 1?
-        obj.tile = 1;   % Standard TIFF does not have multitiled images
+        % Standard TIFF does not have multitiled images
+        obj.tile = 1;
+        obj.numTilesPerRow = 1;
+        obj.numTilesPerCol = 1;
+        obj.rowTilePos = 0;
+        obj.colTilePos = 0;
+        obj.pixPerTileRow = obj.width;
+        obj.pixPerTileCol = obj.height;
+        obj.tileOverlap = 0;
+        % Other info available in imfinfo
         obj.XResolution = imgInfo(1).XResolution;
         obj.YResolution = imgInfo(1).YResolution;
         obj.colormap = imgInfo(1).Colormap;
@@ -164,7 +171,6 @@ classdef TiffReader < imageIO.ImageIO
       obj.tagNames = obj.tiffPtr.getTagNames;
       % retrieve datatype
       sampleFormat = obj.tiffPtr.getTag('SampleFormat');
-      obj.bps = obj.tiffPtr.getTag('BitsPerSample');
       switch sampleFormat
         case 1 % UInt
           obj.datatype = ['uint' num2str(obj.bps)];
@@ -181,6 +187,8 @@ classdef TiffReader < imageIO.ImageIO
         otherwise  % Void or complex types are unsupported
         warning('TiffReader.readMetadata: unsupported sample format')
       end
+      obj.bps = obj.tiffPtr.getTag('BitsPerSample');
+      obj.resolutionUnit = obj.tiffPtr.getTag('	ResolutionUnit');
       
       % check for custom multitiff formats -_-'
       try

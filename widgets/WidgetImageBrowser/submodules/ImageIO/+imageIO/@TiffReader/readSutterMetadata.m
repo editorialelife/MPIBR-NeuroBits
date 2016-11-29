@@ -12,10 +12,137 @@ function [ obj ] = readSutterMetadata( obj, imageDesc )
 %   DATE: 29.11.2016
 %   SEE ALSO: imageIO.TiffReader, imageIO.TiffReader.readMetadata
 
-% first, convert the string into a Name-Value array
-
+% first, convert the string into a dictionary
 tmp = strsplit(imageDesc, {'\f','\n','\r','\t','\v'},'CollapseDelimiters', true);
-metadata = cellfun(@(x) strsplit(x, '='), tmp, 'UniformOutput', false);
+tmp2 = cellfun(@(x) strsplit(x, '='), tmp, 'UniformOutput', false);
+metadata = containers.Map;
+for k = 1:length(metadata)
+  metadata(strtrim(tmp2{1,k}{1})) = tmp2{1,k}{2};
+end
+
+if obj.isSutterMOM1
+  try
+    obj.stacks = str2double(metadata('state.acq.numberOfZSlices'));
+  catch
+    obj.stacks = 1;
+  end
+  
+  try
+    obj.time =  str2double(metadata('state.acq.numberOfFrames'));
+  catch
+    obj.time = 1;
+  end
+  
+  try
+    obj.width = str2double(metadata('state.acq.pixelsPerLine'));
+  catch
+    warning('TiffReader.readSutterMetadata: Using imfinfo for image width');
+  end
+  
+  try
+    obj.height = str2double(metadata('state.acq.linesPerFrame'));
+  catch
+    warning('TiffReader.readSutterMetadata: Using imfinfo for image height');
+  end
+  
+  try
+    obj.channels = str2double(metadata('state.acq.numberOfChannelsSave'));
+  catch
+    warning('TiffReader.readSutterMetadata: Using imfinfo for image channels');
+  end
+  
+  try
+    obj.zoom = str2double(metadata('state.acq.zoomFactor'));
+  catch
+    obj.zoom = nan;
+  end
+  
+  try
+    obj.timePixel = str2double(metadata('state.acq.pixelTime'));
+  catch
+    obj.timePixel = nan;
+  end
+  
+  try
+    obj.timeLine = str2double(metadata('state.acq.msPerLine'));
+  catch
+    obj.timeLine = nan;
+  end
+  
+elseif obj.isSutterMOM2
+  try
+    obj.channels = length(metadata('scanimage.SI.hChannels.channelSave'));
+  catch
+    warning('TiffReader.readSutterMetadata: Using imfinfo for image channels');
+  end
+  
+  try
+    obj.width = metadata('scanimage.SI.hRoiManager.pixelsPerLine');
+  catch
+    warning('TiffReader.readSutterMetadata: Using imfinfo for image width');
+  end
+  
+  try
+    obj.height = metadata('scanimage.SI.hRoiManager.linesPerFrame');
+  catch
+    warning('TiffReader.readSutterMetadata: Using imfinfo for image height');
+  end
+  
+  try
+    obj.timePixel = metadata('scanimage.SI.hScan2D.scanPixelTimeMean');
+  catch
+    obj.timePixel = nan;
+  end
+  
+  try
+    obj.timeLine = metadata('scanimage.SI.hRoiManager.linePeriod');
+  catch
+    obj.timeLine = nan;
+  end
+  
+  try
+    obj.timeFrame = metadata('scanimage.SI.hRoiManager.scanFramePeriod');
+  catch
+    obj.timeFrame = nan;
+  end
+  
+  try
+    obj.timeStack = 1 / metadata('scanimage.SI.hRoiManager.scanVolumeRate');
+  catch
+    obj.timeStack = nan;
+  end
+  
+  try
+    obj.zoom = metadata('scanimage.SI.hRoiManager.scanZoomFactor');
+  catch
+    obj.zoom = nan;
+  end
+  
+  try
+    obj.datatype = metadata('scanimage.SI.hScan2D.channelsDataType');
+  catch
+    warning('TiffReader.readSutterMetadata: Using imfinfo for image datatype');
+  end
+  
+  try
+    obj.stacks = metadata('scanimage.SI.hStackManager.numSlices ');
+  catch
+    obj.stacks = 1;
+  end
+  
+  try
+    obj.time = metadata('scanimage.SI.hStackManager.framesPerSlice');
+  catch
+    obj.time = 1;
+  end
+  
+else
+  error('TiffReader.readSutterMetadata: Must use a Tiff file from SutterMOM microscope!')
+end
+
+  % It's not multitiled... update this info, too
+  obj.pixPerTileRow = obj.width;
+  obj.pixPerTileCol = obj.height;
 
 end
 

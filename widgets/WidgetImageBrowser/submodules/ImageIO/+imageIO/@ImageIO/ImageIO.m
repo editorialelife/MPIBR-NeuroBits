@@ -17,7 +17,7 @@ classdef (Abstract = true) ImageIO < handle
         width = nan;            % Image width / number of columns
         channels = nan;         % Number of image channels
         stacks = nan;           % Image stacks (Z axis)
-        series = nan;           % number of series
+        series = 1;             % number of series (assume it is usually one)
         time = nan;             % Image timeseries
         tile = nan;             % Image tiles per stack
         numTilesRow = nan;      % Image tiles in vertical direction
@@ -32,21 +32,21 @@ classdef (Abstract = true) ImageIO < handle
         
         datatype = '';          % Image datatype (uint8, int16, ...)
         
-        scaleSize %x,y,z        % Pixel physical size
-        scaleUnits              % Unit of measurement of scaleSize
-        scaleTime               % 
+        scaleSize = nan;        % Pixel physical size (x,y,z)
+        scaleUnits = nan;       % Unit of measurement of scaleSize
+        scaleTime = nan;        % 
         
-        timePixel               % Time it takes to acquire a single pixel, 
+        timePixel = nan;        % Time it takes to acquire a single pixel, 
                                 % especially relevant in point-scanning devices 
                                 % in which each physical location of the sample 
                                 % is measured at a different time (focused laser beam is scanned across the sample)
-        timeLine                % Time it takes to acquire a single line of pixels, 
+        timeLine = nan;         % Time it takes to acquire a single line of pixels, 
                                 % again mainly for point scanning devices. The value
                                 % usually differs from timePixel * numberOfPixels
                                 % since only a portion of the scan period can be 
                                 % used for data acquisition
-        timeFrame               % Time it takes to acquire a single frame
-        timeStack               % Time it takes to acquire a stack 
+        timeFrame = nan;        % Time it takes to acquire a single frame
+        timeStack = nan;        % Time it takes to acquire a stack 
         
         zoom = nan;             % In a point scanning device the observed field
                                 % can be changed by simply changing the range of 
@@ -70,12 +70,12 @@ classdef (Abstract = true) ImageIO < handle
         microscopeName = '';
         microscopeType = '';
         
-        objectiveMagnification;
-        objectiveName;
+        objectiveMagnification = nan;
+        objectiveName = nan;
     end
     
     properties (Constant = true)
-      VERSION = '0.2';
+      VERSION = '0.3';
       DIMORDER = 'XYCZT'; 
     end
     
@@ -113,8 +113,7 @@ classdef (Abstract = true) ImageIO < handle
       end
     end
     
-    methods (Abstract = true)
-    % Here we have the methods that each subclass MUST implement
+    methods (Abstract = true)   % Here we have the methods that each subclass MUST implement
       close(obj);
       %obj = readMetadata(obj);
     end
