@@ -16,8 +16,12 @@ function [ obj ] = readSutterMetadata( obj, imageDesc )
 tmp = strsplit(imageDesc, {'\f','\n','\r','\t','\v'},'CollapseDelimiters', true);
 tmp2 = cellfun(@(x) strsplit(x, '='), tmp, 'UniformOutput', false);
 metadata = containers.Map;
-for k = 1:length(metadata)
-  metadata(strtrim(tmp2{1,k}{1})) = tmp2{1,k}{2};
+for k = 1:length(tmp2)
+  try
+    metadata(strtrim(tmp2{1,k}{1})) = tmp2{1,k}{2};
+  catch
+    %do nothing
+  end
 end
 
 if obj.isSutterMOM1
@@ -71,67 +75,67 @@ if obj.isSutterMOM1
   
 elseif obj.isSutterMOM2
   try
-    obj.channels = length(metadata('scanimage.SI.hChannels.channelSave'));
+    obj.channels = length(str2num(metadata('scanimage.SI.hChannels.channelSave')));
   catch
     warning('TiffReader.readSutterMetadata: Using imfinfo for image channels');
   end
   
   try
-    obj.width = metadata('scanimage.SI.hRoiManager.pixelsPerLine');
+    obj.width = str2double(metadata('scanimage.SI.hRoiManager.pixelsPerLine'));
   catch
     warning('TiffReader.readSutterMetadata: Using imfinfo for image width');
   end
   
   try
-    obj.height = metadata('scanimage.SI.hRoiManager.linesPerFrame');
+    obj.height = str2double(metadata('scanimage.SI.hRoiManager.linesPerFrame'));
   catch
     warning('TiffReader.readSutterMetadata: Using imfinfo for image height');
   end
   
   try
-    obj.timePixel = metadata('scanimage.SI.hScan2D.scanPixelTimeMean');
+    obj.timePixel = str2double(metadata('scanimage.SI.hScan2D.scanPixelTimeMean'));
   catch
     obj.timePixel = nan;
   end
   
   try
-    obj.timeLine = metadata('scanimage.SI.hRoiManager.linePeriod');
+    obj.timeLine = str2double(metadata('scanimage.SI.hRoiManager.linePeriod'));
   catch
     obj.timeLine = nan;
   end
   
   try
-    obj.timeFrame = metadata('scanimage.SI.hRoiManager.scanFramePeriod');
+    obj.timeFrame = str2double(metadata('scanimage.SI.hRoiManager.scanFramePeriod'));
   catch
     obj.timeFrame = nan;
   end
   
   try
-    obj.timeStack = 1 / metadata('scanimage.SI.hRoiManager.scanVolumeRate');
+    obj.timeStack = 1 / str2double(metadata('scanimage.SI.hRoiManager.scanVolumeRate'));
   catch
     obj.timeStack = nan;
   end
   
   try
-    obj.zoom = metadata('scanimage.SI.hRoiManager.scanZoomFactor');
+    obj.zoom = str2double(metadata('scanimage.SI.hRoiManager.scanZoomFactor'));
   catch
     obj.zoom = nan;
   end
   
   try
-    obj.datatype = metadata('scanimage.SI.hScan2D.channelsDataType');
+    obj.datatype = regexprep(metadata('scanimage.SI.hScan2D.channelsDataType'), '[ '']', '');
   catch
     warning('TiffReader.readSutterMetadata: Using imfinfo for image datatype');
   end
   
   try
-    obj.stacks = metadata('scanimage.SI.hStackManager.numSlices ');
+    obj.stacks = str2double(metadata('scanimage.SI.hStackManager.numSlices'));
   catch
     obj.stacks = 1;
   end
   
   try
-    obj.time = metadata('scanimage.SI.hStackManager.framesPerSlice');
+    obj.time = str2double(metadata('scanimage.SI.hStackManager.framesPerSlice'));
   catch
     obj.time = 1;
   end

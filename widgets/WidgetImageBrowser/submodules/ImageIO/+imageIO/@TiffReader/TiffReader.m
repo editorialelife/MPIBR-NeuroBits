@@ -88,16 +88,16 @@ classdef TiffReader < imageIO.ImageIO
           data(:, :, :, k) = image';
         end
       elseif obj.isSutterMOM1 || obj.isSutterMOM2
-        idx = 0;
+        idx = 1;
         for k = 1:obj.stacks
           for l = 1:obj.time
-            for m = 1:channels
+            for m = 1:obj.channels
               data(:, :, m, k, l) = obj.readImage(idx);
               idx = idx + 1;
             end
           end
         end
-      else
+      else % normal tif
         for k = 1:obj.stacks
           data(:, :, :, k) = obj.readImage(k);
         end
@@ -133,7 +133,7 @@ classdef TiffReader < imageIO.ImageIO
       else
         if 1 == nargin % n not specified
           img = obj.tiffPtr.read();
-        elseif n > obj.stacks
+        elseif ~obj.isSutterMOM1 && ~obj.isSutterMOM2 && n > obj.stacks
           warning('TiffReader.readImage: Cannot read image. n is bigger than the number of stacks')
           img = [];
         else % valid n
@@ -166,8 +166,8 @@ classdef TiffReader < imageIO.ImageIO
         obj.time = nan; % Or should we set 1?
         % Standard TIFF does not have multitiled images
         obj.tile = 1;
-        obj.numTilesPerRow = 1;
-        obj.numTilesPerCol = 1;
+        obj.numTilesRow = 1;
+        obj.numTilesCol = 1;
         obj.rowTilePos = 0;
         obj.colTilePos = 0;
         obj.pixPerTileRow = obj.width;
@@ -181,6 +181,8 @@ classdef TiffReader < imageIO.ImageIO
         error('TiffReader.TiffReader: Cannot read metadata. %s', ME.message)
       end
       % now use the Tiff pointer
+      obj.bps = obj.tiffPtr.getTag('BitsPerSample');
+      obj.resolutionUnit = obj.tiffPtr.getTag('ResolutionUnit');
       obj.compression = obj.tiffPtr.Compression;
       obj.tagNames = obj.tiffPtr.getTagNames;
       % retrieve datatype
@@ -201,8 +203,6 @@ classdef TiffReader < imageIO.ImageIO
         otherwise  % Void or complex types are unsupported
         warning('TiffReader.readMetadata: unsupported sample format')
       end
-      obj.bps = obj.tiffPtr.getTag('BitsPerSample');
-      obj.resolutionUnit = obj.tiffPtr.getTag('	ResolutionUnit');
       
       % check for custom multitiff formats -_-'
       try
@@ -223,10 +223,10 @@ classdef TiffReader < imageIO.ImageIO
         off = obj.tiffPtr.getTag('StripOffsets');
         obj.offsetToImg = off(1);
       %check if it's sutterMOM specific format
-      elseif length(imageDesc) > 1000 && ~isempty(strfind('MOMconfig', imageDesc))
+      elseif length(imageDesc) > 1000 && ~isempty(strfind(imageDesc, 'MOMconfig'))
         obj.isSutterMOM1 = true;
         obj = obj.readSutterMetadata(imageDesc);
-      elseif length(imageDesc) > 1000 && ~isempty(strfind('scanimage.SI.', imageDesc))
+      elseif length(imageDesc) > 1000 && ~isempty(strfind(imageDesc, 'scanimage.SI.'))
         obj.isSutterMOM2 = true;
         obj = obj.readSutterMetadata(imageDesc);
       end
