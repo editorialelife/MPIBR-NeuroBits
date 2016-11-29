@@ -45,9 +45,6 @@ classdef TiffReader < imageIO.ImageIO
       % Must call explictily because we pass one argument
       obj = obj@imageIO.ImageIO(filename);
       
-      % Is a valid Tiff as default behaviour
-      obj.isImageJFmt = false;
-      
       % Use Matlab interface
       obj.tiffPtr = Tiff(obj.fileFullPath, 'r');
       
@@ -60,7 +57,7 @@ classdef TiffReader < imageIO.ImageIO
         if strcmpi(endianness, 'MM')
           obj.endianness = 'b';
         else %'II'
-          obj.endianness = 'b';
+          obj.endianness = 'l';
         end
         fseek(obj.filePtr, obj.offsetToImg, 'bof');
       end
@@ -75,7 +72,11 @@ classdef TiffReader < imageIO.ImageIO
     % OUTPUT
     %   data: the whole image content
       
-      data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.datatype);
+      if obj.isSutterMOM1 || obj.isSutterMOM2
+        data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.datatype);
+      else
+        data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.datatype);
+      end
       
       if obj.isImageJFmt
         fseek(obj.filePtr, obj.offsetToImg, 'bof');
@@ -86,7 +87,17 @@ classdef TiffReader < imageIO.ImageIO
           image = reshape(image, [obj.width, obj.height, obj.channels]);
           data(:, :, :, k) = image';
         end
-      else
+      elseif obj.isSutterMOM1 || obj.isSutterMOM2
+        idx = 1;
+        for k = 1:obj.stacks
+          for l = 1:obj.time
+            for m = 1:obj.channels
+              data(:, :, m, k, l) = obj.readImage(idx);
+              idx = idx + 1;
+            end
+          end
+        end
+      else % normal tif
         for k = 1:obj.stacks
           data(:, :, :, k) = obj.readImage(k);
         end
@@ -105,17 +116,7 @@ classdef TiffReader < imageIO.ImageIO
     % OUTPUT
     %   img the image just read
     
-      if ~obj.isImageJFmt
-        if 1 == nargin % n not specified
-          img = obj.tiffPtr.read();
-        elseif n > obj.stacks
-          warning('TiffReader.readImage: Cannot read image. n is bigger than the number of stacks')
-          img = [];
-        else % valid n
-          obj.tiffPtr.setDirectory(n);
-          img = obj.tiffPtr.read();
-        end
-      else
+      if obj.isImageJFmt
         imageSize = obj.height * obj.width * obj.channels;
         precision = [ obj.datatype '=>'  obj.datatype ];
         if n > obj.stacks
@@ -129,6 +130,16 @@ classdef TiffReader < imageIO.ImageIO
           img = reshape(img, [obj.width, obj.height, obj.channels]);
           img = img';
         end
+      else
+        if 1 == nargin % n not specified
+          img = obj.tiffPtr.read();
+        elseif ~obj.isSutterMOM1 && ~obj.isSutterMOM2 && n > obj.stacks
+          warning('TiffReader.readImage: Cannot read image. n is bigger than the number of stacks')
+          img = [];
+        else % valid n
+          obj.tiffPtr.setDirectory(n);
+          img = obj.tiffPtr.read();
+        end  
       end
     end
   
@@ -147,12 +158,22 @@ classdef TiffReader < imageIO.ImageIO
       %First get usual info with imfinfo
       try
         imgInfo = imfinfo(obj.fileFullPath);
+        % Dimensions
         obj.stacks = length(imgInfo);
         obj.height = imgInfo(1).Height;
         obj.width = imgInfo(1).Width;
         obj.channels = length(imgInfo(1).BitsPerSample);
         obj.time = nan; % Or should we set 1?
-        obj.tile = 1;   % Standard TIFF does not have multitiled images
+        % Standard TIFF does not have multitiled images
+        obj.tile = 1;
+        obj.numTilesRow = 1;
+        obj.numTilesCol = 1;
+        obj.rowTilePos = 0;
+        obj.colTilePos = 0;
+        obj.pixPerTileRow = obj.width;
+        obj.pixPerTileCol = obj.height;
+        obj.tileOverlap = 0;
+        % Other info available in imfinfo
         obj.XResolution = imgInfo(1).XResolution;
         obj.YResolution = imgInfo(1).YResolution;
         obj.colormap = imgInfo(1).Colormap;
@@ -160,11 +181,12 @@ classdef TiffReader < imageIO.ImageIO
         error('TiffReader.TiffReader: Cannot read metadata. %s', ME.message)
       end
       % now use the Tiff pointer
+      obj.bps = obj.tiffPtr.getTag('BitsPerSample');
+      obj.resolutionUnit = obj.tiffPtr.getTag('ResolutionUnit');
       obj.compression = obj.tiffPtr.Compression;
       obj.tagNames = obj.tiffPtr.getTagNames;
       % retrieve datatype
       sampleFormat = obj.tiffPtr.getTag('SampleFormat');
-      obj.bps = obj.tiffPtr.getTag('BitsPerSample');
       switch sampleFormat
         case 1 % UInt
           obj.datatype = ['uint' num2str(obj.bps)];
@@ -198,14 +220,15 @@ classdef TiffReader < imageIO.ImageIO
         if ~isempty(k)
           obj.stacks = str2double(imageDesc(k(1)+7 : m(1)));
         end
-      %check if it's sutterMOM specific format
-      elseif 0
-        % TODO
-      end
-      
-      if obj.isImageJFmt
         off = obj.tiffPtr.getTag('StripOffsets');
         obj.offsetToImg = off(1);
+      %check if it's sutterMOM specific format
+      elseif length(imageDesc) > 1000 && ~isempty(strfind(imageDesc, 'MOMconfig'))
+        obj.isSutterMOM1 = true;
+        obj = obj.readSutterMetadata(imageDesc);
+      elseif length(imageDesc) > 1000 && ~isempty(strfind(imageDesc, 'scanimage.SI.'))
+        obj.isSutterMOM2 = true;
+        obj = obj.readSutterMetadata(imageDesc);
       end
       
     end
