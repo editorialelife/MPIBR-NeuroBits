@@ -56,9 +56,9 @@ classdef CZIReader < imageIO.ImageIO
       end
     end
     
-    function data = getData(obj, varargin)
+    function data = read(obj, varargin)
     %GETDATA extracts image data
-    % This function reads data from the bioformat file. If no parameters
+    % This function reads data from the CZI file. If no parameters
     % are specified for a specific dimension, all the data will be
     % extracted.
     % INPUT

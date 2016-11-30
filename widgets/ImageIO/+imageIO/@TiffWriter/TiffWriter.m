@@ -454,6 +454,11 @@ classdef TiffWriter < imageIO.ImageIO
       end
       
     end
+    
+    function obj = readMetadata(obj)
+    % Do nothing, it's here because abstarct in superclass
+    end
+    
   end
   
   methods (Static = true)
