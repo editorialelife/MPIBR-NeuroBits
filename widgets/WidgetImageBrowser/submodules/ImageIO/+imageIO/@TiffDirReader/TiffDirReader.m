@@ -13,6 +13,7 @@ classdef TiffDirReader < ImageIO
   properties
     tiffPtrs;       % array of pointers to tiff files
     filePattern;    % string representing the file pattern
+    dimensionOrder; % order used in the filenames to represent different dimensions
   end
   
   methods
@@ -32,7 +33,9 @@ classdef TiffDirReader < ImageIO
     %     the file pattern will be 'img_%04d.tif'. A more complicated
     %     pattern could be 'img_UII%02dX%02d_%02d_xyz-Table_%04d.ome.tif',
     %     where there are four number representing the X/Y tile position,
-    %     the channel and the Z value.
+    %     the channel and the Z value. If no pattern is specified, it is
+    %     assumed that the images represent a Z stack whose order is
+    %     determined by alphabetical sorting of the filenames
     %   dimensionOrder: the order of the dimensions presented in the file
     %     pattern. If not specified, the value depends on the number of
     %     format tags in the file pattern. Valid values could be 'Z',
@@ -40,7 +43,37 @@ classdef TiffDirReader < ImageIO
     % OUTPUT
     %  obj: the TiffDirReader object
     
+      % args check
+      if nargin > 3
+        disp('TiffDirReader: All arguments after the 3rd will be ignored')
+      end
+      if 0 == nargin
+        folder = uigetdir('', 'Select folder containing tiff images:');
+        if isequal(folder, 0)
+          error('TiffDirReader: You must select a folder!')
+        end
+      end
+      if nargin >= 2
+        obj.filePattern = filePattern;
+      else
+        obj.filePattern = '';
+      end
+      if nargin >= 3
+        obj.dimensionOrder = dimensionOrder;
+      else
+        obj.dimensionOrder = '';
+      end
+      
+      %set filename properties
+      obj.fileFullPath = GetFullPath(folder);
+      obj.fileFolder = folder;
+      obj.fileName = folder;
+      obj.fileExt = '';
     end
+  end
+  
+  methods (Access = protected)
+    
   end
   
 end
