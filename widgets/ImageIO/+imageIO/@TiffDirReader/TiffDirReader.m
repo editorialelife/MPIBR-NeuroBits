@@ -117,8 +117,8 @@ classdef TiffDirReader < imageIO.ImageIO
       
       if isempty(varargin) % Read all the data
         data = obj.getAllData();
-      elseif 1 == obj.tile
-        data = obj.getDataNoTiles(varargin{:});
+      %elseif 1 == obj.tile
+      %  data = obj.getDataNoTiles(varargin{:});
       else
         data = obj.getTiledData(varargin{:});
       end

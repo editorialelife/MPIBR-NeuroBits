@@ -30,7 +30,7 @@ function [ data ] = getTiledData( obj, varargin )
 %   data = obj.getTiledData(); %extract all data
 %   data = obj.getTiledData('C', 1:2); %extract data only from the first
 %     2 channels
-%   data = obj.getTiledData('Rows', 1:2:obj.pixPerTileCol, 'Cols', 1:2:obj.pixPerTileRow); %
+%   data = obj.getTiledData('Rows', 1:2:obj.pixPerTileRow, 'Cols', 1:2:obj.pixPerTileCol); %
 %     extract data subsampled by a factor 2 in rows and cols
 %   data = obj.getTiledData('TileRow', 1:6, 'TileCol, 2:4) %Reads first six rows of
 %     tiles, and column tiles from 2 to 4
