@@ -5,7 +5,7 @@ function [ data ] = getAllData( obj )
 data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.datatype);
 
 if 1 == obj.numTilesRow && 1 == obj.numTilesCol
-  for s = 1:obj.stacks;
+  for s = 1:obj.stacks
     for ch = 1:obj.channels
       for t = 1:obj.time
         %set index
@@ -22,7 +22,7 @@ else
       %set series
       obj.bfPtr.setSeries((row-1) * obj.numTilesCol + col - 1);
       
-      for s = 1:obj.stacks;
+      for s = 1:obj.stacks
         for ch = 1:obj.channels
           for t = 1:obj.time
             %set index

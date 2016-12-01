@@ -26,8 +26,8 @@ classdef BioReader < imageIO.ImageIO
       obj = obj.readMetadata();
     end
     
-    function data = getData(obj, varargin)
-    %GETDATA extracts image data
+    function data = read(obj, varargin)
+    %READ extracts image data
     % This function reads data from the bioformat file. If no parameters
     % are specified for a specific dimension, all the data will be
     % extracted.
@@ -40,12 +40,12 @@ classdef BioReader < imageIO.ImageIO
     %   	channel is extracted (or the input is single channel), the singleton
     %   	dimension relative to channel is squeezed.
     % EXAMPLES
-    %   myBR = BioReader('testfile.lsm');
+    %   myBR = imageIO.BioReader('testfile.lsm');
     %   data = myBR.getData(); %Reads all the data
     %   data = myBR.getData('X', 1:10) %Reads only the first then rows
     %   data = myBR.getData('X', 1:2:end) %Reads only the odd rows
     %   data = myBR.getData('C', 1, 'Z', 4:8) %Reads stacks 4 to 8, only 1st channel
-    %   data = myBR.getData('TileRow', 1:6, 'TileCol, 2:4) %Reads first six rows of
+    %   data = myBR.getData('TileRow', 1:6, 'TileCol', 2:4) %Reads first six rows of
     %     tiles, and column tiles from 2 to 4
     
       if isempty(varargin) % Read all the data
@@ -55,6 +55,8 @@ classdef BioReader < imageIO.ImageIO
       else
         data = obj.getTiledData(varargin{:});
       end
+      
+      data = squeeze(data);
     end
     
     function close(obj)

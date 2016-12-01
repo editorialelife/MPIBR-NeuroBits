@@ -75,7 +75,7 @@ classdef (Abstract = true) ImageIO < handle
     end
     
     properties (Constant = true)
-      VERSION = '0.3';
+      VERSION = '0.5';
       DIMORDER = 'XYCZT'; 
     end
     
@@ -115,10 +115,10 @@ classdef (Abstract = true) ImageIO < handle
     
     methods (Abstract = true)   % Here we have the methods that each subclass MUST implement
       close(obj);
-      %obj = readMetadata(obj);
     end
     
     methods (Access = protected)
+      obj = readMetadata(obj);
     end
     
 end
