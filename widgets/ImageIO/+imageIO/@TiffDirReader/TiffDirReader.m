@@ -11,7 +11,6 @@ classdef TiffDirReader < ImageIO
   %     imageIO.TiffReader, imageIO.TiffWriter, Tiff
   
   properties
-    tiffPtrs;       % array of pointers to tiff files
     filePattern;    % string representing the file pattern
     dimensionOrder; % order used in the filenames to represent different dimensions
     filenames;      % list of tiff file names in the folder
@@ -107,7 +106,15 @@ classdef TiffDirReader < ImageIO
     %   data = myTiffDir.getData('X', 1:2:end) %Reads only the odd rows
     %   data = myTiffDir.getData('C', 1, 'Z', 4:8) %Reads stacks 4 to 8, only 1st channel
     %   data = myTiffDir.getData('TileRow', 1:6, 'TileCol', 2:4) %Reads first six rows of
-    %     tiles, and column tiles from 2 to 4  
+    %     tiles, and column tiles from 2 to 4
+      
+      if isempty(varargin) % Read all the data
+        data = obj.getAllData();
+      elseif 1 == obj.tile
+        data = obj.getDataNoTiles(varargin{:});
+      else
+        data = obj.getTiledData(varargin{:});
+      end
     end
     
     
@@ -157,6 +164,9 @@ classdef TiffDirReader < ImageIO
         files = [files dir('*.tiff')];
         obj.fileList = {files.name};
       end
+      
+      %sort filenames
+      obj.fileList = sort(obj.fileList);
       
       % inspect one image
       imgInfo = imfinfo(obj.fileList{1});
