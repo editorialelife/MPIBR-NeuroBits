@@ -48,7 +48,7 @@ data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
 obj.bfPtr.setSeries(0);
 
 idxS = 1;
-for s = stacks;
+for s = stacks
   idxCh = 1;
   for ch = channels
     idxT = 1;
