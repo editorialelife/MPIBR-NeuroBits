@@ -60,5 +60,98 @@ sizeCols = round(length(cols) * (1 + (max(tileCol) - 1) * (1 - obj.tileOverlap))
 data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
   length(timeseries), obj.datatype);
 
+% If no file pattern specified --> create a Z stack
+if isempty(obj.filePattern)
+  % check that channels, tile and time are singleton
+  assert(1 == obj.channels);
+  assert(1 == obj.time);
+  assert(1 == obj.tile);
+  
+  %check that the number of files is equal to the number of stacks
+  assert(length(obj.filenames) == obj.stacks)
+  
+  % now read each file and put its content in data
+  for k = stacks
+    tiffPtr = Tiff(obj.filenames{k});
+    img = tiffPtr.read();
+    data(:, :, 1, k, 1) = img(rows, cols);
+    tiffPtr.close();
+  end
+  
+else % info depend on the file pattern specified!
+  %extract info from the property dimensionOrder
+  varOrder = zeros(1, 5);
+  for k = 1:5
+    tmp = strfind(obj.dimensionOrder, obj.DIMORDER(k));
+    if isempty(tmp)
+      varOrder(k) = inf;
+    else
+      varOrder(k) = tmp;
+    end
+  end
+  numValid = sum(varOrder ~= inf);
+  [~, indexes] = sort(varOrder);
+  indexes = indexes(1:numValid);
+  
+  % get index of start of each new tile
+  pixelStartTileRow = 1 + round((0:max(tileRow)-1) * (1 - obj.tileOverlap) * length(rows));
+  pixelStartTileCol = 1 + round((0:max(tileCol)-1) * (1 - obj.tileOverlap) * length(cols));
+
+  % For every combination of Time, Z, Channel
+  idxS = 1;
+  for s = stacks
+    idxCh = 1;
+    for ch = channels
+      idxT = 1;
+      for t = timeseries
+
+        %Create the whole 2D image
+        for row = tileRow
+          for col = tileCol
+            % find appropriate image file
+            currentVal = [col, row, ch, s, t];
+            currentVal = currentVal(indexes);
+            filename = fullfile(obj.fileFolder, sprintf(obj.filePattern, currentVal));
+            % read image
+            tiffPtr = Tiff(filename);
+            img = tiffPtr.read();
+            tiffPtr.close();
+            % paranoia: dimension check
+            assert(size(img, 1) == obj.pixPerTileRow);
+            assert(size(img, 2) == obj.pixPerTileCol);
+            % get size of image (only the part we want)
+            [rr, cc] = size(tmpTile(rows, cols));
+            data(pixelStartTileRow(row) : pixelStartTileRow(row) + rr - 1, ...
+                 pixelStartTileCol(col) : pixelStartTileCol(col) + cc - 1, ...
+                 idxCh, idxS, idxT) = tmpTile(rows, cols);
+          end
+        end
+
+        idxT = idxT + 1;
+      end
+      idxCh = idxCh + 1;
+    end
+    idxS = idxS + 1;
+  end
+end
+
+% squeeze data, to remove singleton dimensions
+data = squeeze(data);
+
+% remove zero rows and cols
+if ismatrix(data)
+  data(1:pixelStartTileRow(tileRow(1)) - 1, :) = [];
+  data(:, 1:pixelStartTileCol(tileCol(1)) - 1) = [];
+elseif 3 == ndims(data)
+  data(1:pixelStartTileRow(tileRow(1)) - 1, :, :) = [];
+  data(:, 1:pixelStartTileCol(tileCol(1)) - 1, :) = [];
+elseif 4 == ndims(data)
+  data(1:pixelStartTileRow(tileRow(1)) - 1, :, :, :) = [];
+  data(:, 1:pixelStartTileCol(tileCol(1)) - 1, :, :) = [];
+else % 5 == ndims(data)
+  data(1:pixelStartTileRow(tileRow(1)) - 1, :, :, :, :) = [];
+  data(:, 1:pixelStartTileCol(tileCol(1)) - 1, :, :, :) = [];
+end
+
 end
 
