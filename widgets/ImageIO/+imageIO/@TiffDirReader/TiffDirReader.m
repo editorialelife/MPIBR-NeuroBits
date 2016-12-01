@@ -87,6 +87,28 @@ classdef TiffDirReader < ImageIO
       obj.fileExt = '';
     end
     
+    function data = read(obj, varargin)
+    %READ extracts image data
+    % This function reads data from the image directory. If no parameters
+    % are specified for a specific dimension, all the data will be
+    % extracted.
+    % INPUT
+    %   obj: class instance
+    %   varargin: Name-Value arguments. Allowed parameters are 'X', 'Y',
+    %     'C', 'Z', 'T', 'TileRows', 'TileCols'
+    % OUTPUT
+    %   data: image data, up to 5 dimension (in this order: XYCZT). If only one
+    %   	channel is extracted (or the input is single channel), the singleton
+    %   	dimension relative to channel is squeezed.
+    % EXAMPLES
+    %   myTiffDir = imageIO.TiffDirReader(); % select directory
+    %   data = myTiffDir.getData(); %Reads all the data
+    %   data = myTiffDir.getData('X', 1:10) %Reads only the first then rows
+    %   data = myTiffDir.getData('X', 1:2:end) %Reads only the odd rows
+    %   data = myTiffDir.getData('C', 1, 'Z', 4:8) %Reads stacks 4 to 8, only 1st channel
+    %   data = myTiffDir.getData('TileRow', 1:6, 'TileCol', 2:4) %Reads first six rows of
+    %     tiles, and column tiles from 2 to 4  
+    end
     
     
     function close(obj)
