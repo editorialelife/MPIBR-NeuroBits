@@ -1,4 +1,4 @@
-classdef TiffDirReader < ImageIO
+classdef TiffDirReader < imageIO.ImageIO
   %TIFFDIRREADER Reads a collection of images from a folder
   %   This class creates an image from a collection of pictures in a
   %   folder. The class considers only tiff files inside the folder and
@@ -14,6 +14,7 @@ classdef TiffDirReader < ImageIO
     filePattern;    % string representing the file pattern
     dimensionOrder; % order used in the filenames to represent different dimensions
     filenames;      % list of tiff file names in the folder
+    bps;            % bits per sample used
   end
   
   properties (Constant = true)
@@ -53,6 +54,9 @@ classdef TiffDirReader < ImageIO
     % OUTPUT
     %  obj: the TiffDirReader object
     
+      % Must call explictily because we pass one argument
+      obj = obj@imageIO.ImageIO(folder);
+    
       % args check
       if nargin > 4
         disp('TiffDirReader: All arguments after the 3rd will be ignored')
@@ -79,11 +83,14 @@ classdef TiffDirReader < ImageIO
         obj.tileOverlap = 0;
       end
       
-      %set filename properties
+      % set filename properties
       obj.fileFullPath = GetFullPath(folder);
       obj.fileFolder = folder;
       obj.fileName = folder;
       obj.fileExt = '';
+      
+      % get metadata
+      obj = obj.readMetadata();
     end
     
     function data = read(obj, varargin)
@@ -144,44 +151,51 @@ classdef TiffDirReader < ImageIO
       currDir = pwd;
       
       % move to folder with images
-      cd(obj.folder);
+      cd(obj.fileFolder);
       
       % check filenames
       if ~isempty(fp)
         regExpFp = fp;
+        % replace parts of the filePattern such as %05d or %03i
         for k = 1:obj.MAX_DIGITS_IN_FORMAT_TAG 
-          oldStr = ['%0' str2double(k) 'd'];
-          newStr = ['[0-9]{' str2double(k) ',' str2double(k) '}'];
-          strrep(regExpFp, oldStr, newStr);
+          oldStr = ['%0?' num2str(k) '[di]'];
+          newStr = ['[0-9]{' num2str(k) ',' num2str(k) '}'];
+          regExpFp = regexprep(regExpFp, oldStr, newStr);
         end
+        % also replace file patterns like this: %d, %i
+        oldStr = '%[di]';
+        newStr = ['[0-9]{' num2str(1) ',' num2str(obj.MAX_DIGITS_IN_FORMAT_TAG) '}'];
+        regExpFp = regexprep(regExpFp, oldStr, newStr);
+        
+        % now, find files
         files = dir;
         files = {files.name};
-        f = regexpi(files, regExpFp, 'match');
-        obj.fileList = f{:};
+        idx = 1;
+        for k = 1:length(files)
+          res = regexpi(files{k}, regExpFp, 'match');
+          if ~isempty(res)
+            obj.filenames{idx} = res{1};
+            idx = idx + 1;
+          end
+        end
       else
         files = [];
         files = [files dir('*.tif')];
         files = [files dir('*.tiff')];
-        obj.fileList = {files.name};
+        obj.filenames = {files.name};
       end
       
       %sort filenames
-      obj.fileList = sort(obj.fileList);
+      obj.filenames = sort(obj.filenames);
       
       % inspect one image
-      imgInfo = imfinfo(obj.fileList{1});
+      imgInfo = imfinfo(obj.filenames{1});
       obj.pixPerTileCol = imgInfo(1).Height;
       obj.pixPerTileRow = imgInfo(1).Width;
       obj.channels = length(imgInfo(1).BitsPerSample);
-      obj.XResolution = imgInfo(1).XResolution;
-      obj.YResolution = imgInfo(1).YResolution;
-      obj.colormap = imgInfo(1).Colormap;
-      tiffPtr = Tiff(obj.fileList{1});
-      tiffPtr.close();
-      obj.bps = obj.tiffPtr.getTag('BitsPerSample');
-      obj.resolutionUnit = tiffPtr.getTag('ResolutionUnit');
-      obj.compression = tiffPtr.Compression;
-      obj.tagNames = tiffPtr.getTagNames;
+      tiffPtr = Tiff(obj.filenames{1});
+      obj.bps = tiffPtr.getTag('BitsPerSample');
+     
       % retrieve datatype
       sampleFormat = tiffPtr.getTag('SampleFormat');
       switch sampleFormat
@@ -200,7 +214,7 @@ classdef TiffDirReader < ImageIO
         otherwise  % Void or complex types are unsupported
         warning('TiffDirReader.readMetadata: unsupported sample format')
       end
-      
+      tiffPtr.close();
       obj = assignDimensions(obj);
       
       %return to previous current folder
@@ -208,11 +222,11 @@ classdef TiffDirReader < ImageIO
     end
     
     function obj = assignDimensions(obj)
-    %ASSIGNDIMENSION Assign image dimensions by inspecting filelist
+    %ASSIGNDIMENSION Assign image dimensions by inspecting filenames
       
       if isempty(obj.dimensionOrder)
         obj.time = 1;
-        obj.stacks = length(obj.fileList);
+        obj.stacks = length(obj.filenames);
         obj.width = obj.pixPerTileRow;
         obj.height = obj.pixPerTileCol;
         obj.rowTilePos = 1;
@@ -225,8 +239,8 @@ classdef TiffDirReader < ImageIO
         numDim = length(obj.dimensionOrder);
         minVal = Inf*ones(numDim, 1);
         maxVal = zeros(numDim, 1);
-        for m = 1:length(fileList)
-          filename = fileList(m);
+        for m = 1:length(obj.filenames)
+          filename = obj.filenames(m);
           numbers = sscanf(filename, obj.filePattern);
           for k = 1:numDim
             if numbers(k) > maxVal(k) 
