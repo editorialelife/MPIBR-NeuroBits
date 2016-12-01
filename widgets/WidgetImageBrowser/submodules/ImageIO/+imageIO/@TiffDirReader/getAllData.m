@@ -12,11 +12,11 @@ if isempty(obj.filePattern)
   assert(1 == obj.tile);
   
   %check that the number of files is equal to the number of stacks
-  assert(length(obj.fileList) == obj.stacks)
+  assert(length(obj.filenames) == obj.stacks)
   
   % now read each file and put its content in data
-  for k = 1:length(obj.fileList)
-    tiffPtr = Tiff(obj.fileList{k});
+  for k = 1:length(obj.filenames)
+    tiffPtr = Tiff(obj.filenames{k});
     data(:, :, 1, k, 1) = tiffPtr.read();
     tiffPtr.close();
   end
