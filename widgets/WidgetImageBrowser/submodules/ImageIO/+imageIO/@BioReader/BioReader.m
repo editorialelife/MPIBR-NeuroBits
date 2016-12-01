@@ -55,6 +55,8 @@ classdef BioReader < imageIO.ImageIO
       else
         data = obj.getTiledData(varargin{:});
       end
+      
+      data = squeeze(data);
     end
     
     function close(obj)

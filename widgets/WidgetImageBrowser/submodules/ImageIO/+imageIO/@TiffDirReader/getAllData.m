@@ -23,9 +23,18 @@ if isempty(obj.filePattern)
   
 else % info depend on the file pattern specified!
   %extract info from the property dimensionOrder
-  varOrder = [strfind(obj.dimensionOrder, 'X'), strfind(obj.dimensionOrder, 'Y'), ...
-    strfind(obj.dimensionOrder, 'C'), strfind(obj.dimensionOrder, 'Z'), ...
-    strfind(obj.dimensionOrder, 'T') ];
+  varOrder = zeros(1, 5);
+  for k = 1:5
+    tmp = strfind(obj.dimensionOrder, obj.DIMORDER(k));
+    if isempty(tmp)
+      varOrder(k) = inf;
+    else
+      varOrder(k) = tmp;
+    end
+  end
+  numValid = sum(varOrder ~= inf);
+  [~, indexes] = sort(varOrder);
+  indexes = indexes(1:numValid);
   
   for row = 1:obj.numTilesRow
     for col = 1:obj.numTilesCol
@@ -33,10 +42,9 @@ else % info depend on the file pattern specified!
         for ch = 1:obj.channels
           for t = 1:obj.time
             % find appropriate image file
-            currentVal = [col, row, s, ch, t];
-            currentVal = currentVal(varOrder);
-            filename = sprintf(obj.filePattern, currentVal(1), currentVal(2), ...
-              currentVal(3), currentVal(4), currentVal(5));
+            currentVal = [col, row, ch, s, t];
+            currentVal = currentVal(indexes);
+            filename = fullfile(obj.fileFolder, sprintf(obj.filePattern, currentVal));
             % read image
             tiffPtr = Tiff(filename);
             img = tiffPtr.read();
