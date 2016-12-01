@@ -66,7 +66,7 @@ pixelStartTileCol = 1 + round((0:max(tileCol)-1) * (1 - obj.tileOverlap) * lengt
 
 % For every combination of Time, Z, Channel
 idxS = 1;
-for s = stacks;
+for s = stacks
   idxCh = 1;
   for ch = channels
     idxT = 1;
