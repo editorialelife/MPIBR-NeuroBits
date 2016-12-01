@@ -75,7 +75,7 @@ classdef TiffDirReader < imageIO.ImageIO
       if nargin >= 3
         obj.dimensionOrder = upper(dimensionOrder);
       else
-        obj.dimensionOrder = '';
+        obj.dimensionOrder = 'Z';
       end
       if nargin >= 4
         obj.tileOverlap = overlap;
@@ -122,6 +122,8 @@ classdef TiffDirReader < imageIO.ImageIO
       else
         data = obj.getTiledData(varargin{:});
       end
+      
+      data = squeeze(data);
     end
     
     
@@ -190,8 +192,8 @@ classdef TiffDirReader < imageIO.ImageIO
       
       % inspect one image
       imgInfo = imfinfo(obj.filenames{1});
-      obj.pixPerTileCol = imgInfo(1).Height;
-      obj.pixPerTileRow = imgInfo(1).Width;
+      obj.pixPerTileCol = imgInfo(1).Width;
+      obj.pixPerTileRow = imgInfo(1).Height;
       obj.channels = length(imgInfo(1).BitsPerSample);
       tiffPtr = Tiff(obj.filenames{1});
       obj.bps = tiffPtr.getTag('BitsPerSample');
@@ -227,26 +229,26 @@ classdef TiffDirReader < imageIO.ImageIO
       if isempty(obj.dimensionOrder)
         obj.time = 1;
         obj.stacks = length(obj.filenames);
-        obj.width = obj.pixPerTileRow;
-        obj.height = obj.pixPerTileCol;
+        obj.width = obj.pixPerTileCol;
+        obj.height = obj.pixPerTileRow;
         obj.rowTilePos = 1;
         obj.colTilePos = 1;
         obj.numTilesRow = 1;
         obj.numTilesCol = 1;
         obj.tile = 1;
       else
-        dim = container.Map;
+        dim = containers.Map;
         numDim = length(obj.dimensionOrder);
         minVal = Inf*ones(numDim, 1);
         maxVal = zeros(numDim, 1);
         for m = 1:length(obj.filenames)
-          filename = obj.filenames(m);
+          filename = obj.filenames{m};
           numbers = sscanf(filename, obj.filePattern);
           for k = 1:numDim
             if numbers(k) > maxVal(k) 
               maxVal(k) = numbers(k);
             end
-            if numbers(k) < maxVal(k) 
+            if numbers(k) < minVal(k) 
               minVal(k) = numbers(k);
             end
           end
