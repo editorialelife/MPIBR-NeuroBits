@@ -159,21 +159,8 @@ classdef TiffDirReader < imageIO.ImageIO
       % check filenames
       if ~isempty(fp)
         
-        % check if index starts at zero or 1
-        obj.startsWithZero = obj.getStartIndex();
-        
-        regExpFp = fp;
-        % replace parts of the filePattern such as %05d or %03i
-        for k = 1:obj.MAX_DIGITS_IN_FORMAT_TAG 
-          oldStr = ['%0?' num2str(k) '[di]'];
-          newStr = ['[0-9]{' num2str(k) ',' num2str(k) '}'];
-          regExpFp = regexprep(regExpFp, oldStr, newStr);
-        end
-        % also replace file patterns like this: %d, %i
-        oldStr = '%[di]';
-        newStr = ['[0-9]{' num2str(1) ',' num2str(obj.MAX_DIGITS_IN_FORMAT_TAG) '}'];
-        regExpFp = regexprep(regExpFp, oldStr, newStr);
-        
+        regExpFp = obj.replaceFormatInFilePattern(fp);
+                
         % now, find files
         files = dir;
         files = {files.name};
@@ -185,6 +172,10 @@ classdef TiffDirReader < imageIO.ImageIO
             idx = idx + 1;
           end
         end
+        
+        % finally, check if index starts at zero or 1
+        obj.startsWithZero = obj.getStartIndex();
+        
       else
         files = [];
         files = [files dir('*.tif')];
@@ -194,6 +185,7 @@ classdef TiffDirReader < imageIO.ImageIO
       
       %sort filenames
       obj.filenames = sort(obj.filenames);
+      
       
       % inspect one image
       imgInfo = imfinfo(obj.filenames{1});
@@ -295,8 +287,67 @@ classdef TiffDirReader < imageIO.ImageIO
     
     function startIndex = getStartIndex(obj)
     %GETSTARTINDEX Check if image index starts with zero or one
+    % This method analyzes the files in the folder to check whether the
+    % index for each dimensions starts at zero or one. The method returns a
+    % five elements logical array sets to ONE when the indexing starts at
+    % zero and ZERO otherwise. This is useful because when reading the data
+    % it is sufficient to subtract this array to the current conunters to
+    % manage the "starts with zero" case.
+    
       dimOrd = obj.dimensionOrder;
+      fp = obj.filePattern;
+     
+      assert(~isempty(dimOrd))
+      assert(~isempty(fp))
+     
+      startIndex = zeros(1, 5); %at the beginning, all zeros
       
+      % find the position of the format string
+      strToMatch = '%[0-9]*[di]';
+      [idxS, idxE] = regexp(fp, strToMatch, 'start', 'end');
+      
+      % paranoia check
+      assert(length(ind) == length(dimOrd))
+      
+      for k = 1:length(dimOrd) % check all dimensions changing in file pattern
+        % replace the current format string with 0
+        filePatternTmp = [fp(1:idxS(k) - 1) sprintf(fp(idxS(k):idxE(k)), 0) fp(idxE(k) + 1: end)];
+        
+        %now replace the remaining format strings with regular expression
+        regExpFp = obj.replaceFormatInFilePattern(filePatternTmp);
+        
+        % check that at least one file with this pattern existss
+        for m = 1:length(obj.filenames)
+          filename = obj.filenames(m);
+          res = regexpi(filename{k}, regExpFp);
+          if ~isempty(res) % found a match!
+            currDim = upper(dimOrd(k));
+            % ORDER WHEN READING DATA IS XYCZT
+            pos = strfind(obj.DIMORDER, currDim);
+            if isempty(pos) || pos < 1 || pos > 5
+              error('TiffDirReader.getStartIndex: Unrecognized dimension')
+            end
+            startIndex(pos) = true;
+          end
+        end
+        
+      end
+    end
+    
+    function regExpFp = replaceFormatInFilePattern(obj, filePattern)
+    
+      regExpFp = filePattern;
+      % replace parts of the filePattern such as %05d or %03i
+      for k = 1:obj.MAX_DIGITS_IN_FORMAT_TAG
+        oldStr = ['%0?' num2str(k) '[di]'];
+        newStr = ['[0-9]{' num2str(k) ',' num2str(k) '}'];
+        regExpFp = regexprep(regExpFp, oldStr, newStr);
+      end
+      % also replace file patterns like this: %d, %i
+      oldStr = '%[di]';
+      newStr = ['[0-9]{' num2str(1) ',' num2str(obj.MAX_DIGITS_IN_FORMAT_TAG) '}'];
+      regExpFp = regexprep(regExpFp, oldStr, newStr);
+    
     end
     
   end
