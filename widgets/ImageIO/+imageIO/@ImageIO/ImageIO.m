@@ -75,7 +75,7 @@ classdef (Abstract = true) ImageIO < handle
     end
     
     properties (Constant = true)
-      VERSION = '0.5';
+      VERSION = '0.6';
       DIMORDER = 'XYCZT'; 
     end
     
