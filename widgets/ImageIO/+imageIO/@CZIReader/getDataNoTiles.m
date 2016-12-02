@@ -22,7 +22,7 @@ function [ data ] = getDataNoTiles( obj, varargin )
 %   data = obj.getDataNoTiles(); %extract all data
 %   data = obj.getDataNoTiles('C', 1:2); %extract data only from the first
 %     2 channels
-%   data = obj.getDataNoTiles('X', 1:2:obj.width, 'Y', 1:2:obj.height); %
+%   data = obj.getDataNoTiles('Cols', 1:2:obj.width, 'Rows', 1:2:obj.height); %
 %     extract data subsampled by a factor 2 in rows and cols
 
 %parse input

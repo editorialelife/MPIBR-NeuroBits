@@ -63,7 +63,7 @@ classdef CZIReader < imageIO.ImageIO
     % extracted.
     % INPUT
     %   obj: class instance
-    %   varargin: Name-Value arguments. Allowed parameters are 'X', 'Y',
+    %   varargin: Name-Value arguments. Allowed parameters are 'Cols', 'Rows',
     %     'C', 'Z', 'T', 'S', 'TileRows', 'TileCols'
     % OUTPUT
     %   data: image data, up to 6 dimension (in this order: XYCZTS). If only one
@@ -72,8 +72,8 @@ classdef CZIReader < imageIO.ImageIO
     % EXAMPLES
     %   myCZI = CZIReader('testfile.czi');
     %   data = myCZI.getData(); %Reads all the data
-    %   data = myCZI.getData('X', 1:10) %Reads only the first then rows
-    %   data = myCZI.getData('X', 1:2:end) %Reads only the odd rows
+    %   data = myCZI.getData('Cols', 1:10) %Reads only the first then rows
+    %   data = myCZI.getData('Cols', 1:2:end) %Reads only the odd rows
     %   data = myCZI.getData('C', 1, 'Z', 4:8) %Reads stacks 4 to 8, only 1st channel
     %   data = myCZI.getData('TileRows', 1:6, 'TileCols, 2:4) %Reads first six rows of
     %     tiles, and column tiles from 2 to 4

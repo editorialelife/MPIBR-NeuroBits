@@ -100,7 +100,8 @@ classdef TiffReader < imageIO.ImageIO
       elseif obj.isSutterMOM1 || obj.isSutterMOM2
         data = readSutter(obj, cols, rows, channels, stacks, timeseries );
       else % normal tif
-        data = zeros(rows, cols, channels, stacks, obj.datatype);
+        data = zeros(length(rows), length(cols), length(channels), ...
+          length(stacks), obj.datatype);
         idx = 1;
 
         for k = stacks            
