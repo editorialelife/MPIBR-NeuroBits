@@ -15,6 +15,7 @@ classdef TiffDirReader < imageIO.ImageIO
     dimensionOrder; % order used in the filenames to represent different dimensions
     filenames;      % list of tiff file names in the folder
     bps;            % bits per sample used
+    startsWithZero; % logical used to check whether the index is zero based
   end
   
   properties (Constant = true)
