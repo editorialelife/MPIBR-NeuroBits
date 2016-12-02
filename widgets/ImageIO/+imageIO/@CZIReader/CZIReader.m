@@ -75,7 +75,7 @@ classdef CZIReader < imageIO.ImageIO
     %   data = myCZI.getData('X', 1:10) %Reads only the first then rows
     %   data = myCZI.getData('X', 1:2:end) %Reads only the odd rows
     %   data = myCZI.getData('C', 1, 'Z', 4:8) %Reads stacks 4 to 8, only 1st channel
-    %   data = myCZI.getData('TileRow', 1:6, 'TileCol, 2:4) %Reads first six rows of
+    %   data = myCZI.getData('TileRows', 1:6, 'TileCols, 2:4) %Reads first six rows of
     %     tiles, and column tiles from 2 to 4
     
       if isempty(varargin) % Read all the data

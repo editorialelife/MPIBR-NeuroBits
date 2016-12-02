@@ -14,8 +14,8 @@ function [ data ] = getTiledData( obj, varargin )
 %   'Z': Specify which planes to extract
 %   'T': Specify which timeseries to extract
 %   'S': Specify which series/position to extract
-%   'TileRow': Specify which row tiles to read.
-%   'TileCol': Specify which col tiles to read.
+%   'TileRows': Specify which row tiles to read.
+%   'TileCols': Specify which col tiles to read.
 % OUTPUT:
 %   data: image data, up to 6 dimension (in this order: XYCZTS). If only one
 %   	channel is extracted (or the input is single channel), the singleton
@@ -26,7 +26,7 @@ function [ data ] = getTiledData( obj, varargin )
 %     2 channels
 %   data = obj.getTiledData('Rows', 1:2:obj.pixPerTileCol, 'Cols', 1:2:obj.pixPerTileRow); %
 %     extract data subsampled by a factor 2 in rows and cols
-%   data = obj.getTiledData('TileRow', 1:6, 'TileCol, 2:4) %Reads first six rows of
+%   data = obj.getTiledData('TileRows', 1:6, 'TileCols, 2:4) %Reads first six rows of
 %     tiles, and column tiles from 2 to 4
 
 %parse input
