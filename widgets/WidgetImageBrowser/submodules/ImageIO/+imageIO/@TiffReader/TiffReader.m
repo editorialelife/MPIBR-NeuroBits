@@ -178,8 +178,8 @@ classdef TiffReader < imageIO.ImageIO
         obj.numTilesCol = 1;
         obj.rowTilePos = 0;
         obj.colTilePos = 0;
-        obj.pixPerTileRow = obj.width;
-        obj.pixPerTileCol = obj.height;
+        obj.pixPerTileRow = obj.height;
+        obj.pixPerTileCol = obj.width;
         obj.tileOverlap = 0;
         % Other info available in imfinfo
         obj.XResolution = imgInfo(1).XResolution;
