@@ -115,10 +115,11 @@ classdef (Abstract = true) ImageIO < handle
     
     methods (Abstract = true)   % Here we have the methods that each subclass MUST implement
       close(obj);
+      data = read(obj)
     end
     
     methods (Access = protected)
-      obj = readMetadata(obj);
+      obj = readMetadata(obj, varargin);
     end
     
 end

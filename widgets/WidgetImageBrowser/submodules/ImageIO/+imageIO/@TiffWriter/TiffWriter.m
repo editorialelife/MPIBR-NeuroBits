@@ -459,6 +459,10 @@ classdef TiffWriter < imageIO.ImageIO
     % Do nothing, it's here because abstarct in superclass
     end
     
+    function data = read(obj, varargin)
+    % Do nothing, it's here because abstarct in superclass
+    end
+    
   end
   
   methods (Static = true)

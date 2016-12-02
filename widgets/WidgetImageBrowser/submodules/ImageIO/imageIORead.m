@@ -26,7 +26,8 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %     determined by alphabetical sorting of the filenames
 %   dimensionOrder: [optional] used only when 'file' is a directory.
 %     Represents the order of the dimensions presented in the file
-%     pattern. Valid values could be 'Z', 'XYCZ', 'T'. If not specified,
+%     pattern. Each dimension is represented by a single character, uppercase.
+%     Valid values could be 'Z', 'XYCZ', 'T'. If not specified,
 %     the value depends on the number of format tags in the file
 %     pattern: if 0 or 1 format tags specified, it will be 'Z', if 2
 %     format tags specified, it will be 'XY', if 3 tags specified, it
@@ -51,11 +52,11 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %   all tiles).
 %   'Cols': Specify which columns to extract
 %   'Rows': Specify which rows to extract
-%   'Channel': Specify which channels to extract
-%   'Stack': Specify which planes to extract
+%   'Channels': Specify which channels to extract
+%   'Stacks': Specify which planes to extract
 %   'Time': Specify which timeseries to extract
-%   'TileRow': Specify which row tiles to read.
-%   'TileCol': Specify which col tiles to read.
+%   'TileRows': Specify which row tiles to read.
+%   'TileCols': Specify which col tiles to read.
 % OUTPUT:
 %   data: image data, up to 5 dimension (in this order: XYCZT). If only one
 %   	channel is extracted (or the input is single channel), the singleton
@@ -69,14 +70,14 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %     cziData = imageIORead('aCZIFile.czi');
 %   Reading a Z stack from a folder
 %     tiffStack = imageIORead('folderWithImages'); % no need to specify pattern
-%     tiffStack = imageIORead('folderWithImages', 'Stack', 100:150); % subset
+%     tiffStack = imageIORead('folderWithImages', 'Stacks', 100:150); % subset
 %   Reading complex datasets from a folder
 %     multiChTiffStack = imageIORead('folder', 'filePattern_Ch_%d_Z_%04d.tif', 'CZ');
 %   Reading a subset from complex datasets from a folder
 %     multiChTiffStack = imageIORead('folder', 'filePattern_Pos_%02dx%02d_Ch_%d_Z_%04d.tif', ...
-%       'YXCZ', 'Channel', 2, 'TileRow', 1:2, 'TileCol', 1:3);
+%       'YXCZ', 'Channels', 2, 'TileRows', 1:2, 'TileCols', 1:3);
 %   Read from file of size 4000x3000, subset of a factor 4, only first and third channel
-%     bioReaderData = imageIORead('sample.lsm', 'Channel', [1 3], 'Cols', ...
+%     bioReaderData = imageIORead('sample.lsm', 'Channels', [1 3], 'Cols', ...
 %       1:4:4000, 'Rows', 1:4:3000);
 % DATE: 02.12.2016
 % AUTHOR: stefano.masneri@brain.mpg.de
@@ -85,6 +86,55 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %   imageIO, imageIO.imageIO, imageIO.TiffReader, imageIO.BioReader, 
 %   imageIO.CZIReader, imageIO.TiffDirReader
 
+%check input
+p = inputParser();
+p.KeepUnmatched = true;
+
+p.addRequired('file', @(x) ischar(x) && exist(x, 'file'));
+
+p.addOptional('filePattern', '', ischar);
+p.addOptional('dimensionOrder', 'Z', @(x) ischar(x) && length(x) <= 5);
+p.addOptional('overlap', 0, @(x) isscalar(x) && isnumeric(x) && x>= 0 && x < 100);
+
+p.addParameter('Cols', 1:obj.pixPerTileCol, @(x) isvector(x) && all(x > 0) && max(x) <= obj.pixPerTileCol);
+p.addParameter('Rows', 1:obj.pixPerTileRow, @(x) isvector(x) && all(x > 0) && max(x) <= obj.pixPerTileRow);
+p.addParameter('Channels', 1:obj.channels, @(x) isvector(x) && all(x > 0) && max(x) <= obj.channels);
+p.addParameter('Stacks', 1:obj.stacks, @(x) isvector(x) && all(x > 0) && max(x) <= obj.stacks);
+p.addParameter('Time', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.time);
+p.addParameter('TileCols', 1:obj.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesCol);
+p.addParameter('TileRows', 1:obj.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesRow);
+
+p.parse(file, varargin{:})
+
+filePattern = p.Results.filePattern;
+dimensionOrder = p.Results.dimensionOrder;
+overlap = p.Results.overlap;
+rows = p.Results.Rows;
+cols = p.Results.Cols;
+channels = p.Results.Channels;
+stacks = p.Results.stacks;
+timeseries = p.Results.Time;
+tileCols = p.Results.TileCols;
+tileRows = p.Results.TileRows;
+
+% check if is directory or file, and in case the file extension
+if isdir(file)
+  imgPtr = imageIO.TiffDirReader(file, filePattern, dimensionOrder, overlap);
+else %ok, which type of file?
+  [~, ~, ext] = fileparts(file);
+  switch ext
+    case '.czi'
+      imgPtr = imageIO.CZIReader(file);
+    case {'.tif', '.tiff'}
+      imgPtr = imageIO.TiffReader(file);
+    otherwise %assume it could be opened using the BioFormatReader
+      imgPtr = imageIO.BioReader(file);
+  end
+end
+
+% read the required data 
+data = imgPtr.read('X', cols, 'Y', rows, 'C', channels, 'Z', stacks, ...
+  'T', timeseries, 'TileCols', tileCols, 'TileRows', tileRows);
 
 end
 
