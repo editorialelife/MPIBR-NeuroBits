@@ -63,43 +63,50 @@ classdef TiffReader < imageIO.ImageIO
       end
     end
     
-    function data = read(obj)
+    function data = read(obj, varargin)
     %READ read all the image data
     %This function reads all the planes of the image. If the file has
     %only one plane just returns that.
     % INPUT
     %   obj: the TiffReader instance
+    % NAME-VALUE ARGUMENTS
+    %   'Cols': Specify which columns to extract
+    %   'Rows': Specify which rows to extract
+    %   'C': Specify which channels to extract
+    %   'Z': Specify which planes to extract
+    %   'T': Specify which timeseries to extract
     % OUTPUT
     %   data: the whole image content
-      
-      if obj.isSutterMOM1 || obj.isSutterMOM2
-        data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.datatype);
-      else
-        data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.datatype);
-      end
-      
+    
+      p = inputParser();
+      p.KeepUnmatched = true;
+      p.addParameter('Cols', 1:obj.width, @(x) isvector(x) && all(x > 0) && max(x) <= obj.pixPerTileCol);
+      p.addParameter('Rows', 1:obj.height, @(x) isvector(x) && all(x > 0) && max(x) <= obj.pixPerTileRow);
+      p.addParameter('C', 1:obj.channels, @(x) isvector(x) && all(x > 0) && max(x) <= obj.channels);
+      p.addParameter('Z', 1:obj.stacks, @(x) isvector(x) && all(x > 0) && max(x) <= obj.stacks);
+      p.addParameter('T', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.time);
+
+      p.parse(varargin{:});
+      rows = p.Results.Rows;
+      cols = p.Results.Cols;
+      channels = p.Results.C;
+      stacks = p.Results.Z;
+      timeseries = p.Results.T;
+            
       if obj.isImageJFmt
-        fseek(obj.filePtr, obj.offsetToImg, 'bof');
-        imageSize = obj.height * obj.width * obj.channels;
-        precision = [ obj.datatype '=>'  obj.datatype ];
-        for k = 1:obj.stacks
-          image = fread(obj.filePtr, imageSize, precision, obj.endianness);
-          image = reshape(image, [obj.width, obj.height, obj.channels]);
-          data(:, :, :, k) = image';
-        end
+        data = readTifImageJ(obj, cols, rows, channels, stacks);
+
+        
       elseif obj.isSutterMOM1 || obj.isSutterMOM2
-        idx = 1;
-        for k = 1:obj.stacks
-          for l = 1:obj.time
-            for m = 1:obj.channels
-              data(:, :, m, k, l) = obj.readImage(idx);
-              idx = idx + 1;
-            end
-          end
-        end
+        data = readSutter(obj, cols, rows, channels, stacks, timeseries );
       else % normal tif
-        for k = 1:obj.stacks
-          data(:, :, :, k) = obj.readImage(k);
+        data = zeros(rows, cols, channels, stacks, obj.datatype);
+        idx = 1;
+
+        for k = stacks            
+          img = obj.readImage(k);
+          data(:, :, :, idx) = img(rows, cols, channels);
+          idx = idx + 1;
         end
       end
       
