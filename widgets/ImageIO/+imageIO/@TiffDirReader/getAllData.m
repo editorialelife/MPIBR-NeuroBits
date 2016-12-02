@@ -43,7 +43,11 @@ else % info depend on the file pattern specified!
           for t = 1:obj.time
             % find appropriate image file
             currentVal = [col, row, ch, s, t];
-            currentVal = currentVal(indexes);
+            if obj.startsWithZero
+              currentVal = currentVal - obj.startsWithZero;
+            end
+            
+            currentVal = currentVal(indexes);    
             filename = fullfile(obj.fileFolder, sprintf(obj.filePattern, currentVal));
             % read image
             tiffPtr = Tiff(filename);

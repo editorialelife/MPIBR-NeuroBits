@@ -158,6 +158,10 @@ classdef TiffDirReader < imageIO.ImageIO
       
       % check filenames
       if ~isempty(fp)
+        
+        % check if index starts at zero or 1
+        obj.startsWithZero = obj.getStartIndex();
+        
         regExpFp = fp;
         % replace parts of the filePattern such as %05d or %03i
         for k = 1:obj.MAX_DIGITS_IN_FORMAT_TAG 
@@ -288,6 +292,13 @@ classdef TiffDirReader < imageIO.ImageIO
         obj.width = round(obj.pixPerTileCol * (1 + (obj.numTilesCol - 1) * (1 - obj.tileOverlap)));
       end
     end
+    
+    function startIndex = getStartIndex(obj)
+    %GETSTARTINDEX Check if image index starts with zero or one
+      dimOrd = obj.dimensionOrder;
+      
+    end
+    
   end
   
 end
