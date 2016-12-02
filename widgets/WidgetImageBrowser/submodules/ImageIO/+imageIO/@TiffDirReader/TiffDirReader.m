@@ -307,7 +307,7 @@ classdef TiffDirReader < imageIO.ImageIO
       [idxS, idxE] = regexp(fp, strToMatch, 'start', 'end');
       
       % paranoia check
-      assert(length(ind) == length(dimOrd))
+      assert(length(idxS) == length(dimOrd))
       
       for k = 1:length(dimOrd) % check all dimensions changing in file pattern
         % replace the current format string with 0
@@ -319,8 +319,8 @@ classdef TiffDirReader < imageIO.ImageIO
         % check that at least one file with this pattern existss
         for m = 1:length(obj.filenames)
           filename = obj.filenames(m);
-          res = regexpi(filename{k}, regExpFp);
-          if ~isempty(res) % found a match!
+          res = regexpi(filename, regExpFp);
+          if ~isempty(res{1}) % found a match!
             currDim = upper(dimOrd(k));
             % ORDER WHEN READING DATA IS XYCZT
             pos = strfind(obj.DIMORDER, currDim);
@@ -336,13 +336,16 @@ classdef TiffDirReader < imageIO.ImageIO
     
     function regExpFp = replaceFormatInFilePattern(obj, filePattern)
     
-      regExpFp = filePattern;
+      % translate into a regular expression by escaping special characters
+      regExpFp = regexptranslate('escape', filePattern);
+      
       % replace parts of the filePattern such as %05d or %03i
       for k = 1:obj.MAX_DIGITS_IN_FORMAT_TAG
         oldStr = ['%0?' num2str(k) '[di]'];
         newStr = ['[0-9]{' num2str(k) ',' num2str(k) '}'];
         regExpFp = regexprep(regExpFp, oldStr, newStr);
       end
+      
       % also replace file patterns like this: %d, %i
       oldStr = '%[di]';
       newStr = ['[0-9]{' num2str(1) ',' num2str(obj.MAX_DIGITS_IN_FORMAT_TAG) '}'];

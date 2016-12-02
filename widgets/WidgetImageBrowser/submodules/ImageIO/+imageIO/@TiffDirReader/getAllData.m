@@ -43,7 +43,7 @@ else % info depend on the file pattern specified!
           for t = 1:obj.time
             % find appropriate image file
             currentVal = [col, row, ch, s, t];
-            if obj.startsWithZero
+            if any(obj.startsWithZero)
               currentVal = currentVal - obj.startsWithZero;
             end
             

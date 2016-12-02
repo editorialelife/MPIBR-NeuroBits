@@ -110,7 +110,7 @@ else % info depend on the file pattern specified!
           for col = tileCol
             % find appropriate image file
             currentVal = [col, row, ch, s, t];
-            if obj.startsWithZero
+            if any(obj.startsWithZero)
               currentVal = currentVal - obj.startsWithZero;
             end
             currentVal = currentVal(indexes);
