@@ -68,7 +68,7 @@ classdef TiffReader < imageIO.ImageIO
     %This function reads all the planes of the image. If the file has
     %only one plane just returns that.
     % INPUT
-    %   
+    %   obj: the TiffReader instance
     % OUTPUT
     %   data: the whole image content
       
