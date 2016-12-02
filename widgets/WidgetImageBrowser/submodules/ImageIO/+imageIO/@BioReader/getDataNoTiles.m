@@ -8,8 +8,8 @@ function [ data ] = getDataNoTiles( obj, varargin )
 % INPUT:
 %   obj: the BioReader instance
 % NAME-VALUE ARGUMENTS
-%   'X' or 'Cols': Specify which columns to extract
-%   'Y' or 'Rows': Specify which rows to extract
+%   'Cols': Specify which columns to extract
+%   'Rows': Specify which rows to extract
 %   'C': Specify which channels to extract
 %   'Z': Specify which planes to extract
 %   'T': Specify which timeseries to extract

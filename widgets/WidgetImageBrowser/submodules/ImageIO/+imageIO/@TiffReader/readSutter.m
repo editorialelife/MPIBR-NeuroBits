@@ -1,8 +1,11 @@
 function [ data ] = readSutter( obj, cols, rows, channels, stacks, timeseries )
 %READSUTTER Read data from Tiff files created with Sutter microscope
 
-data = zeros(rows, cols, channels, stacks, timeseries, obj.datatype);
-idx = 1;
+data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
+  length(timeseries), obj.datatype);
+
+matSize = [obj.channels, obj.time, obj.stacks];
+  
 
 idxS = 1;
 for s = stacks
@@ -11,8 +14,8 @@ for s = stacks
     idxCh = 1;
     for ch = channels
       
+      idx = sub2ind(matSize, ch, t, s);
       img = obj.readImage(idx);
-      idx = idx + 1;
       data(:, :, idxCh, idxS, idxT) = img(rows, cols);
       
       idxCh = idxCh + 1;

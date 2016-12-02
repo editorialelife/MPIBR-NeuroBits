@@ -1,7 +1,7 @@
 function [ data ] = readTifImageJ( obj, cols, rows, channels, stacks )
 %READTIFIMAGEJ Read data from Tiff files in non-standard imageJ format
 
-data = zeros(rows, cols, channels, stacks, obj.datatype);
+data = zeros(length(rows), length(cols), length(channels), length(stacks), obj.datatype);
 
 fseek(obj.filePtr, obj.offsetToImg, 'bof');
 imageSize = obj.height * obj.width * obj.channels;
