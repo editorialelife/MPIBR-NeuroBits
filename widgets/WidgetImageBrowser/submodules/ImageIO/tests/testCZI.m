@@ -19,20 +19,28 @@ for k = 1:5
   fullPath = fullfile(cziFolder, filename);
   cziFile = imageIO.CZIReader(fullPath);
   cziData = cziFile.read();
-  if 3 == ndims(cziData)
-    for m = 1:size(cziData, 4)
-      imshow(imadjust(cziData(:,:,1,m)))
-      pause(0.2)
+  if ismatrix(cziData)
+    imshow(imadjust(cziData))
+    pause(1)
+  elseif 3 == ndims(cziData)
+    for m = 1:size(cziData, 3)
+      imshow(imadjust(cziData(:,:,m)))
+      pause(1)
     end
   elseif 4 == ndims(cziData)
     for m = 1:size(cziData, 4)
       imshow(imadjust(cziData(:,:,1,m)))
-      pause(0.2)
+      pause(1)
     end
   elseif 5 == ndims(cziData)
     for m = 1:size(cziData, 5)
       imshow(imadjust(cziData(:,:,1,1,m)))
-      pause(0.2)
+      pause(1)
+    end
+  else % 6D
+    for m = 1:size(cziData, 6)
+      imshow(imadjust(cziData(:,:,1,1,m)))
+      pause(1)
     end
   end
     

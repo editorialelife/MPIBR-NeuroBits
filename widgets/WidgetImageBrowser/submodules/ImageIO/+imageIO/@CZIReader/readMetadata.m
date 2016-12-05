@@ -135,10 +135,26 @@ function obj = readMetadata( obj )
   % directoryEntry as value
   obj.dirEntryIndices = cell(obj.channels, obj.stacks, obj.time, obj.series);
   for k = 1:length(obj.directoryEntries)
-    C = 1 + obj.directoryEntries(k).C; 
-    Z = 1 + obj.directoryEntries(k).Z;
-    T = 1 + obj.directoryEntries(k).T;
-    S = 1 + obj.directoryEntries(k).S;
+    if ~isempty(obj.directoryEntries(k).C)
+      C = 1 + obj.directoryEntries(k).C;
+    else
+      C = 1;
+    end
+    if ~isempty(obj.directoryEntries(k).Z)
+      Z = 1 + obj.directoryEntries(k).Z;
+    else
+      Z = 1;
+    end
+    if ~isempty(obj.directoryEntries(k).T)
+      T = 1 + obj.directoryEntries(k).T;
+    else
+      T = 1;
+    end
+    if ~isempty(obj.directoryEntries(k).S)
+      S = 1 + obj.directoryEntries(k).S;
+    else
+      S = 1;
+    end
     obj.dirEntryIndices{C, Z, T, S} = [obj.dirEntryIndices{C, Z, T, S},  k];
   end
 end

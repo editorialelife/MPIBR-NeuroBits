@@ -24,10 +24,10 @@ classdef CZIDirectoryEntry
     T;                  % Timeseries this directory refers to
     S;                  % Series this directory refers to
     M;                  % Mosaic position (currently unused, but in principle
-                        % required for accurate plotting of overlapping
-                        % tiles)
-    XPos;               % X starting position for this directory
-    YPos;               % Y starting position for this directory
+                            % required for accurate plotting of overlapping
+                            % tiles)
+    XPos;                   % X starting position for this directory
+    YPos;                   % Y starting position for this directory
   end
   
   methods

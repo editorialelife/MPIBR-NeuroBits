@@ -45,6 +45,7 @@ for m = 1:obj.dimensionCount
     otherwise
       error('CZIReader.analyzeDirEntry: Unrecognized dimension');
   end
+  
 end
 
 end

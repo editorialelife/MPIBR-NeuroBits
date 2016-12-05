@@ -48,7 +48,9 @@ function obj = readRawDirSegm( obj )
   
   %now sort the directory entries according to their M field, so that tiles
   %with higher M are read later and will overwrite overlapping pixels
-  [~, idx] = sort([obj.directoryEntries.M]);
-  obj.directoryEntries = obj.directoryEntries(idx);
+  if ~isempty(obj.directoryEntries(1).M)
+    [~, idx] = sort([obj.directoryEntries.M]);
+    obj.directoryEntries = obj.directoryEntries(idx);
+  end
 end
 
