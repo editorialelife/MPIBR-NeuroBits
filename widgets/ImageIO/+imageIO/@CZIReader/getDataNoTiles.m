@@ -48,7 +48,7 @@ data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
   length(timeseries), length(series), obj.datatype);
 
 idxZ = 1;
-for z = stacks;
+for z = stacks
   idxCh = 1;
   for ch = channels
     idxT = 1;
@@ -56,9 +56,9 @@ for z = stacks;
       idxS = 1;
       for s = series
         %get directory entry
-        dirEntry = obj.directoryEntries(obj.dirEntryIndices(ch, z, t, s));
+        dirEntry = obj.directoryEntries(obj.dirEntryIndices{ch, z, t, s});
         tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntry);
-        data(:, :, idxCh, idxZ, idxT, indS) = tmpImg(rows, cols);
+        data(:, :, idxCh, idxZ, idxT, idxS) = tmpImg(rows, cols);
         idxS = idxS + 1;
       end
       idxT = idxT + 1;

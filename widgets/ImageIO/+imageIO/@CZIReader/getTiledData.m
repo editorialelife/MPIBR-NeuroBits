@@ -37,7 +37,7 @@ p.addParameter('Rows', 1:obj.height, @(x) isvector(x) && all(x > 0) && max(x) <=
 p.addParameter('C', 1:obj.channels, @(x) isvector(x) && all(x > 0) && max(x) <= obj.channels);
 p.addParameter('Z', 1:obj.stacks, @(x) isvector(x) && all(x > 0) && max(x) <= obj.stacks);
 p.addParameter('T', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.time);
-p.addParameter('S', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.series);
+p.addParameter('S', 1:obj.series, @(x) isvector(x) && all(x > 0) && max(x) <= obj.series);
 p.addParameter('TileCols', 1:obj.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesCol);
 p.addParameter('TileRows', 1:obj.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesRow);
 
@@ -53,7 +53,12 @@ tileCols = p.Results.TileCols;
 tileRows = p.Results.TileRows;
 
 if obj.wrongMetadata % deal with messy indices
-  
+  % Cannot get tiled data, because:
+  % A) some information is contradictory
+  % B) in case of stitching the tile position is not on a grid, we would
+  % have to read from all the tiles anyhow
+  disp('Cannot get tiled data when metadata information is contradictory. Please read all data and subset afterwards');
+  return
 else % normal case
   sizeRows = round(length(rows) * (1 + (max(tileRows) - 1) * (1 - obj.tileOverlap)));
   sizeCols = round(length(cols) * (1 + (max(tileCols) - 1) * (1 - obj.tileOverlap)));
@@ -66,7 +71,7 @@ else % normal case
   pixelStartTileCol = 1 + round((0:max(tileCols)-1) * (1 - obj.tileOverlap) * length(cols));
   
   idxZ = 1;
-  for z = stacks;
+  for z = stacks
     idxCh = 1;
     for ch = channels
       idxT = 1;
