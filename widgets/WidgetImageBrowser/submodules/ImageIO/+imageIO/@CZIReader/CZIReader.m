@@ -98,6 +98,7 @@ classdef CZIReader < imageIO.ImageIO
     [data, obj] = readRawSubblockSegm(obj, varargin); % IMPLEMENTED IN SEPARATE FILE
     obj = readRawMetadataSegm(obj);           % IMPLEMENTED IN SEPARATE FILE
     obj = readRawAttachSegm(obj);             % IMPLEMENTED IN SEPARATE FILE   
+    obj = readMetadata(obj);                  % IMPLEMENTED IN SEPARATE FILE
   end
   
 end
