@@ -5,8 +5,8 @@ if ispc
   fishFolder = '\\storage.corp.brain.mpg.de\data\Projects\ImageIO\TestDataFormats\tiffFromSutterMOM\Fish Facility';
   imagFolder = '\\storage.corp.brain.mpg.de\data\Projects\ImageIO\TestDataFormats\tiffFromSutterMOM\Imaging Facility';
 else
-  fishFolder = 'smb://storage.corp.brain.mpg.de/data/Projects/ImageIO/TestDataFormats/tiffFromSutterMOM/Fish Facility';
-  imagFolder = 'smb://storage.corp.brain.mpg.de/data/Projects/ImageIO/TestDataFormats/tiffFromSutterMOM/Imaging Facility';
+  fishFolder = '/Volumes/data/Projects/ImageIO/TestDataFormats/tiffFromSutterMOM/Fish Facility';
+  imagFolder = '/Volumes/data/Projects/ImageIO/TestDataFormats/tiffFromSutterMOM/Imaging Facility';
 end
 
 %% TEST FISH FACILITY DATA - READ ALL DATA
