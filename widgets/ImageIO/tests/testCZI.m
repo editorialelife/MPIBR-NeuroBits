@@ -42,8 +42,7 @@ for k = 1:5
       imshow(imadjust(cziData(:,:,1,1,m)))
       pause(0.5)
     end
-  end
-    
+  end  
 end
 
 %% OTHER FILES - GET A SUBSET OF THE DATA
