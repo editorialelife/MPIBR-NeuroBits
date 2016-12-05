@@ -41,6 +41,18 @@ else
     Z = 1 + dirEntry.Z;
     T = 1 + dirEntry.T;
     S = 1 + dirEntry.S;
+    if isempty(C)
+      C = 1;
+    end
+    if isempty(Z)
+      Z = 1;
+    end
+    if isempty(T)
+      T = 1;
+    end
+    if isempty(S)
+      S = 1;
+    end
     row = obj.rowIndex(dirEntry.YPos);
     col = obj.colIndex(dirEntry.XPos);
     % Manage overlap

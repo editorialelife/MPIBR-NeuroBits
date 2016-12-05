@@ -134,6 +134,9 @@ function obj = readRawMetadataSegm( obj )
     % assume single tile
     obj.height = obj.pixPerTileRow;
     obj.width = obj.pixPerTileCol;
+    obj.numTilesRow = 1;
+    obj.numTilesCol = 1;
+    obj.tileOverlap = 0;
   end
   
   %% The field "DisplaySetting" has info related to the Channels
