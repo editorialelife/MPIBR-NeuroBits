@@ -4,7 +4,7 @@
 if ispc
   imageJFolder = '\\storage.corp.brain.mpg.de\data\Projects\ImageIO\TestDataFormats\tiffImageJ';
 else
-  imageJFolder = 'smb://storage.corp.brain.mpg.de/data/Projects/ImageIO/TestDataFormats/tiffImageJ';
+  imageJFolder = '/Volumes/data/Projects/ImageIO/TestDataFormats/tiffImageJ';
 end
 
 filename = 'stitched_shadowCorrection_bin221.tif';
@@ -16,9 +16,14 @@ reader = imageIO.TiffReader(fullPath);
 %% READ PART OF THE DATA
 dataImageJ = reader.read('Cols', 1:4:reader.width, 'rows', 1:4:reader.height, 'Z', 1:300);
 
+%% GET THE COLORMAP AS WELL
+imgColormap = reader.colormap;
+
 %% SHOW DATA
 disp(['Showing file ' filename])
+
+figure(1)
 for m = 1:size(dataImageJ, 4)
-  imshow(imadjust(dataImageJ(:,:,:,m)))
+  imshow(dataImageJ(:,:,:,m), imgColormap)
   pause(0.05)
 end
