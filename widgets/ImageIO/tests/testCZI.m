@@ -67,8 +67,8 @@ for k = 6:length(cziFiles)
   else
     %extract only 20 slices
     cziData = cziFile.read('Z', 1:20);
-    for m = 1:size(cziData, 4)
-      imshow(imadjust(cziData(:,:,1,m)))
+    for m = 1:size(cziData, 3)
+      imshow(imadjust(cziData(:,:,m)))
       pause(0.2)
     end
   end
