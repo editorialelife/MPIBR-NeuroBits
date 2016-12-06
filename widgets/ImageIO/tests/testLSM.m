@@ -8,10 +8,11 @@ else
 end
 
 %% TEST CZI DATA - READ ALL DATA
-lsmFiles = {'2Positions.lsm', '2x2Tiles.lsm', '5Z.lsm', '5Z10T2x2Tiles2Pos.lsm', '10T.lsm'};
+lsmFiles = {'2Positions.lsm', '2x2Tiles.lsm', '5Z.lsm', '5Z10T2x2Tiles2Pos.lsm', ...
+  '10T.lsm', 'U4_20150328_TileStack_25x_Red_Green_CentralRegion_Z330-360.lsm'};
 
 %% EXAMPLE FILES - READ ALL THE DATA
-for k = 1:5
+for k = 1:length(lsmFiles)
   filename = lsmFiles{k};
   fullPath = fullfile(lsmFolder, filename);
   lsmFile = imageIO.BioReader(fullPath);

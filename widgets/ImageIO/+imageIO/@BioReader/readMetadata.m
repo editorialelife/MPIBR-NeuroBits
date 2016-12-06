@@ -9,20 +9,21 @@ function obj = readMetadata(obj)
 ome = obj.bfPtr.getMetadataStore();
 
 % get Pixels Physical Size
+obj.scaleSize = zeros(1, 3);
 try
-  obj.pixelSizeX = double(ome.getPixelsPhysicalSizeX(0).value());
+  obj.scaleSize(1) = double(ome.getPixelsPhysicalSizeX(0).value());
 catch
-  obj.pixelSizeX = 1;
+  obj.scaleSize(1) = 1;
 end
 try
-  obj.pixelSizeY = double(ome.getPixelsPhysicalSizeY(0).value());
+  obj.scaleSize(2) = double(ome.getPixelsPhysicalSizeY(0).value());
 catch
-  obj.pixelSizeY = 1;
+  obj.scaleSize(2) = 1;
 end
 try
-  obj.pixelSizeZ = double(ome.getPixelsPhysicalSizeZ(0).value());
+  obj.scaleSize(3) = double(ome.getPixelsPhysicalSizeZ(0).value());
 catch
-  obj.pixelSizeZ = 1;
+  obj.scaleSize(3) = 1;
 end
 
 %for tiled data: get total number of tiles and accessory info
@@ -60,30 +61,13 @@ catch
   obj.channels = NaN;
 end
 try
-  obj.dataType = char(ome.getPixelsType(0));
+  obj.datatype = char(ome.getPixelsType(0));
 catch
-  obj.dataType = 'uint16';
-end
-
-%scales
-obj.scaleSize = zeros(1,3);
-try
-  obj.scaleSize(1) = double(ome.getPixelsPhysicalSizeX(0).value());
-catch
-  obj.scaleSize(1) = NaN;
-end
-try
-  obj.scaleSize(2) = double(ome.getPixelsPhysicalSizeY(0).value());
-catch
-  obj.scaleSize(2) = NaN;
-end
-try
-  obj.scaleSize(3) = double(ome.getPixelsPhysicalSizeZ(0).value());
-catch
-  obj.scaleSize(3) = NaN;
+  obj.datatype = 'uint16';
 end
 
 %scaling units
+obj.scaleUnits = cell(1, 3);
 try
   obj.scaleUnits{1} = char(ome.getPixelsPhysicalSizeY(0).unit().getSymbol());
 catch
@@ -117,9 +101,9 @@ catch
   obj.objectiveName = 'Unknown';
 end
 try
-  obj.refractiveIndex = double(ome.getObjectiveSettingsRefractiveIndex(0));
+  obj.refractionIndex = double(ome.getObjectiveSettingsRefractiveIndex(0));
 catch
-  obj.refractiveIndex = NaN;
+  obj.refractionIndex = NaN;
 end
 try
   obj.objectiveMagnification = double(ome.getObjectiveNominalMagnification(0,0));
