@@ -79,10 +79,10 @@ Here's a description on how to use the **imageIoRead** function
    which can be used later to read other data without requiring to parse
    again the file to extract all the metadata information
  
- **INPUT**:
-   file: [mandatory] the input image to be read or a folder containing a collection of
+**INPUT**:
+   * file: [mandatory] the input image to be read or a folder containing a collection of
      tiff images 
-   filePattern: [optional] used only when 'file' is a directory.
+   * filePattern: [optional] used only when 'file' is a directory.
      Specifies the pattern used to number the images. It uses the same
      formatting rules used by Matlab and C 'sprintf' function. For example, 
      if the folder contains files like 'img_001.tif', 'img_002.tif' and so on, 
@@ -92,7 +92,7 @@ Here's a description on how to use the **imageIoRead** function
      the channel and the Z value. If no pattern is specified, it is
      assumed that the images represent a Z stack whose order is
      determined by alphabetical sorting of the filenames
-   dimensionOrder: [optional] used only when 'file' is a directory.
+   * dimensionOrder: [optional] used only when 'file' is a directory.
      Represents the order of the dimensions presented in the file
      pattern. Each dimension is represented by a single character, uppercase.
      Valid values could be 'Z', 'XYCZ', 'T'. If not specified,
@@ -101,12 +101,13 @@ Here's a description on how to use the **imageIoRead** function
      format tags specified, it will be 'XY', if 3 tags specified, it
      will be 'XYC', if four tags specified, it will be 'XYCZ'. With
      five tags, it will be 'XYCZT'
-   overlap: [optional] used only when 'file' is a directory.
+   * overlap: [optional] used only when 'file' is a directory.
      Expected overlap (in percentage) between the tiles. If 'file' is not
      a directory, the value is inferred by the metadata contained in the
      file and, in that case, any user provided value would be overridden.
      If not specified, assumes 0
- **NAME-VALUE INPUT ARGUMENTS**:
+
+**NAME-VALUE INPUT ARGUMENTS**:
    Used to extract parts of the data.The user can specify subset
    of the images by specifying the dimension and the interval of interest
    as a Name-Value pair. If no arguments are given, all the data is
@@ -118,37 +119,41 @@ Here's a description on how to use the **imageIoRead** function
    is subsampled by a factor 2 he will specify Rows = 1:2:600
    and Cols = 1:2:800, and no subset for the tiles (i.e. use
    all tiles).
-   'Cols': Specify which columns to extract
-   'Rows': Specify which rows to extract
-   'Channels': Specify which channels to extract
-   'Stacks': Specify which planes to extract
-   'Time': Specify which timeseries to extract
-   'TileRows': Specify which row tiles to read.
-   'TileCols': Specify which col tiles to read.
- **OUTPUT**:
-   data: image data, up to 5 dimension (in this order: XYCZT). If only one
+   
+   * 'Cols': Specify which columns to extract
+   * 'Rows': Specify which rows to extract
+   * 'Channels': Specify which channels to extract
+   * 'Stacks': Specify which planes to extract
+   * 'Time': Specify which timeseries to extract
+   * 'TileRows': Specify which row tiles to read.
+   * 'TileCols': Specify which col tiles to read.
+
+**OUTPUT**:
+   
+   * data: image data, up to 5 dimension (in this order: XYCZT). If only one
    	channel is extracted (or the input is single channel), the singleton
    	dimension relative to channel is squeezed.
-   imgPtr: imageIO instance (actually instance of a subclass of imageIO)
+   * imgPtr: imageIO instance (actually instance of a subclass of imageIO)
      that can be used to extract other data or access the image properties
      and metadata
- **EXAMPLES**:
-   Reading all the content from single files:
+ 
+**EXAMPLES**:
+   
+  * Reading all the content from single files:
      tiffData = imageIORead('myTiff.tif');
      cziData = imageIORead('aCZIFile.czi');
-   Reading a Z stack from a folder
+  * Reading a Z stack from a folder
      tiffStack = imageIORead('folderWithImages'); % no need to specify pattern
      tiffStack = imageIORead('folderWithImages', 'Stacks', 100:150); % subset
-   Reading complex datasets from a folder
+  * Reading complex datasets from a folder
      multiChTiffStack = imageIORead('folder', 'filePattern_Ch_%d_Z_%04d.tif', 'CZ');
-   Reading a subset from complex datasets from a folder
+  * Reading a subset from complex datasets from a folder
      multiChTiffStack = imageIORead('folder', 'filePattern_Pos_%02dx%02d_Ch_%d_Z_%04d.tif', ...
        'YXCZ', 'Channels', 2, 'TileRows', 1:2, 'TileCols', 1:3);
-   Read from file of size 4000x3000, subset of a factor 4, only first and third channel
+  * Read from file of size 4000x3000, subset of a factor 4, only first and third channel
      bioReaderData = imageIORead('sample.lsm', 'Channels', [1 3], 'Cols', ...
        1:4:4000, 'Rows', 1:4:3000);
- **DATE**: 02.12.2016
- **AUTHOR**: stefano.masneri@brain.mpg.de
+
 
 ## Folder containing test data
 smb://storage.corp.brain.mpg.de/data/Projects/uImread/testdata
