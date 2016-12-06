@@ -1,6 +1,6 @@
 function [data, imgPtr] = imageIORead( file, varargin )
 %IMAGEIOREAD Main function for reading image data using imageIO library
-%   Imageioread provides a single interface for reading image data using
+%   imageIORead provides a single interface for reading image data using
 %   any of the classes specified in the +imageIO package. The easiest way
 %   to use the function is to pass a filename as argument: the function
 %   will return the whole content of the image. Several arguments can be
