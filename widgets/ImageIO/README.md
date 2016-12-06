@@ -65,16 +65,20 @@ The *imageIO* class defines a set of common information and metadata about the i
 ## Example usage
 
 For details regarding usage of specific classes, please check the Matlab documentation of each class in the **+imageIO** package.
-Here's a description on how to use the **imageIoRead** function
+
+Here's a description on how to use the **imageIORead** function:
 
 **IMAGEIOREAD** Main function for reading image data using imageIO library
    *imageIORead* provides a single interface for reading image data using
-   any of the classes specified in the +imageIO package. The easiest way
-   to use the function is to pass a filename as argument: the function
+   any of the classes specified in the +imageIO package.
+   
+   The easiest way to use the function is to pass a filename as argument: the function
    will return the whole content of the image. Several arguments can be
    passed to restrict the amount of data returned by the function or, in
    case the user passed a folder as input, to specify the file pattern of
-   the images to be read in the folder. When the user specifies a second
+   the images to be read in the folder.
+   
+   When the user specifies a second
    output argument the function returns also the image reader object,
    which can be used later to read other data without requiring to parse
    again the file to extract all the metadata information
