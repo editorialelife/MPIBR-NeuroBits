@@ -125,6 +125,9 @@ function obj = readRawMetadataSegm( obj )
     obj.numTilesRow = str2double(tileInfo.TilesY.Text);
     obj.numTilesCol = str2double(tileInfo.TilesX.Text);
     obj.tileOverlap = str2double(tileInfo.TileAcquisitionOverlap.Text);
+    if obj.tileOverlap > 1
+      obj.tileOverlap = obj.tileOverlap / 100;
+    end
     obj.width = round((obj.numTilesCol - 1) * (1 - obj.tileOverlap) * obj.pixPerTileCol + ...
       obj.pixPerTileCol);
     obj.height = round((obj.numTilesRow - 1) * (1 - obj.tileOverlap) * obj.pixPerTileRow + ...
