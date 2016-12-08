@@ -60,7 +60,7 @@ classdef TiffDirReader < imageIO.ImageIO
     
       % args check
       if nargin > 4
-        disp('TiffDirReader: All arguments after the 3rd will be ignored')
+        disp('TiffDirReader: All arguments after the 4th will be ignored')
       end
       if 0 == nargin
         folder = uigetdir('', 'Select folder containing tiff images:');
