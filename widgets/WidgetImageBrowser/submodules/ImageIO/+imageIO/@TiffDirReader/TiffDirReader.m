@@ -23,7 +23,7 @@ classdef TiffDirReader < imageIO.ImageIO
   end
   
   methods
-    function obj = TiffDirReader(folder, filePattern, dimensionOrder)
+    function obj = TiffDirReader(folder, filePattern, dimensionOrder, overlap)
     %TIFFDIRREADER Class constructor
     %The constructor checks at first if the user provided a directory as argument. 
     % If no directory is passed, a gui asks the user to select a directory.
