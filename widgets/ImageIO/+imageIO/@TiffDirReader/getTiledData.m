@@ -159,19 +159,19 @@ end
 data = squeeze(data);
 
 % remove zero rows and cols
-if ismatrix(data)
-  data(1:pixelStartTileRow(tileRow(1)) - 1, :) = [];
-  data(:, 1:pixelStartTileCol(tileCol(1)) - 1) = [];
-elseif 3 == ndims(data)
-  data(1:pixelStartTileRow(tileRow(1)) - 1, :, :) = [];
-  data(:, 1:pixelStartTileCol(tileCol(1)) - 1, :) = [];
-elseif 4 == ndims(data)
-  data(1:pixelStartTileRow(tileRow(1)) - 1, :, :, :) = [];
-  data(:, 1:pixelStartTileCol(tileCol(1)) - 1, :, :) = [];
-else % 5 == ndims(data)
-  data(1:pixelStartTileRow(tileRow(1)) - 1, :, :, :, :) = [];
-  data(:, 1:pixelStartTileCol(tileCol(1)) - 1, :, :, :) = [];
-end
+% if ismatrix(data)
+%   data(1:pixelStartTileRow(tileRow(1)) - 1, :) = [];
+%   data(:, 1:pixelStartTileCol(tileCol(1)) - 1) = [];
+% elseif 3 == ndims(data)
+%   data(1:pixelStartTileRow(tileRow(1)) - 1, :, :) = [];
+%   data(:, 1:pixelStartTileCol(tileCol(1)) - 1, :) = [];
+% elseif 4 == ndims(data)
+%   data(1:pixelStartTileRow(tileRow(1)) - 1, :, :, :) = [];
+%   data(:, 1:pixelStartTileCol(tileCol(1)) - 1, :, :) = [];
+% else % 5 == ndims(data)
+%   data(1:pixelStartTileRow(tileRow(1)) - 1, :, :, :, :) = [];
+%   data(:, 1:pixelStartTileCol(tileCol(1)) - 1, :, :, :) = [];
+% end
 
 end
 
