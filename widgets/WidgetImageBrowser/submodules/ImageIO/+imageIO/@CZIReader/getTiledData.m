@@ -60,15 +60,15 @@ if obj.wrongMetadata % deal with messy indices
   disp('Cannot get tiled data when metadata information is contradictory. Please read all data and subset afterwards');
   return
 else % normal case
-  sizeRows = round(length(rows) * (1 + (max(tileRows) - 1) * (1 - obj.tileOverlap)));
-  sizeCols = round(length(cols) * (1 + (max(tileCols) - 1) * (1 - obj.tileOverlap)));
+  sizeRows = round(length(rows) * (1 + (length(tileRows) - 1) * (1 - obj.tileOverlap)));
+  sizeCols = round(length(cols) * (1 + (length(tileCols) - 1) * (1 - obj.tileOverlap)));
   
   data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
     length(timeseries), length(series), obj.datatype);
   
   %get index of start of each new tile
-  pixelStartTileRow = 1 + round((0:max(tileRows)-1) * (1 - obj.tileOverlap) * length(rows));
-  pixelStartTileCol = 1 + round((0:max(tileCols)-1) * (1 - obj.tileOverlap) * length(cols));
+  pixelStartTileRow = 1 + round((0:length(tileRows)-1) * (1 - obj.tileOverlap) * length(rows));
+  pixelStartTileCol = 1 + round((0:length(tileCols)-1) * (1 - obj.tileOverlap) * length(cols));
   
   idxZ = 1;
   for z = stacks
