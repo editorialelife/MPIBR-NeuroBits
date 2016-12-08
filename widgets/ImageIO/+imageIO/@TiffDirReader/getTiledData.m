@@ -114,7 +114,9 @@ else % info depend on the file pattern specified!
       for t = timeseries
 
         %Create the whole 2D image
+        idxTr = 1;
         for row = tileRow
+          idxTc = 1;
           for col = tileCol
             % find appropriate image file
             currentVal = [col, row, ch, s, t];
@@ -132,10 +134,17 @@ else % info depend on the file pattern specified!
             assert(size(img, 2) == obj.pixPerTileCol);
             % get size of image (only the part we want)
             [rr, cc] = size(img(rows, cols));
-            data(pixelStartTileRow(row) : pixelStartTileRow(row) + rr - 1, ...
-                 pixelStartTileCol(col) : pixelStartTileCol(col) + cc - 1, ...
+            try
+              data(pixelStartTileRow(idxTr) : pixelStartTileRow(idxTr) + rr - 1, ...
+                 pixelStartTileCol(idxTc) : pixelStartTileCol(idxTc) + cc - 1, ...
                  idxCh, idxS, idxT) = img(rows, cols);
+            catch ME
+              warning('Ohoh...')
+              rethrow(ME)
+            end
+            idxTc = idxTc + 1;
           end
+          idxTr = idxTr + 1;
         end
 
         idxT = idxT + 1;
