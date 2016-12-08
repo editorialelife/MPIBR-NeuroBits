@@ -194,6 +194,9 @@ classdef TiffDirReader < imageIO.ImageIO
       obj.channels = length(imgInfo(1).BitsPerSample);
       tiffPtr = Tiff(obj.filenames{1});
       obj.bps = tiffPtr.getTag('BitsPerSample');
+      if ~isscalar(obj.bps)
+        obj.bps = obj.bps(1);
+      end
      
       % retrieve datatype
       sampleFormat = tiffPtr.getTag('SampleFormat');
@@ -210,8 +213,11 @@ classdef TiffDirReader < imageIO.ImageIO
           else
             warning('TiffDirReader.readMetadata: unrecognized BitsPerSample value')
           end
+        case 4 %COMPLEX OR UNDEFINED
+          warning('TiffDirReader.readMetadata: unsupported sample format')
+          obj.datatype = ['uint' num2str(obj.bps)]; % default
         otherwise  % Void or complex types are unsupported
-        warning('TiffDirReader.readMetadata: unsupported sample format')
+          obj.datatype = ['uint' num2str(obj.bps)]; % default
       end
       tiffPtr.close();
       obj = assignDimensions(obj);
