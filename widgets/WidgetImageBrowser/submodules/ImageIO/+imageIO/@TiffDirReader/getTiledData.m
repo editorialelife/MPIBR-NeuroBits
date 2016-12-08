@@ -55,8 +55,8 @@ timeseries = p.Results.T;
 tileCol = p.Results.TileCols;
 tileRow = p.Results.TileRows;
 
-sizeRows = round(length(rows) * (1 + (max(tileRow) - 1) * (1 - obj.tileOverlap)));
-sizeCols = round(length(cols) * (1 + (max(tileCol) - 1) * (1 - obj.tileOverlap)));
+sizeRows = round(length(rows) * (1 + (length(tileRow) - 1) * (1 - obj.tileOverlap)));
+sizeCols = round(length(cols) * (1 + (length(tileCol) - 1) * (1 - obj.tileOverlap)));
 data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
   length(timeseries), obj.datatype);
 
@@ -94,9 +94,17 @@ else % info depend on the file pattern specified!
   indexes = indexes(1:numValid);
   
   % get index of start of each new tile
-  pixelStartTileRow = 1 + round((0:max(tileRow)-1) * (1 - obj.tileOverlap) * length(rows));
-  pixelStartTileCol = 1 + round((0:max(tileCol)-1) * (1 - obj.tileOverlap) * length(cols));
-
+  if isscalar(tileRow)
+    pixelStartTileRow = 1;
+  else
+    pixelStartTileRow = 1 + round((0:length(tileRow)-1) * (1 - obj.tileOverlap) * length(rows));
+  end
+  if isscalar(tileCol)
+    pixelStartTileCol = 1;
+  else
+    pixelStartTileCol = 1 + round((0:length(tileCol)-1) * (1 - obj.tileOverlap) * length(cols));
+  end
+  
   % For every combination of Time, Z, Channel
   idxS = 1;
   for s = stacks
