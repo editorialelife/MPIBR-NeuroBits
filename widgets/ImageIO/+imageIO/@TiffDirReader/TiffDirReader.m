@@ -80,6 +80,9 @@ classdef TiffDirReader < imageIO.ImageIO
       end
       if nargin >= 4
         obj.tileOverlap = overlap;
+        if obj.tileOverlap > 1
+          obj.tileOverlap = obj.tileOverlap / 100;
+        end
       else
         obj.tileOverlap = 0;
       end
