@@ -86,40 +86,8 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %   imageIO, imageIO.imageIO, imageIO.TiffReader, imageIO.BioReader, 
 %   imageIO.CZIReader, imageIO.TiffDirReader
 
-% parse the input parameters. At first, check only the mandatory parameter
-% and the ones which do not perform checking with the input file dimensions
-
-p = inputParser();
-p.KeepUnmatched = true;
-
-p.addRequired('file', @(x) ischar(x) && exist(x, 'file'));
-
-p.addOptional('filePattern', '', @ischar);
-p.addOptional('dimensionOrder', 'Z', @(x) ischar(x) && length(x) <= 5);
-p.addOptional('overlap', 0, @(x) isscalar(x) && isnumeric(x) && x>= 0 && x < 100);
-
-p.parse(file, varargin{:})
-
-filePattern = p.Results.filePattern;
-dimensionOrder = p.Results.dimensionOrder;
-overlap = p.Results.overlap;
-
-
-% check if is directory or file, and in case the file extension. Then
-% create an adequate instance that will read the file
-if isdir(file)
-  imgPtr = imageIO.TiffDirReader(file, filePattern, dimensionOrder, overlap);
-else %ok, which type of file?
-  [~, ~, ext] = fileparts(file);
-  switch ext
-    case '.czi'
-      imgPtr = imageIO.CZIReader(file);
-    case {'.tif', '.tiff'}
-      imgPtr = imageIO.TiffReader(file);
-    otherwise %assume it could be opened using the BioFormatReader
-      imgPtr = imageIO.BioReader(file);
-  end
-end
+% parse the input parameters using imageIOPtr
+imgPtr = imageIOPtr(file, varargin{:});
 
 % now complete the parse of the input. Throw an error if the users tries to
 % extract data which is outside the range specified by the img dimensions
