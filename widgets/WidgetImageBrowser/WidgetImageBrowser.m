@@ -21,7 +21,7 @@ classdef WidgetImageBrowser < handle
     properties
         
         file
-        meta
+        imgPtr
         cdata
         clim
         channel
@@ -90,7 +90,6 @@ classdef WidgetImageBrowser < handle
         PUSHBUTTON_MINORSIZE = [1, 1, 16, 16];
         POPUP_SIZE = [1, 1, 90, 26];
         
-        
         IMG_WINDOW_MARGIN = 32;
         IMG_CLIM_TYPE = {' 8 bit', '12 bit', '16 bit'};
         IMG_CLIM_MAX = [2^8, 2^12, 2^16];
@@ -110,6 +109,7 @@ classdef WidgetImageBrowser < handle
         
         function obj = WidgetImageBrowser(varargin)
             %WIDGETIMAGEBROWSER class constructor
+            addpath(genpath('./submodules/'));
             
             parserObj = inputParser;
             addParameter(parserObj, 'Parent', [], @isgraphics);
@@ -162,7 +162,6 @@ classdef WidgetImageBrowser < handle
             
             
             obj.file = [];
-            obj.meta = [];
             obj.channel = 1;
             obj.stack = 1;
             
@@ -174,11 +173,12 @@ classdef WidgetImageBrowser < handle
         function obj = dispose(obj)
             %DISPOSE class destructor
             
-            % remove image window grid
-            if isa(obj.iw_grid, 'uiGridLayout')
-                delete(obj.iw_grid);
+            % remove user interface grid
+            if isa(obj.ui_grid, 'uiGridLayout')
+                rmpath(genpath('./uiGridLayout/'));
+                delete(obj.ui_grid);
             end
-            
+
             % remove user interface grid
             if isa(obj.ui_grid, 'uiGridLayout')
                 delete(obj.ui_grid);
@@ -521,7 +521,6 @@ classdef WidgetImageBrowser < handle
             
         end
         
-        
         function obj = fcnCallback_changeImage(obj, hSrc, ~)
             %FCNCALLBACK_CHANGEIMAGE increment / decrement
             % stack / channel counters and calls read pipeline
@@ -532,13 +531,14 @@ classdef WidgetImageBrowser < handle
                     
                     obj.channel = obj.channel - 1;
                     if (obj.channel < 1)
-                        obj.channel = obj.meta.channels;
+                        obj.channel = obj.imgPtr.channels;
+                        
                     end
                     
                 case obj.ui_pushButton_nextChannel
                     
                     obj.channel = obj.channel + 1;
-                    if (obj.channel > obj.meta.channels)
+                    if (obj.channel > obj.imgPtr.channels)
                         obj.channel = 1;
                     end
                     
@@ -546,13 +546,13 @@ classdef WidgetImageBrowser < handle
                     
                     obj.stack = obj.stack - 1;
                     if (obj.stack < 1)
-                        obj.stack = obj.meta.stacks;
+                        obj.stack = obj.imgPtr.stacks;
                     end
                     
                 case obj.ui_pushButton_nextStack
                     
                     obj.stack = obj.stack + 1;
-                    if (obj.stack > obj.meta.stacks)
+                    if (obj.stack > obj.imgPtr.stacks)
                         obj.stack = 1;
                     end
                     
@@ -565,7 +565,7 @@ classdef WidgetImageBrowser < handle
                 
             else
                 
-                obj.readCData();
+                obj.cdata = obj.imgPtr.read('C', obj.channel, 'Z', obj.stack);
                 obj.updateCData();
                 obj.status();
                 
@@ -573,7 +573,6 @@ classdef WidgetImageBrowser < handle
             
             
         end
-        
         
         function obj = fcnCallback_project(obj, ~, ~)
             %FCNCALLBACK_PROJECT apply projection
@@ -606,7 +605,6 @@ classdef WidgetImageBrowser < handle
             
         end
         
-        
         function obj = fcnCallback_pickClass(obj, hSrc, ~)
             
             % get current value
@@ -638,7 +636,6 @@ classdef WidgetImageBrowser < handle
             end
             
         end
-        
         
         function obj = fcnCallback_editCLim(obj, hSrc, ~)
             %FCNCALLBACK_EDITCLIM edit CLim range
@@ -679,7 +676,6 @@ classdef WidgetImageBrowser < handle
             obj.rescale(obj.clim);
             
         end
-        
         
         function obj = fcnCallback_pushCLim(obj, hSrc, ~)
             %FCNCALLBACK_PUSHCLIM adjust CLim range
@@ -726,14 +722,12 @@ classdef WidgetImageBrowser < handle
             
         end
         
-        
         function obj = fcnCallback_autoCLim(obj, ~, ~)
             %FCNCALLBACK set CLim to current image min and max values
             
             obj.autoscale();
             
         end
-        
         
     end
     
@@ -744,7 +738,7 @@ classdef WidgetImageBrowser < handle
             %ENABLE activate/deactivate buttons
             
             % update stack buttons callbacks
-            if obj.meta.stacks == 1
+            if obj.imgPtr.stacks == 1
                 
                 set(obj.ui_pushButton_prevStack, 'Enable', 'off');
                 set(obj.ui_pushButton_nextStack, 'Enable', 'off');
@@ -763,7 +757,7 @@ classdef WidgetImageBrowser < handle
             end
             
             % update channel buttons callback
-            if obj.meta.channels == 1
+            if obj.imgPtr.channels == 1
                 
                 set(obj.ui_pushButton_prevChannel, 'Enable', 'off');
                 set(obj.ui_pushButton_nextChannel, 'Enable', 'off');
@@ -787,7 +781,6 @@ classdef WidgetImageBrowser < handle
             
         end
         
-        
         function obj = open(obj, fileName)
             %OPEN open new file name to browser
             
@@ -796,10 +789,9 @@ classdef WidgetImageBrowser < handle
             [~, fileTag] = fileparts(obj.file);
             set(obj.iw_figure, 'Name', fileTag);
             
-            % read meta info
-            obj.readMetaData();
+            obj.imgPtr = imageIOPtr(fileName);
             
-            % either read curren or project
+            % either read current or project
             if get(obj.ui_checkBox_keepProjection, 'Value') == 1
                 
                 obj.project();
@@ -808,7 +800,7 @@ classdef WidgetImageBrowser < handle
                 
                 obj.stack = 1;
                 obj.channel = 1;
-                obj.readCData();
+                obj.cdata = obj.imgPtr.read('C', obj.channel, 'Z', obj.stack);
                 obj.updateCData();
                 
             end
@@ -857,7 +849,6 @@ classdef WidgetImageBrowser < handle
             
         end
         
-        
         function obj = rescale(obj, clim)
             %RESCALE sets axes clim property to the required one
             
@@ -868,23 +859,6 @@ classdef WidgetImageBrowser < handle
             % update CLim axes property
             set(obj.iw_axes, 'CLim', clim);
             
-        end
-        
-        function obj = readMetaData(obj)
-            %READMETADATA reads meta data from image file
-            
-            obj.meta = readLSMInfo(obj.file);
-            
-        end
-        
-        function obj = readCData(obj)
-            %READCDATA reads pixel data from image file
-            
-            obj.cdata = readLSMImage(obj.file,...
-                                     obj.meta,...
-                                     obj.stack,...
-                                     obj.channel);
-                                 
         end
         
         function obj = updateCData(obj)
@@ -911,16 +885,9 @@ classdef WidgetImageBrowser < handle
         
         function obj = project(obj)
             %PROJECT executes image projection
-            
-            % old stack position
-            stackNow = obj.stack;
-            obj.stack = (1:obj.meta.stacks)';
-            
+           
             % read full stack
-            obj.readCData();
-            
-            % restore stack position
-            obj.stack = stackNow;
+            obj.cdata = obj.imgPtr.read('C', obj.channel);
             
             % get value from pop up
             switch get(obj.ui_popup_pickProjection, 'Value')
@@ -951,16 +918,15 @@ classdef WidgetImageBrowser < handle
             
         end
         
-        
         function obj = status(obj)
             
             % compose message
             varchar = sprintf('%s, %dx%d (%.2fx%.2f um), intensity [%d,%d]',...
                               obj.IMG_CLIM_TYPE{get(obj.iw_popup_pickClass,'Value')},...
-                              obj.meta.height,...
-                              obj.meta.width,...
-                              obj.meta.height * obj.meta.yResolution,...
-                              obj.meta.width * obj.meta.xResolution,...
+                              obj.imgPtr.height,...
+                              obj.imgPtr.width,...
+                              obj.imgPtr.height * obj.imgPtr.scaleSize(2),...
+                              obj.imgPtr.width * obj.imgPtr.scaleSize(1),...
                               min(obj.cdata(:)),...
                               max(obj.cdata(:)));
            
@@ -974,7 +940,7 @@ classdef WidgetImageBrowser < handle
            % update channel
            set(obj.ui_text_counterChannel, 'String',...
                sprintf('channel %d / %d',...
-               obj.channel, obj.meta.channels));
+               obj.channel, obj.imgPtr.channels));
            obj.ui_grid.align(obj.ui_text_counterChannel,...
                'VIndex', 1,...
                'HIndex', 1:2,...
@@ -983,7 +949,7 @@ classdef WidgetImageBrowser < handle
            % update stack
            set(obj.ui_text_counterStack, 'String',...
                sprintf('stack %d / %d',...
-               obj.stack, obj.meta.stacks));
+               obj.stack, obj.imgPtr.stacks));
            obj.ui_grid.align(obj.ui_text_counterStack,...
                'VIndex', 2,...
                'HIndex', 1:2,...
