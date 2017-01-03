@@ -42,7 +42,7 @@ stacks = p.Results.Z;
 timeseries = p.Results.T;
 
 data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
-  length(time), obj.datatype);
+  length(timeseries), obj.datatype);
 
 %set series
 obj.bfPtr.setSeries(0);
