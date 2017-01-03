@@ -49,7 +49,7 @@ p.KeepUnmatched = true;
 
 p.addRequired('file', @(x) ischar(x) && exist(x, 'file'));
 
-p.addOptional('filePattern', '', @(x) ischar(x));
+p.addOptional('filePattern', '', @ischar);
 p.addOptional('dimensionOrder', 'Z', @(x) ischar(x) && length(x) <= 5);
 p.addOptional('overlap', 0, @(x) isscalar(x) && isnumeric(x) && x>= 0 && x < 100);
 
