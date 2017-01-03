@@ -86,38 +86,27 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %   imageIO, imageIO.imageIO, imageIO.TiffReader, imageIO.BioReader, 
 %   imageIO.CZIReader, imageIO.TiffDirReader
 
-%check input
+% parse the input parameters. At first, check only the mandatory parameter
+% and the ones which do not perform checking with the input file dimensions
+
 p = inputParser();
 p.KeepUnmatched = true;
 
 p.addRequired('file', @(x) ischar(x) && exist(x, 'file'));
 
-p.addOptional('filePattern', '', ischar);
+p.addOptional('filePattern', '', @ischar);
 p.addOptional('dimensionOrder', 'Z', @(x) ischar(x) && length(x) <= 5);
 p.addOptional('overlap', 0, @(x) isscalar(x) && isnumeric(x) && x>= 0 && x < 100);
-
-p.addParameter('Cols', 1:obj.pixPerTileCol, @(x) isvector(x) && all(x > 0) && max(x) <= obj.pixPerTileCol);
-p.addParameter('Rows', 1:obj.pixPerTileRow, @(x) isvector(x) && all(x > 0) && max(x) <= obj.pixPerTileRow);
-p.addParameter('Channels', 1:obj.channels, @(x) isvector(x) && all(x > 0) && max(x) <= obj.channels);
-p.addParameter('Stacks', 1:obj.stacks, @(x) isvector(x) && all(x > 0) && max(x) <= obj.stacks);
-p.addParameter('Time', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.time);
-p.addParameter('TileCols', 1:obj.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesCol);
-p.addParameter('TileRows', 1:obj.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesRow);
 
 p.parse(file, varargin{:})
 
 filePattern = p.Results.filePattern;
 dimensionOrder = p.Results.dimensionOrder;
 overlap = p.Results.overlap;
-rows = p.Results.Rows;
-cols = p.Results.Cols;
-channels = p.Results.Channels;
-stacks = p.Results.stacks;
-timeseries = p.Results.Time;
-tileCols = p.Results.TileCols;
-tileRows = p.Results.TileRows;
 
-% check if is directory or file, and in case the file extension
+
+% check if is directory or file, and in case the file extension. Then
+% create an adequate instance that will read the file
 if isdir(file)
   imgPtr = imageIO.TiffDirReader(file, filePattern, dimensionOrder, overlap);
 else %ok, which type of file?
@@ -132,7 +121,29 @@ else %ok, which type of file?
   end
 end
 
-% read the required data 
+% now complete the parse of the input. Throw an error if the users tries to
+% extract data which is outside the range specified by the img dimensions
+p = inputParser();
+p.KeepUnmatched = true;
+p.addParameter('Cols', 1:imgPtr.pixPerTileCol, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.pixPerTileCol);
+p.addParameter('Rows', 1:imgPtr.pixPerTileRow, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.pixPerTileRow);
+p.addParameter('Channels', 1:imgPtr.channels, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.channels);
+p.addParameter('Stacks', 1:imgPtr.stacks, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.stacks);
+p.addParameter('Time', 1:imgPtr.time, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.time);
+p.addParameter('TileCols', 1:imgPtr.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.numTilesCol);
+p.addParameter('TileRows', 1:imgPtr.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.numTilesRow);
+
+p.parse(varargin{:});
+
+rows = p.Results.Rows;
+cols = p.Results.Cols;
+channels = p.Results.Channels;
+stacks = p.Results.Stacks;
+timeseries = p.Results.Time;
+tileCols = p.Results.TileCols;
+tileRows = p.Results.TileRows;
+
+% finally, read the required data 
 data = imgPtr.read('X', cols, 'Y', rows, 'C', channels, 'Z', stacks, ...
   'T', timeseries, 'TileCols', tileCols, 'TileRows', tileRows);
 

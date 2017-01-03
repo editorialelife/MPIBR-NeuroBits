@@ -171,7 +171,7 @@ classdef TiffReader < imageIO.ImageIO
         obj.height = imgInfo(1).Height;
         obj.width = imgInfo(1).Width;
         obj.channels = length(imgInfo(1).BitsPerSample);
-        obj.time = nan; % Or should we set 1?
+        obj.time = 1;
         % Standard TIFF does not have multitiled images
         obj.tile = 1;
         obj.numTilesRow = 1;
