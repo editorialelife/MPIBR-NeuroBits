@@ -2,17 +2,18 @@ classdef WidgetImageBrowser < handle
     %
     % WidgetImageBrowser
     %
-    % GUI Widget for browsing stack multichannel LSM/TIFF image
+    % GUI Widget for browsing stack multichannel images
+    % supported by ImageIO
     % user loads an image file
     % browser either stacks or channels
     % visualize Max, Sum or Std projections
     %
     % requires:
-    %    readLSMInfo.m
-    %    readLSMImage.m
-    %    uiGridLayout.m
+    %    uiGridLayout
+    %    ImageIO
     %
     % Georgi Tushev
+    % Friedrich Kretschmer
     % sciclist@brain.mpg.de
     % Max-Planck Institute For Brain Research
     %
