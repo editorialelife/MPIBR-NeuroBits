@@ -111,6 +111,7 @@ classdef TiffReader < imageIO.ImageIO
         end
       end
       
+      data = squeeze(data);
     end
     
     function img = readImage( obj, n )
