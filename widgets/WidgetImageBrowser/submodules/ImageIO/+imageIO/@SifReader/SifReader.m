@@ -10,10 +10,14 @@ classdef SifReader < imageIO.ImageIO
   %   SEE ALSO: imageIO.imageIO
   
   properties
+    useAndorMex; % if on windows, true --> use Andor wrapper
   end
   
   properties (Constant = true)
-    % ANDOR API codes
+    % ANDOR API CONSTANTS
+    ATSIF_ReadAll = 0;
+    ATSIF_ReadHeaderOnly = 1; 
+    % ANDOR API RETURN codes
     ATSIF_SUCCESS = 22002;
     ATSIF_SIF_FORMAT_ERROR = 22003;
     ATSIF_NO_SIF_LOADED = 22004;
@@ -23,7 +27,48 @@ classdef SifReader < imageIO.ImageIO
   end
   
   methods
+    function obj = SifReader(filename)
+      % SIFREADER Constructs the BioReader object
+      % The constructor calls the superclass constructor and then tries to
+      % extract as many metadata as possible
+      
+      % Must call explicitly because we pass one argument
+      obj = obj@imageIO.ImageIO(filename);
+      
+      % Check OS, will be used to decide how to extract data
+      if ispc
+        obj.useAndorMex = true;
+        openWin(filename);
+      else
+        warning('SifReader: Reading data on Linux / Mac can fail or be inaccurate')
+        obj.useAndorMex = false;
+      end
+      
+      % Get metadata
+      obj = obj.readMetadata();
+    end
   end
+  
+  methods (Access = protected)
+    function obj = readMetadata(obj)
+    %READMETADATA Read all object metadata
+    end
+    
+    function close(obj)
+    %CLOSE close the file identifier  
+      if obj.useAndorMex
+        atsif_closefile;
+      else
+        %TODO
+      end
+    end
+    
+    function openWin(filename)
+      atsif_setfileaccessmode(obj.ATSIF_ReadAll);
+      
+    end
+  end
+
   
 end
 

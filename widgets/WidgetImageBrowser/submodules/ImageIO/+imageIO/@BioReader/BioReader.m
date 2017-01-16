@@ -19,7 +19,7 @@ classdef BioReader < imageIO.ImageIO
     % The constructor calls the superclass constructor and then tries to
     % extract as many metadata as possible
     
-      % Must call explictily because we pass one argument
+      % Must call explicitly because we pass one argument
       obj = obj@imageIO.ImageIO(filename);
       
       obj.bfPtr = bfGetReader(obj.fileFullPath);
