@@ -39,7 +39,12 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %     file and, in that case, any user provided value would be overridden.
 %     If not specified, assumes 0
 % NAME-VALUE INPUT ARGUMENTS:
-%   Used to extract parts of the data.The user can specify subset
+%   'closeFile': Specify if the file should be closed after reading the data.
+%     The default is true, should be set to false if the user wants to
+%     perform multiple reads on the same imageIOPtr.
+%
+%   The following name value parameters are used to extract only part of
+%   the data. The user can specify subset
 %   of the images by specifying the dimension and the interval of interest
 %   as a Name-Value pair. If no arguments are given, all the data is
 %   extracted. For the Cols and Rows argument, the interval is intented
@@ -93,6 +98,7 @@ imgPtr = imageIOPtr(file, varargin{:});
 % extract data which is outside the range specified by the img dimensions
 p = inputParser();
 p.KeepUnmatched = true;
+p.addParameter('closeFile', true, @(x) isscalar(x) && islogical(x));
 p.addParameter('Cols', 1:imgPtr.pixPerTileCol, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.pixPerTileCol);
 p.addParameter('Rows', 1:imgPtr.pixPerTileRow, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.pixPerTileRow);
 p.addParameter('Channels', 1:imgPtr.channels, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.channels);
@@ -103,6 +109,7 @@ p.addParameter('TileRows', 1:imgPtr.numTilesRow, @(x) isvector(x) && all(x > 0) 
 
 p.parse(varargin{:});
 
+closeFile = p.Results.closeFile;
 rows = p.Results.Rows;
 cols = p.Results.Cols;
 channels = p.Results.Channels;
@@ -114,6 +121,10 @@ tileRows = p.Results.TileRows;
 % finally, read the required data 
 data = imgPtr.read('X', cols, 'Y', rows, 'C', channels, 'Z', stacks, ...
   'T', timeseries, 'TileCols', tileCols, 'TileRows', tileRows);
+
+if closeFile
+  imgPtr.close();
+end
 
 end
 

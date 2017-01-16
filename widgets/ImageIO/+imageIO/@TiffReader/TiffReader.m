@@ -42,7 +42,7 @@ classdef TiffReader < imageIO.ImageIO
     %possible from the file. No actual data is read in the constructor
     %SEE ALSO imageIO.ImageIO.ImageIO
       
-      % Must call explictily because we pass one argument
+      % Must call explicitly because we pass one argument
       obj = obj@imageIO.ImageIO(filename);
       
       % Use Matlab interface
