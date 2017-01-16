@@ -5,6 +5,9 @@ classdef ND2Reader < imageIO.BioReader
   %   BioFormat's reverse-engineered reader. This class inherits then from
   %   BioReader and has been created for clarity and to allow modifications
   %   in the future, if/when an official specification is available.
+  %   Author: Stefano.Masneri@brain.mpge.de
+  %   Date: 16.01.2017
+  %   SEE ALSO: imageIO.imageIO, imageIO.BioReader
   
   properties
   end
