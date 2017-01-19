@@ -22,13 +22,17 @@ for m = 1:obj.dimensionCount
       obj.T = dimEntry.startCoordinate;
     case 'R' % Rotation – used in acquisition modes where the data is recorded
       %  from various angles.
-      disp('Dimension R currently not supported')
+      if obj.verbose
+        disp('Dimension R currently not supported')
+      end
     case 'S' % Scene – for clustering items in X/Y direction (data belonging to
       %  contiguous regions of interests in a mosaic image).
       obj.S = dimEntry.start;
     case 'I' % Illumination - illumination direction index (e.g. from left=0, from
       %   right=1).
-      disp('Dimension I currently not supported')
+      if obj.verbose
+        disp('Dimension I currently not supported')
+      end
     case 'B' % (Acquisition) Block index in segmented experiments
       %disp('Dimension B currently not supported and dropped by the file specification')
       %BPos = [BPos dimEntry.startCoordinate];
@@ -39,9 +43,13 @@ for m = 1:obj.dimensionCount
         disp('Size of M > 1 for this block')
       end
     case 'H' % Phase index – for specific acquisition methods.
-      disp('Dimension H currently not supported')
+      if obj.verbose
+        disp('Dimension H currently not supported')
+      end
     case 'V' % View index (for multi – view images, e.g. SPIM)
-      disp('Dimension V currently not supported')
+      if obj.verbose
+        disp('Dimension V currently not supported')
+      end
     otherwise
       error('CZIReader.analyzeDirEntry: Unrecognized dimension');
   end

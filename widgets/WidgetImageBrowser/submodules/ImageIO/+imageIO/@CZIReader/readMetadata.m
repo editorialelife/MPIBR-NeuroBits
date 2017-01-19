@@ -99,7 +99,11 @@ function obj = readMetadata( obj )
       dirEntry = obj.directoryEntries(k);
       col = 1 + dirEntry.XPos;
       row = 1 + dirEntry.YPos;
-      S = 1 + dirEntry.S;
+      if isempty(dirEntry.S)
+        S = 1;
+      else
+        S = 1 + dirEntry.S;
+      end
       obj.tilesPos(k, :) = [row, col, S];
       if 1 == k % get tile size
         tileH = dirEntry.dimensionEntries(1).size;
@@ -113,10 +117,10 @@ function obj = readMetadata( obj )
     obj.tilesPos = bsxfun(@minus, obj.tilesPos, tileOffsets);
     obj.height = max(obj.tilesPos(:,1)) + tileH;
     obj.width = max(obj.tilesPos(:,2)) + tileW;
-    
-    % Sanity check
-    assert(obj.height == obj.pixPerTileRow);
-    assert(obj.width == obj.pixPerTileCol);
+%     
+%     % Sanity check
+%     assert(obj.height == obj.pixPerTileRow);
+%     assert(obj.width == obj.pixPerTileCol);
     
     % Fix size of single tile
     obj.pixPerTileRow = tileH;
