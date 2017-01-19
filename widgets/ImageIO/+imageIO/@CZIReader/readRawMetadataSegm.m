@@ -122,8 +122,14 @@ function obj = readRawMetadataSegm( obj )
   %% The field "Experiment" contains information about the tiles
   try
     tileInfo = top.Experiment.ExperimentBlocks.AcquisitionBlock.TilesSetup.PositionGroups.PositionGroup;
+    if iscell(tileInfo)
+      tileInfo = tileInfo{1};
+    end
     obj.numTilesRow = str2double(tileInfo.TilesY.Text);
     obj.numTilesCol = str2double(tileInfo.TilesX.Text);
+    if (obj.numTilesRow * obj.numTilesCol) ~= obj.tile
+      warning('CZIReader.readRawMetadataSegm: inconsistent tile info, possible errors ahead!')
+    end
     obj.tileOverlap = str2double(tileInfo.TileAcquisitionOverlap.Text);
     if obj.tileOverlap > 1
       obj.tileOverlap = obj.tileOverlap / 100;
@@ -133,7 +139,7 @@ function obj = readRawMetadataSegm( obj )
     obj.height = round((obj.numTilesRow - 1) * (1 - obj.tileOverlap) * obj.pixPerTileRow + ...
       obj.pixPerTileRow);
   catch
-    disp('CZIReader.readMetadataSegm: field Experiment not available')
+    disp('CZIReader.readRawMetadataSegm: field Experiment not available')
     % assume single tile
     obj.height = obj.pixPerTileRow;
     obj.width = obj.pixPerTileCol;

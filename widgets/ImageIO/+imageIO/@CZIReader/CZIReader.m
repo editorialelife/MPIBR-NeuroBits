@@ -32,6 +32,7 @@ classdef CZIReader < imageIO.ImageIO
     wrongMetadata = false;   % set to true if the information acquired from the 
                              % metadata block and the directory block is
                              % contradictory
+    verbose = false;         % set to true only when displaying additional info                         
   end
   
   methods
