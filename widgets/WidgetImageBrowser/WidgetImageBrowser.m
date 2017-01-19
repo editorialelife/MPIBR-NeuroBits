@@ -75,6 +75,9 @@ classdef WidgetImageBrowser < handle
         
         ui_popup_pickProjection
         ui_checkBox_keepProjection
+        ui_checkbox_projectionRange
+        ui_edit_projectionRangeFrom
+        ui_edit_projectionRangeTo
         
     end
     
@@ -90,6 +93,7 @@ classdef WidgetImageBrowser < handle
         PUSHBUTTON_HALFSIZE = [1, 1, 45, 26];
         PUSHBUTTON_MINORSIZE = [1, 1, 16, 16];
         POPUP_SIZE = [1, 1, 90, 26];
+        EDITBOX_SIZE = [1, 1, 60, 20];
         
         IMG_WINDOW_MARGIN = 32;
         IMG_CLIM_TYPE = {' 8 bit', '12 bit', '16 bit'};
@@ -102,7 +106,6 @@ classdef WidgetImageBrowser < handle
         
         event_ImageBrowser_Show
         event_ImageBrowser_Hide
-        
     end
     
     %% --- Constructor / Destructor --- %%%
@@ -166,8 +169,6 @@ classdef WidgetImageBrowser < handle
             obj.channel = 1;
             obj.stack = 1;
             
-            
-            
         end
         
         
@@ -224,7 +225,7 @@ classdef WidgetImageBrowser < handle
             %%% --- create grid object --- %%%
             obj.ui_grid = uiGridLayout(...
                 'Parent', obj.ui_panel,...
-                'VGrid', 4,...
+                'VGrid', 5,...
                 'HGrid', 4,...
                 'VGap', obj.GRID_VGAP,...
                 'HGap', obj.GRID_HGAP);
@@ -333,6 +334,45 @@ classdef WidgetImageBrowser < handle
                 'HIndex', 3:4,...
                 'Anchor', 'center');
             
+            obj.ui_checkbox_projectionRange = uicontrol(...
+                'Parent', obj.ui_panel,...
+                'Style', 'CheckBox',...
+                'String', 'Range',...
+                'Value', 0,...
+                'Enable', 'off',...
+                'BackgroundColor', obj.BACKGROUND_COLOR,...
+                'Callback', @obj.fcnCallback_toggleProjectionRange,...
+                'Units', 'pixels',...
+                'Position', obj.ui_grid.getGrid('VIndex', 4, 'HIndex', 1:2));
+            
+            obj.ui_edit_projectionRangeFrom = uicontrol(...
+                'Parent', obj.ui_panel,...
+                'Style', 'Edit',...
+                'String', ' ',...
+                'Enable', 'off',...
+                'BackgroundColor', obj.BACKGROUND_COLOR,...
+                'Callback', @obj.fcnCallback_editProjectionRange,...
+                'Units', 'pixels',...
+                'Position', obj.EDITBOX_SIZE);
+            obj.ui_grid.align(obj.ui_edit_projectionRangeFrom,...
+                'VIndex', 4,...
+                'HIndex', 3,...
+                'Anchor', 'center');
+            
+            obj.ui_edit_projectionRangeTo = uicontrol(...
+                'Parent', obj.ui_panel,...
+                'Style', 'Edit',...
+                'String', ' ',...
+                'Enable', 'off',...
+                'BackgroundColor', obj.BACKGROUND_COLOR,...
+                'Callback', @obj.fcnCallback_editProjectionRange,...
+                'Units', 'pixels',...
+                'Position', obj.EDITBOX_SIZE);
+            obj.ui_grid.align(obj.ui_edit_projectionRangeTo,...
+                'VIndex', 4,...
+                'HIndex', 4,...
+                'Anchor', 'center');
+            
             obj.ui_checkBox_keepProjection = uicontrol(...
                 'Parent', obj.ui_panel,...
                 'Style', 'CheckBox',...
@@ -342,11 +382,14 @@ classdef WidgetImageBrowser < handle
                 'BackgroundColor', obj.BACKGROUND_COLOR,...
                 'Callback', @obj.fcnCallback_keepProjection,...
                 'Units', 'pixels',...
-                'Position', obj.ui_grid.getGrid('VIndex', 4, 'HIndex', 3:4));
+                'Position', obj.ui_grid.getGrid('VIndex', 5, 'HIndex', 3:4));
             obj.ui_grid.align(obj.ui_checkBox_keepProjection,...
-                'VIndex', 4,...
+                'VIndex', 5,...
                 'HIndex', 3:4,...
                 'Anchor', 'center');
+            
+            
+            
             
         end
         
@@ -592,6 +635,9 @@ classdef WidgetImageBrowser < handle
                 set(obj.ui_pushButton_nextStack, 'Enable', 'off');
                 set(obj.ui_pushButton_project, 'Enable', 'off');
                 set(obj.ui_popup_pickProjection, 'Enable', 'off');
+                set(obj.ui_checkbox_projectionRange, 'Enable', 'off');
+                set(obj.ui_edit_projectionRangeFrom, 'Enable', 'off');
+                set(obj.ui_edit_projectionRangeTo, 'Enable', 'off');
                 
                 obj.project();
                 
@@ -601,9 +647,55 @@ classdef WidgetImageBrowser < handle
                 set(obj.ui_pushButton_nextStack, 'Enable', 'on');
                 set(obj.ui_pushButton_project, 'Enable', 'on');
                 set(obj.ui_popup_pickProjection, 'Enable', 'on');
-                
+                set(obj.ui_checkbox_projectionRange, 'Enable', 'on');
+                set(obj.ui_edit_projectionRangeFrom, 'Enable', 'on');
+                set(obj.ui_edit_projectionRangeTo, 'Enable', 'on');
             end
             
+        end
+        
+        function obj = fcnCallback_toggleProjectionRange(obj, hSrc,~)
+              % enable / disable stack buttons
+            value = get(hSrc, 'Value');
+            if value == 1
+                set(obj.ui_edit_projectionRangeFrom, 'Enable', 'on');
+                set(obj.ui_edit_projectionRangeTo, 'Enable', 'on');
+                obj.project();
+                
+            elseif value == 0
+                set(obj.ui_edit_projectionRangeFrom, 'Enable', 'off');
+                set(obj.ui_edit_projectionRangeTo, 'Enable', 'off');
+            end
+            
+            obj.project();
+
+        end
+        
+        function obj = fcnCallback_editProjectionRange(obj, ~,~)
+            from = str2double(get(obj.ui_edit_projectionRangeFrom, 'String'));
+            to = str2double(get(obj.ui_edit_projectionRangeTo, 'String'));
+            if(from < 1)
+                from = 1;
+                set(obj.ui_edit_projectionRangeFrom, 'String', '1');
+            elseif(from > obj.imgPtr.stacks)
+                from = obj.imgPtr.stacks;
+                set(obj.ui_edit_projectionRangeFrom, 'String', num2str(obj.imgPtr.stacks));
+            end
+            
+            if(to < 1)
+                to = 1;
+                set(obj.ui_edit_projectionRangeTo, 'String', '1');
+            elseif(to > obj.imgPtr.stacks)
+                to = obj.imgPtr.stacks;
+                set(obj.ui_edit_projectionRangeTo, 'String', num2str(obj.imgPtr.stacks));
+            end
+            
+            if(to < from)
+                set(obj.ui_edit_projectionRangeFrom, 'String', num2str(from));
+                set(obj.ui_edit_projectionRangeTo, 'String', num2str(from));
+            end
+            
+            obj.project();
         end
         
         function obj = fcnCallback_pickClass(obj, hSrc, ~)
@@ -740,44 +832,48 @@ classdef WidgetImageBrowser < handle
             
             % update stack buttons callbacks
             if obj.imgPtr.stacks == 1
-                
                 set(obj.ui_pushButton_prevStack, 'Enable', 'off');
                 set(obj.ui_pushButton_nextStack, 'Enable', 'off');
                 set(obj.ui_pushButton_project, 'Enable', 'off');
                 set(obj.ui_popup_pickProjection, 'Enable', 'off');
                 set(obj.ui_checkBox_keepProjection, 'Enable', 'off');
-                
+                set(obj.ui_checkbox_projectionRange, 'Enable', 'off');
             else
-                
                 set(obj.ui_pushButton_prevStack, 'Enable', 'on');
                 set(obj.ui_pushButton_nextStack, 'Enable', 'on');
                 set(obj.ui_pushButton_project, 'Enable', 'on');
                 set(obj.ui_popup_pickProjection, 'Enable', 'on');
                 set(obj.ui_checkBox_keepProjection, 'Enable', 'on');
-                
+                set(obj.ui_checkbox_projectionRange, 'Enable', 'on');
             end
             
             % update channel buttons callback
             if obj.imgPtr.channels == 1
-                
                 set(obj.ui_pushButton_prevChannel, 'Enable', 'off');
                 set(obj.ui_pushButton_nextChannel, 'Enable', 'off');
-                
             else
-                
                 set(obj.ui_pushButton_prevChannel, 'Enable', 'on');
                 set(obj.ui_pushButton_nextChannel, 'Enable', 'on');
-                
             end
             
             % check if keep projection is active
             if get(obj.ui_checkBox_keepProjection, 'Value') == 1
-                
                 set(obj.ui_pushButton_prevStack, 'Enable', 'off');
                 set(obj.ui_pushButton_nextStack, 'Enable', 'off');
                 set(obj.ui_pushButton_project, 'Enable', 'off');
                 set(obj.ui_popup_pickProjection, 'Enable', 'off');
-                
+                set(obj.ui_checkbox_projectionRange, 'Enable', 'off');
+                set(obj.ui_edit_projectionRangeFrom, 'Enable', 'off');
+                set(obj.ui_edit_projectionRangeTo, 'Enable', 'off');
+            end
+            
+            % check if keep projection range is active
+            if strcmp(get(obj.ui_checkbox_projectionRange, 'Enable'), 'on') && get(obj.ui_checkbox_projectionRange, 'Value') == 1
+                set(obj.ui_edit_projectionRangeFrom, 'Enable', 'on');
+                set(obj.ui_edit_projectionRangeTo, 'Enable', 'on');
+            else
+                set(obj.ui_edit_projectionRangeFrom, 'Enable', 'off');
+                set(obj.ui_edit_projectionRangeTo, 'Enable', 'off');
             end
             
         end
@@ -886,26 +982,32 @@ classdef WidgetImageBrowser < handle
         
         function obj = project(obj)
             %PROJECT executes image projection
-           
             % read full stack
             obj.cdata = obj.imgPtr.read('C', obj.channel);
+            if (get(obj.ui_checkbox_projectionRange, 'Value') == 1) && ...
+                ~strcmp(get(obj.ui_edit_projectionRangeFrom, 'String'),' ') &&...
+                ~strcmp(get(obj.ui_edit_projectionRangeTo, 'String'),' ')
+                
+                from = str2double(get(obj.ui_edit_projectionRangeFrom, 'String'));
+                to = str2double(get(obj.ui_edit_projectionRangeTo, 'String'));
+            else
+                from = 1;
+                to = size(obj.cdata,3);
+            end
             
             % get value from pop up
             switch get(obj.ui_popup_pickProjection, 'Value')
                 case 1
-                    
-                    obj.cdata = max(obj.cdata, [], 3);
-                    
+                    obj.cdata = max(obj.cdata(:,:,from:to), [], 3);
+
                 case 2
-                    
-                    obj.cdata = im2uint16(sum(double(obj.cdata), 3));
+                    obj.cdata = im2uint16(sum(double(obj.cdata(:,:,from:to)), 3));
                     set(obj.iw_popup_pickClass, 'Value', 3);
                     obj.clim = [0,obj.IMG_CLIM_MAX(3) - 1];
                     obj.rescale(obj.clim);
                     
                 case 3
-                    
-                    obj.cdata = im2uint16(std(double(obj.cdata), [], 3));
+                    obj.cdata = im2uint16(std(double(obj.cdata(:,:,from:to)), [], 3));
                     set(obj.iw_popup_pickClass, 'Value', 3);
                     obj.clim = [0,obj.IMG_CLIM_MAX(3) - 1];
                     obj.rescale(obj.clim);
@@ -920,7 +1022,6 @@ classdef WidgetImageBrowser < handle
         end
         
         function obj = status(obj)
-            
             % compose message
             varchar = sprintf('%s, %dx%d (%.2fx%.2f um), intensity [%d,%d]',...
                               obj.IMG_CLIM_TYPE{get(obj.iw_popup_pickClass,'Value')},...
