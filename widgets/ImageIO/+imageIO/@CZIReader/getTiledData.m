@@ -69,6 +69,8 @@ data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
 %get index of start of each new tile
 pixelStartTileRow = 1 + round((0:length(tileRows)-1) * (1 - obj.tileOverlap) * length(rows));
 pixelStartTileCol = 1 + round((0:length(tileCols)-1) * (1 - obj.tileOverlap) * length(cols));
+initialTileRow = tileRows(1);
+initialTileCol = tileCols(1);
 
 idxZ = 1;
 for z = stacks
@@ -84,13 +86,15 @@ for z = stacks
           
           currTileRow = obj.rowIndex(dirEntries(k).YPos);
           currTileCol = obj.colIndex(dirEntries(k).XPos);
+          outTileRow = currTileRow - initialTileRow + 1;
+          outTileCol = currTileCol - initialTileCol + 1;
           
           if any(currTileRow == tileRows) && any(currTileCol == tileCols)
             % this tile is required!
             tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntries(k));
             [rr, cc] = size(tmpImg(rows, cols));
-            data(pixelStartTileRow(currTileRow) : pixelStartTileRow(currTileRow) + rr - 1, ...
-              pixelStartTileCol(currTileCol) : pixelStartTileCol(currTileCol) + cc - 1, ...
+            data(pixelStartTileRow(outTileRow) : pixelStartTileRow(outTileRow) + rr - 1, ...
+              pixelStartTileCol(outTileCol) : pixelStartTileCol(outTileCol) + cc - 1, ...
               idxCh, idxZ, idxT, idxS) = tmpImg(rows, cols);
           end
         end
