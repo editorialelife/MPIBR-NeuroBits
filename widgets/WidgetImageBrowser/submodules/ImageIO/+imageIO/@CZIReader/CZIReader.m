@@ -58,7 +58,7 @@ classdef CZIReader < imageIO.ImageIO
     end
     
     function data = read(obj, varargin)
-    %GETDATA extracts image data
+    %READ extracts image data
     % This function reads data from the CZI file. If no parameters
     % are specified for a specific dimension, all the data will be
     % extracted.
