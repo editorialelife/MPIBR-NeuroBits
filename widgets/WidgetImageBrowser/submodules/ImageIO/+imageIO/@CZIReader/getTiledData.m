@@ -57,7 +57,9 @@ if obj.wrongMetadata % deal with messy indices
   % A) some information is contradictory
   % B) in case of stitching the tile position is not on a grid, we would
   % have to read from all the tiles anyhow
-  warning('CZIReader.getTiledData: Metadata information is contradictory It''s probably better to read all data and subset afterwards.');
+  if obj.verbose
+    warning('CZIReader.getTiledData: Metadata information is contradictory It''s probably better to read all data and subset afterwards.');
+  end
 end
 
 sizeRows = round(length(rows) * (1 + (length(tileRows) - 1) * (1 - obj.tileOverlap)));
