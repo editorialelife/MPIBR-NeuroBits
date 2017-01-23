@@ -16,6 +16,7 @@ classdef CZIDirectoryEntry
     dimensionEntries;   % Variable length array of dimensions. Each dimension
                         % can occur only once. It's an array of
                         % CZIDimensionEntry objects
+    verbose = false;                    
   end
 
   properties

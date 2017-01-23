@@ -32,8 +32,8 @@ function [ data ] = getTiledData( obj, varargin )
 %parse input
 p = inputParser();
 p.KeepUnmatched = true;
-p.addParameter('Cols', 1:obj.width, @(x) isvector(x) && all(x > 0) && max(x) <= obj.width);
-p.addParameter('Rows', 1:obj.height, @(x) isvector(x) && all(x > 0) && max(x) <= obj.height);
+p.addParameter('Cols', 1:obj.pixPerTileCol, @(x) isvector(x) && all(x > 0) && max(x) <= obj.width);
+p.addParameter('Rows', 1:obj.pixPerTileRow, @(x) isvector(x) && all(x > 0) && max(x) <= obj.height);
 p.addParameter('C', 1:obj.channels, @(x) isvector(x) && all(x > 0) && max(x) <= obj.channels);
 p.addParameter('Z', 1:obj.stacks, @(x) isvector(x) && all(x > 0) && max(x) <= obj.stacks);
 p.addParameter('T', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.time);
@@ -53,56 +53,60 @@ tileCols = p.Results.TileCols;
 tileRows = p.Results.TileRows;
 
 if obj.wrongMetadata % deal with messy indices
-  % Cannot get tiled data, because:
+  % Probably cannot get tiled data, because:
   % A) some information is contradictory
   % B) in case of stitching the tile position is not on a grid, we would
   % have to read from all the tiles anyhow
-  disp('Cannot get tiled data when metadata information is contradictory. Please read all data and subset afterwards');
-  return
-else % normal case
-  sizeRows = round(length(rows) * (1 + (length(tileRows) - 1) * (1 - obj.tileOverlap)));
-  sizeCols = round(length(cols) * (1 + (length(tileCols) - 1) * (1 - obj.tileOverlap)));
-  
-  data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
-    length(timeseries), length(series), obj.datatype);
-  
-  %get index of start of each new tile
-  pixelStartTileRow = 1 + round((0:length(tileRows)-1) * (1 - obj.tileOverlap) * length(rows));
-  pixelStartTileCol = 1 + round((0:length(tileCols)-1) * (1 - obj.tileOverlap) * length(cols));
-  
-  idxZ = 1;
-  for z = stacks
-    idxCh = 1;
-    for ch = channels
-      idxT = 1;
-      for t = timeseries
-        idxS = 1;
-        for s = series
-          %get directory entry
-          dirEntries = obj.directoryEntries(obj.dirEntryIndices{ch, z, t, s});
-          for k = 1:length(dirEntries)
-            
-            currTileRow = obj.rowIndex(dirEntries(k).YPos);
-            currTileCol = obj.colIndex(dirEntries(k).XPos);
-            
-            if any(currTileRow == tileRows) && any(currTileCol == tileCols)
-              % this tile is required!
-              tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntries(k));
-              [rr, cc] = size(tmpImg(rows, cols));
-              data(pixelStartTileRow(currTileRow) : pixelStartTileRow(currTileRow) + rr - 1, ...
-               pixelStartTileCol(currTileCol) : pixelStartTileCol(currTileCol) + cc - 1, ...
-               idxCh, idxZ, idxT, idxS) = tmpImg(rows, cols);
-            end
-          end
-          idxS = idxS + 1;
-        end
-        idxT = idxT + 1;
-      end
-      idxCh = idxCh + 1;
-    end
-    idxZ = idxZ + 1;
+  if obj.verbose
+    warning('CZIReader.getTiledData: Metadata information is contradictory It''s probably better to read all data and subset afterwards.');
   end
-  
+end
+
+sizeRows = round(length(rows) * (1 + (length(tileRows) - 1) * (1 - obj.tileOverlap)));
+sizeCols = round(length(cols) * (1 + (length(tileCols) - 1) * (1 - obj.tileOverlap)));
+
+data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
+  length(timeseries), length(series), obj.datatype);
+
+%get index of start of each new tile
+pixelStartTileRow = 1 + round((0:length(tileRows)-1) * (1 - obj.tileOverlap) * length(rows));
+pixelStartTileCol = 1 + round((0:length(tileCols)-1) * (1 - obj.tileOverlap) * length(cols));
+initialTileRow = tileRows(1);
+initialTileCol = tileCols(1);
+
+idxZ = 1;
+for z = stacks
+  idxCh = 1;
+  for ch = channels
+    idxT = 1;
+    for t = timeseries
+      idxS = 1;
+      for s = series
+        %get directory entry
+        dirEntries = obj.directoryEntries(obj.dirEntryIndices{ch, z, t, s});
+        for k = 1:length(dirEntries)
+          
+          currTileRow = obj.rowIndex(dirEntries(k).YPos);
+          currTileCol = obj.colIndex(dirEntries(k).XPos);
+          outTileRow = currTileRow - initialTileRow + 1;
+          outTileCol = currTileCol - initialTileCol + 1;
+          
+          if any(currTileRow == tileRows) && any(currTileCol == tileCols)
+            % this tile is required!
+            tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntries(k));
+            [rr, cc] = size(tmpImg(rows, cols));
+            data(pixelStartTileRow(outTileRow) : pixelStartTileRow(outTileRow) + rr - 1, ...
+              pixelStartTileCol(outTileCol) : pixelStartTileCol(outTileCol) + cc - 1, ...
+              idxCh, idxZ, idxT, idxS) = tmpImg(rows, cols);
+          end
+        end
+        idxS = idxS + 1;
+      end
+      idxT = idxT + 1;
+    end
+    idxCh = idxCh + 1;
+  end
+  idxZ = idxZ + 1;
 end
 
 

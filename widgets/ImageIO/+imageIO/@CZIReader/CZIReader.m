@@ -32,6 +32,7 @@ classdef CZIReader < imageIO.ImageIO
     wrongMetadata = false;   % set to true if the information acquired from the 
                              % metadata block and the directory block is
                              % contradictory
+    verbose = false;         % set to true only when displaying additional info                         
   end
   
   methods
@@ -42,7 +43,7 @@ classdef CZIReader < imageIO.ImageIO
     %possible from the file. No actual data is read in the constructor
     %SEE ALSO imageIO.ImageIO.ImageIO
       
-      % Must call explictily because we pass one argument
+      % Must call explicitly because we pass one argument
       obj = obj@imageIO.ImageIO(filename);
       
       % Set as many properties from the superclass as possible
@@ -57,7 +58,7 @@ classdef CZIReader < imageIO.ImageIO
     end
     
     function data = read(obj, varargin)
-    %GETDATA extracts image data
+    %READ extracts image data
     % This function reads data from the CZI file. If no parameters
     % are specified for a specific dimension, all the data will be
     % extracted.
