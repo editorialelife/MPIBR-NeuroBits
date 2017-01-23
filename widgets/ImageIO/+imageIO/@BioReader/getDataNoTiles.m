@@ -56,7 +56,7 @@ for s = stacks
       %set index
       tileIdx = obj.bfPtr.getIndex(s-1, ch-1, t-1) + 1;
       %get plane
-      tmp = bfGetPlane(obj.bfPtr, tileIdx)';
+      tmp = bfGetPlane(obj.bfPtr, tileIdx);
       
       data(:, :, idxCh, idxS, idxT) = tmp(rows, cols);
       idxT = idxT + 1;
