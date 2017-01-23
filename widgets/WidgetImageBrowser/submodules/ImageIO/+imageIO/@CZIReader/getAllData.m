@@ -20,8 +20,12 @@ if obj.wrongMetadata
     C = 1 + dirEntry.C; 
     Z = 1 + dirEntry.Z;
     T = 1 + dirEntry.T;
-    S = 1 + dirEntry.S;
-    start = obj.tilesPos(k, :) + 1;
+    if isempty(dirEntry.S)
+      S = 1;
+    else
+      S = 1 + dirEntry.S;
+    end
+    start = round(obj.tilesPos(k, :)) + 1;
     endR   = start(1) + size(tmpImg, 1) - 1;
     endC   = start(2) + size(tmpImg, 2) - 1;
     data(start(1):endR, start(2):endC, C, Z, T, S) = tmpImg;

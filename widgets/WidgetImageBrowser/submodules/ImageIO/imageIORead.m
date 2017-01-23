@@ -39,7 +39,12 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %     file and, in that case, any user provided value would be overridden.
 %     If not specified, assumes 0
 % NAME-VALUE INPUT ARGUMENTS:
-%   Used to extract parts of the data.The user can specify subset
+%   'closeFile': Specify if the file should be closed after reading the data.
+%     The default is true, should be set to false if the user wants to
+%     perform multiple reads on the same imageIOPtr.
+%
+%   The following name value parameters are used to extract only part of
+%   the data. The user can specify subset
 %   of the images by specifying the dimension and the interval of interest
 %   as a Name-Value pair. If no arguments are given, all the data is
 %   extracted. For the Cols and Rows argument, the interval is intented
@@ -86,45 +91,14 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %   imageIO, imageIO.imageIO, imageIO.TiffReader, imageIO.BioReader, 
 %   imageIO.CZIReader, imageIO.TiffDirReader
 
-% parse the input parameters. At first, check only the mandatory parameter
-% and the ones which do not perform checking with the input file dimensions
-
-p = inputParser();
-p.KeepUnmatched = true;
-
-p.addRequired('file', @(x) ischar(x) && exist(x, 'file'));
-
-p.addOptional('filePattern', '', @ischar);
-p.addOptional('dimensionOrder', 'Z', @(x) ischar(x) && length(x) <= 5);
-p.addOptional('overlap', 0, @(x) isscalar(x) && isnumeric(x) && x>= 0 && x < 100);
-
-p.parse(file, varargin{:})
-
-filePattern = p.Results.filePattern;
-dimensionOrder = p.Results.dimensionOrder;
-overlap = p.Results.overlap;
-
-
-% check if is directory or file, and in case the file extension. Then
-% create an adequate instance that will read the file
-if isdir(file)
-  imgPtr = imageIO.TiffDirReader(file, filePattern, dimensionOrder, overlap);
-else %ok, which type of file?
-  [~, ~, ext] = fileparts(file);
-  switch ext
-    case '.czi'
-      imgPtr = imageIO.CZIReader(file);
-    case {'.tif', '.tiff'}
-      imgPtr = imageIO.TiffReader(file);
-    otherwise %assume it could be opened using the BioFormatReader
-      imgPtr = imageIO.BioReader(file);
-  end
-end
+% parse the input parameters using imageIOPtr
+imgPtr = imageIOPtr(file, varargin{:});
 
 % now complete the parse of the input. Throw an error if the users tries to
 % extract data which is outside the range specified by the img dimensions
 p = inputParser();
 p.KeepUnmatched = true;
+p.addParameter('closeFile', true, @(x) isscalar(x) && islogical(x));
 p.addParameter('Cols', 1:imgPtr.pixPerTileCol, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.pixPerTileCol);
 p.addParameter('Rows', 1:imgPtr.pixPerTileRow, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.pixPerTileRow);
 p.addParameter('Channels', 1:imgPtr.channels, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.channels);
@@ -135,6 +109,7 @@ p.addParameter('TileRows', 1:imgPtr.numTilesRow, @(x) isvector(x) && all(x > 0) 
 
 p.parse(varargin{:});
 
+closeFile = p.Results.closeFile;
 rows = p.Results.Rows;
 cols = p.Results.Cols;
 channels = p.Results.Channels;
@@ -146,6 +121,10 @@ tileRows = p.Results.TileRows;
 % finally, read the required data 
 data = imgPtr.read('X', cols, 'Y', rows, 'C', channels, 'Z', stacks, ...
   'T', timeseries, 'TileCols', tileCols, 'TileRows', tileRows);
+
+if closeFile
+  imgPtr.close();
+end
 
 end
 
