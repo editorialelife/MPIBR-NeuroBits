@@ -80,15 +80,15 @@ classdef BioReader < imageIO.ImageIO
         obj.numTilesRow = 1;
         obj.numTilesCol = 1;
         obj.tileOverlap = 0;
-        obj.pixPerTileRow = ome.getPixelsSizeX(0).getValue();
-        obj.pixPerTileCol = ome.getPixelsSizeY(0).getValue();
+        obj.pixPerTileRow = ome.getPixelsSizeY(0).getValue();
+        obj.pixPerTileCol = ome.getPixelsSizeX(0).getValue();
       else
         obj.rowTilePos = nan(1, obj.tile);
         obj.colTilePos = nan(1, obj.tile);
         try
           for k = 1:obj.tile
-            obj.rowTilePos(k) = double(ome.getPlanePositionX(k-1,0).value());
-            obj.colTilePos(k) = double(ome.getPlanePositionY(k-1,0).value());
+            obj.rowTilePos(k) = double(ome.getPlanePositionY(k-1,0).value());
+            obj.colTilePos(k) = double(ome.getPlanePositionX(k-1,0).value());
           end
           obj.numTilesRow = length(unique(obj.rowTilePos));
           obj.numTilesCol = length(unique(obj.colTilePos));
@@ -99,8 +99,8 @@ classdef BioReader < imageIO.ImageIO
           obj.numTilesCol = nan;
         end
         try
-          obj.pixPerTileRow = double(ome.getPixelsSizeX(0).getValue());
-          obj.pixPerTileCol = double(ome.getPixelsSizeY(0).getValue());
+          obj.pixPerTileRow = double(ome.getPixelsSizeY(0).getValue());
+          obj.pixPerTileCol = double(ome.getPixelsSizeX(0).getValue());
         catch
           obj.pixPerTileRow = NaN;
           obj.pixPerTileCol = NaN;
@@ -111,12 +111,12 @@ classdef BioReader < imageIO.ImageIO
             rowDiffs = diff(obj.rowTilePos);
             rowDiffs(rowDiffs <= 0) = Inf;
             adjacentDiff = min(rowDiffs);
-            obj.tileOverlap = 1 - adjacentDiff / (obj.pixPerTileRow * obj.pixelSizeX);
+            obj.tileOverlap = 1 - adjacentDiff / (obj.pixPerTileRow * obj.pixelSizeY);
           elseif obj.numTilesCol > 1
             colDiffs = diff(obj.colTilePos);
             colDiffs(colDiffs == 0) = Inf;
             adjacentDiff = min(colDiffs);
-            obj.tileOverlap = 1 - adjacentDiff / (obj.pixPerTileCol * obj.pixelSizeY);
+            obj.tileOverlap = 1 - adjacentDiff / (obj.pixPerTileCol * obj.pixelSizeX);
           else
             obj.tileOverlap = 0;
           end
