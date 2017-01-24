@@ -152,8 +152,8 @@ classdef TiffReader < imageIO.ImageIO
       end
     end
   
-    function close(obj)
-    %CLOSE Close object instances.
+    function delete(obj)
+    %DELETE Close object instances.
     %Close performs the cleanup and release of the instantiated object
       obj.tiffPtr.close();
       if obj.filePtr > 0

@@ -50,8 +50,8 @@ classdef CZIReader < imageIO.ImageIO
       obj = obj.readMetadata();
     end
     
-    function close(obj)
-    %CLOSE close the file identifier  
+    function delete(obj)
+    %DELETE close the file identifier  
       if obj.cziPtr
         fclose(obj.cziPtr);
       end

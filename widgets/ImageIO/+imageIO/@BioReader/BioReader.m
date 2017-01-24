@@ -59,8 +59,8 @@ classdef BioReader < imageIO.ImageIO
       data = squeeze(data);
     end
     
-    function close(obj)
-    %CLOSE Close object instances.
+    function delete(obj)
+    %DELETE Close object instances.
     %Close performs the cleanup and release of the instantiated object
       obj.bfPtr.close();
     end

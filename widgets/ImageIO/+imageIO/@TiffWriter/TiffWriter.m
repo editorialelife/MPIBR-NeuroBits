@@ -466,8 +466,8 @@ classdef TiffWriter < imageIO.ImageIO
   end
   
   methods (Static = true)
-    function close()
-      %CLOSE Close object instances.
+    function delete()
+      %DELETE Close object instances.
       %Close performs the cleanup and release of the instantiated object.
       %This method is static because the fast method fro writing Tiff
       %requires that at most one file is open at the same time, so calling
