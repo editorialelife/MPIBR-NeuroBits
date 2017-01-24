@@ -123,7 +123,7 @@ data = imgPtr.read('X', cols, 'Y', rows, 'C', channels, 'Z', stacks, ...
   'T', timeseries, 'TileCols', tileCols, 'TileRows', tileRows);
 
 if closeFile
-  imgPtr.close();
+  imgPtr.delete();
 end
 
 end

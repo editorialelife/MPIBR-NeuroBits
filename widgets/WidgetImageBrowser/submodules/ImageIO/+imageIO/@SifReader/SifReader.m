@@ -117,8 +117,8 @@ classdef SifReader < imageIO.ImageIO
     %READMETADATA Read all object metadata
     end
     
-    function close(obj)
-    %CLOSE close the file identifier  
+    function delete(obj)
+    %DELETE close the file identifier  
       if obj.useAndorMex
         atsif_closefile;
       else
