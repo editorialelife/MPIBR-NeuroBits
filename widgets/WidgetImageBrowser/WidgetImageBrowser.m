@@ -96,7 +96,7 @@ classdef WidgetImageBrowser < handle
         EDITBOX_SIZE = [1, 1, 60, 20];
         
         IMG_WINDOW_MARGIN = 0.05;
-        IMG_BAR_SIZE = 0.035;
+        IMG_BAR_SIZE = 0.0355;
         IMG_CLIM_TYPE = {' 8 bit', '12 bit', '16 bit'};
         IMG_CLIM_MAX = [2^8, 2^12, 2^16];
         IMG_PROJ_TYPE = {'max', 'sum', 'std'};
@@ -163,7 +163,6 @@ classdef WidgetImageBrowser < handle
             % allocate empty image
             obj.cdata = zeros(obj.screen, obj.screen, 'uint16');
             obj.clim = [0, obj.IMG_CLIM_MAX(2) - 1];
-            
             
             obj.file = [];
             obj.channel = 1;
@@ -503,7 +502,7 @@ classdef WidgetImageBrowser < handle
                 'Enable', 'on',...
                 'Callback', @obj.fcnCallback_autoCLim,...
                 'Units', 'normalized',...
-                'Position', [.94, .1, .1, .775]);
+                'Position', [.92, .1, .1, .775]);
             
             % default used handle
             obj.iw_edit_usedCLim = obj.iw_edit_maxCLim;
