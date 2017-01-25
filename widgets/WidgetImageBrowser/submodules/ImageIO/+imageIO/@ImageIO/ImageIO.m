@@ -79,6 +79,10 @@ classdef (Abstract = true) ImageIO < handle
       DIMORDER = 'XYCZT'; 
     end
     
+    properties (Hidden = true)
+      cleanup;
+    end
+    
     methods
       function obj = ImageIO(filename)
       %IMAGEIO ImageIo Constructor
@@ -97,6 +101,9 @@ classdef (Abstract = true) ImageIO < handle
         
         obj.fileFullPath = GetFullPath(filename);
         [obj.fileFolder, obj.fileName, obj.fileExt] = fileparts(obj.fileFullPath);
+        
+        %manage delete
+        obj.cleanup = onCleanup(@()delete(obj));
       end
       
       function [major, minor] = getVersion(object)
@@ -111,10 +118,12 @@ classdef (Abstract = true) ImageIO < handle
         major = str2double(C{1});
         minor = str2double(C{2});
       end
+      
+      function delete(~)
+      end
     end
     
     methods (Abstract = true)   % Here we have the methods that each subclass MUST implement
-      delete(obj);
       data = read(obj)
     end
     
