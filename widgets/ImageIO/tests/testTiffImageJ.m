@@ -23,7 +23,7 @@ imgColormap = reader.colormap;
 disp(['Showing file ' filename])
 
 figure(1)
-for m = 1:size(dataImageJ, 4)
-  imshow(dataImageJ(:,:,:,m), imgColormap)
+for m = 1:size(dataImageJ, 3)
+  imshow(dataImageJ(:,:,m), imgColormap)
   pause(0.05)
 end
