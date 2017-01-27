@@ -58,7 +58,7 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %   'Cols': Specify which columns to extract
 %   'Rows': Specify which rows to extract
 %   'Channels': Specify which channels to extract
-%   'Stacks': Specify which planes to extract
+%   'Planes': Specify which planes to extract
 %   'Time': Specify which timeseries to extract
 %   'TileRows': Specify which row tiles to read.
 %   'TileCols': Specify which col tiles to read.
@@ -75,7 +75,7 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %     cziData = imageIORead('aCZIFile.czi');
 %   Reading a Z stack from a folder
 %     tiffStack = imageIORead('folderWithImages'); % no need to specify pattern
-%     tiffStack = imageIORead('folderWithImages', 'Stacks', 100:150); % subset
+%     tiffStack = imageIORead('folderWithImages', 'Planes', 100:150); % subset
 %   Reading complex datasets from a folder
 %     multiChTiffStack = imageIORead('folder', 'filePattern_Ch_%d_Z_%04d.tif', 'CZ');
 %   Reading a subset from complex datasets from a folder
@@ -102,7 +102,7 @@ p.addParameter('closeFile', true, @(x) isscalar(x) && islogical(x));
 p.addParameter('Cols', 1:imgPtr.pixPerTileCol, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.pixPerTileCol);
 p.addParameter('Rows', 1:imgPtr.pixPerTileRow, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.pixPerTileRow);
 p.addParameter('Channels', 1:imgPtr.channels, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.channels);
-p.addParameter('Stacks', 1:imgPtr.stacks, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.stacks);
+p.addParameter('Planes', 1:imgPtr.stacks, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.stacks);
 p.addParameter('Time', 1:imgPtr.time, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.time);
 p.addParameter('TileCols', 1:imgPtr.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.numTilesCol);
 p.addParameter('TileRows', 1:imgPtr.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.numTilesRow);
@@ -113,13 +113,13 @@ closeFile = p.Results.closeFile;
 rows = p.Results.Rows;
 cols = p.Results.Cols;
 channels = p.Results.Channels;
-stacks = p.Results.Stacks;
+planes = p.Results.Planes;
 timeseries = p.Results.Time;
 tileCols = p.Results.TileCols;
 tileRows = p.Results.TileRows;
 
 % finally, read the required data 
-data = imgPtr.read('X', cols, 'Y', rows, 'C', channels, 'Z', stacks, ...
+data = imgPtr.read('X', cols, 'Y', rows, 'C', channels, 'Z', planes, ...
   'T', timeseries, 'TileCols', tileCols, 'TileRows', tileRows);
 
 if closeFile
