@@ -1,4 +1,4 @@
-function [data, imgPtr] = imageIORead( file, varargin )
+function [data, metadata, imgPtr] = imageIORead( file, varargin )
 %IMAGEIOREAD Main function for reading image data using imageIO library
 %   imageIORead provides a single interface for reading image data using
 %   any of the classes specified in the +imageIO package. The easiest way
@@ -66,6 +66,7 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %   data: image data, up to 5 dimension (in this order: XYCZT). If only one
 %   	channel is extracted (or the input is single channel), the singleton
 %   	dimension relative to channel is squeezed.
+%   metadata: structure containing all of the 
 %   imgPtr: imageIO instance (actually instance of a subclass of imageIO)
 %     that can be used to extract other data or access the image properties
 %     and metadata
@@ -123,7 +124,15 @@ tileRows = p.Results.TileRows;
 data = imgPtr.read('X', cols, 'Y', rows, 'C', channels, 'Z', planes, ...
   'T', timeseries, 'TileCols', tileCols, 'TileRows', tileRows);
 
+% return also the metadata, is requested
+if nargout > 1
+  metadata = imgPtr.packMetadata();
+end
+
 if closeFile
+  if 3 == nargout % we are returning AND deleting it!
+    warning('imageIORead: returning pointer to image, but also closing it. Please set parameter ''closeFile'' to true')
+  end
   imgPtr.delete();
 end
 
