@@ -53,8 +53,10 @@ p.addRequired('file', @(x) ischar(x) && exist(x, 'file'));
 p.addParameter('filePattern', '', @ischar);
 p.addParameter('dimOrder', 'Z', @(x) ischar(x) && length(x) <= 6);
 p.addParameter('overlap', 0, @(x) isscalar(x) && isnumeric(x) && x>= 0 && x < 100);
-
 p.parse(file, varargin{:})
+filePattern = p.Results.filePattern;
+dimensionOrder = p.Results.dimOrder;
+overlap = p.Results.overlap;
 
 % check if is directory or file, and in case the file extension
 if isdir(file)
@@ -66,6 +68,16 @@ else %ok, which type of file?
       imgPtr = imageIO.CZIReader(file);
     case {'.tif', '.tiff'}
       imgPtr = imageIO.TiffReader(file);
+    case '.exr'
+      error('imageIOPtr: Reading of exr files currently not supported')
+    case '.nd2'
+      imgPtr = imageIO.ND2Reader(file);
+    case '.sif'
+      if ispc
+        imgPtr = imageIO.SifReader(file);
+      else
+        error('imageIOPtr: Reading of sif files currently supported only on windows')
+      end
     otherwise %assume it could be opened using the BioFormatReader
       imgPtr = imageIO.BioReader(file);
   end
