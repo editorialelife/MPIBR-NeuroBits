@@ -675,6 +675,8 @@ classdef WidgetImageBrowser < handle
             % update axes CLim
             obj.rescale(obj.clim);
             
+            % update status
+            obj.status();
         end
         
         function obj = fcnCallback_setUsedCLim(obj, hSrc, ~)
