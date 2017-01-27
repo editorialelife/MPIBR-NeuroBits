@@ -13,8 +13,9 @@ function [data, imgPtr] = imageIORead( file, varargin )
 % 
 % INPUT:
 %   file: [mandatory] the input image to be read or a folder containing a collection of
-%     tiff images 
-%   filePattern: [optional] used only when 'file' is a directory.
+%     tiff images
+% NAME-VALUE INPUT ARGUMENTS:
+%   filePattern: used only when 'file' is a directory.
 %     Specifies the pattern used to number the images. It uses the same
 %     formatting rules used by Matlab and C 'sprintf' function. For example, 
 %     if the folder contains files like 'img_001.tif', 'img_002.tif' and so on, 
@@ -24,7 +25,7 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %     the channel and the Z value. If no pattern is specified, it is
 %     assumed that the images represent a Z stack whose order is
 %     determined by alphabetical sorting of the filenames
-%   dimensionOrder: [optional] used only when 'file' is a directory.
+%   dimOrder: used only when 'file' is a directory.
 %     Represents the order of the dimensions presented in the file
 %     pattern. Each dimension is represented by a single character, uppercase.
 %     Valid values could be 'Z', 'XYCZ', 'T'. If not specified,
@@ -33,12 +34,11 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %     format tags specified, it will be 'XY', if 3 tags specified, it
 %     will be 'XYC', if four tags specified, it will be 'XYCZ'. With
 %     five tags, it will be 'XYCZT'
-%   overlap: [optional] used only when 'file' is a directory.
+%   overlap: used only when 'file' is a directory.
 %     Expected overlap (in percentage) between the tiles. If 'file' is not
 %     a directory, the value is inferred by the metadata contained in the
 %     file and, in that case, any user provided value would be overridden.
 %     If not specified, assumes 0
-% NAME-VALUE INPUT ARGUMENTS:
 %   'closeFile': Specify if the file should be closed after reading the data.
 %     The default is true, should be set to false if the user wants to
 %     perform multiple reads on the same imageIOPtr.
@@ -77,10 +77,11 @@ function [data, imgPtr] = imageIORead( file, varargin )
 %     tiffStack = imageIORead('folderWithImages'); % no need to specify pattern
 %     tiffStack = imageIORead('folderWithImages', 'Planes', 100:150); % subset
 %   Reading complex datasets from a folder
-%     multiChTiffStack = imageIORead('folder', 'filePattern_Ch_%d_Z_%04d.tif', 'CZ');
+%     multiChTiffStack = imageIORead('folder', 'filePattern', 'filePattern_Ch_%d_Z_%04d.tif', ...
+%       'dimOrder', 'CZ');
 %   Reading a subset from complex datasets from a folder
-%     multiChTiffStack = imageIORead('folder', 'filePattern_Pos_%02dx%02d_Ch_%d_Z_%04d.tif', ...
-%       'YXCZ', 'Channels', 2, 'TileRows', 1:2, 'TileCols', 1:3);
+%     multiChTiffStack = imageIORead('folder', 'filePattern', 'filePattern_Pos_%02dx%02d_Ch_%d_Z_%04d.tif', ...
+%       'dimOrder', 'YXCZ', 'Channels', 2, 'TileRows', 1:2, 'TileCols', 1:3);
 %   Read from file of size 4000x3000, subset of a factor 4, only first and third channel
 %     bioReaderData = imageIORead('sample.lsm', 'Channels', [1 3], 'Cols', ...
 %       1:4:4000, 'Rows', 1:4:3000);
