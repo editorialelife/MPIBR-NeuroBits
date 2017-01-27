@@ -153,9 +153,9 @@ Here's a description on how to use the **imageIORead** function:
    per-tile. For example, if the user wants to keep only the top left tile,
    he won't specify any subset for *'Rows'* and *'Cols'* (that is, take them all),
    but will specify the subset *'TileRow' = 1* and *'TileCol' = 1*. On the other
-   hand, if the user wants to extract from a 800*600 image a version which
-   is subsampled by a factor 2 he will specify Rows = 1:2:600
-   and Cols = 1:2:800, and no subset for the tiles (i.e. use
+   hand, if the user wants to extract from a 800x600 image a version which
+   is subsampled by a factor 2 he will specify *Rows = 1:2:600*
+   and *Cols = 1:2:800*, and no subset for the tiles (i.e. use
    all tiles).
    
    *Cols*: Specify which columns to extract
@@ -187,24 +187,21 @@ Here's a description on how to use the **imageIORead** function:
 **EXAMPLES**
 
    Reading all the content from single files:
-     tiffData = imageIORead('myTiff.tif');
-     cziData = imageIORead('aCZIFile.czi');
+     `tiffData = imageIORead('myTiff.tif');`
+     `cziData = imageIORead('aCZIFile.czi');`
    
    Reading a Z stack from a folder
-     tiffStack = imageIORead('folderWithImages'); % no need to specify pattern
-     tiffStack = imageIORead('folderWithImages', 'Planes', 100:150); % subset
+     `tiffStack = imageIORead('folderWithImages'); % no need to specify pattern`
+     `tiffStack = imageIORead('folderWithImages', 'Planes', 100:150); % subset`
    
    Reading complex datasets from a folder
-     multiChTiffStack = imageIORead('folder', 'filePattern', 'filePattern_Ch_%d_Z_%04d.tif', ...
-       'dimOrder', 'CZ');
+     `multiChTiffStack = imageIORead('folder', 'filePattern', 'filePattern_Ch_%d_Z_%04d.tif', 'dimOrder', 'CZ');`
    
    Reading a subset from complex datasets from a folder
-     multiChTiffStack = imageIORead('folder', 'filePattern', 'filePattern_Pos_%02dx%02d_Ch_%d_Z_%04d.tif', ...
-       'dimOrder', 'YXCZ', 'Channels', 2, 'TileRows', 1:2, 'TileCols', 1:3);
+     `multiChTiffStack = imageIORead('folder', 'filePattern', 'filePattern_Pos_%02dx%02d_Ch_%d_Z_%04d.tif', 'dimOrder', 'YXCZ', 'Channels', 2, 'TileRows', 1:2, 'TileCols', 1:3);`
    
    Read from file of size 4000x3000, subset of a factor 4, only first and third channel
-     bioReaderData = imageIORead('sample.lsm', 'Channels', [1 3], 'Cols', ...
-       1:4:4000, 'Rows', 1:4:3000);
+     `bioReaderData = imageIORead('sample.lsm', 'Channels', [1 3], 'Cols', 1:4:4000, 'Rows', 1:4:3000);`
 
 
 ## Folder containing test data
@@ -223,6 +220,19 @@ smb://storage.corp.brain.mpg.de/data/Projects/ImageIO
 * Slide Book Container (not in bioformats?)
 * HDF --> Natively supported by Matlab
 * multiple TIFF files in a folder --> opened using our Matlab implementation
+
+## Things that could be required in the future
+
+* Read multiple stacks (datsets with different dimension from within the same file)
+* Read Knossos (ie multiple files)
+* Read Prairie (ie multiple files)
+* Read subregions
+* Read sif on Linux or Mac
+* Deal with line averages, frame averages, line steps, pixel steps 
+* Read stacks or read images by default 
+* Check or not for wildcards (slow)
+* Store original metadata (see issue #21)
+
 
 ## Current limitations of Bioformats
 List of formats supported by bioformat:
