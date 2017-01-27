@@ -624,20 +624,15 @@ classdef WidgetImageBrowser < handle
         end
         
         function obj = fcnCallback_toggleProjectionRange(obj, hSrc,~)
-              % enable / disable stack buttons
+            % enable / disable stack buttons
             value = get(hSrc, 'Value');
             if value == 1
                 set(obj.ui_edit_projectionRangeFrom, 'Enable', 'on');
                 set(obj.ui_edit_projectionRangeTo, 'Enable', 'on');
-                obj.project();
-                
             elseif value == 0
                 set(obj.ui_edit_projectionRangeFrom, 'Enable', 'off');
                 set(obj.ui_edit_projectionRangeTo, 'Enable', 'off');
             end
-            
-            obj.project();
-
         end
         
         function obj = fcnCallback_editProjectionRange(obj, ~,~)
@@ -663,8 +658,6 @@ classdef WidgetImageBrowser < handle
                 set(obj.ui_edit_projectionRangeFrom, 'String', num2str(from));
                 set(obj.ui_edit_projectionRangeTo, 'String', num2str(from));
             end
-            
-            obj.project();
         end
         
         function obj = fcnCallback_pickClass(obj, hSrc, ~)
@@ -969,6 +962,8 @@ classdef WidgetImageBrowser < handle
         function obj = project(obj)
             %PROJECT executes image projection
             % read full stack
+            h = waitbar(0, 'Calculating projection');
+            
             obj.cdata = obj.imgPtr.read('C', obj.channel);
             if (get(obj.ui_checkbox_projectionRange, 'Value') == 1) && ...
                 ~strcmp(get(obj.ui_edit_projectionRangeFrom, 'String'),' ') &&...
@@ -1002,6 +997,7 @@ classdef WidgetImageBrowser < handle
             
             % update CData
             obj.updateCData();
+            close(h)
             
             obj.status();
             
