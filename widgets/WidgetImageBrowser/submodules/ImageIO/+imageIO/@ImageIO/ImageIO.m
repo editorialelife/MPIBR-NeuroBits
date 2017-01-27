@@ -72,6 +72,12 @@ classdef (Abstract = true) ImageIO < handle
         
         objectiveMagnification = nan;
         objectiveName = nan;
+        originalMetadata;       % as presented originally in the file. Each
+                                % file format has a specific type of metadata,
+                                % so no assumption is made on the type of
+                                % data (string, struct or cell are all
+                                % valid formats)
+        
     end
     
     properties (Constant = true)
@@ -111,6 +117,11 @@ classdef (Abstract = true) ImageIO < handle
         end
         major = str2double(C{1});
         minor = str2double(C{2});
+      end
+      
+      function meta = packMetadata(obj)
+      %PACKMETADATA Put all of the metadata inside of a structure. 
+        meta = struct(obj);
       end
       
       function delete(~)

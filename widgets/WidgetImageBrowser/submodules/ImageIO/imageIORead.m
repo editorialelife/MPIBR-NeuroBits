@@ -126,6 +126,7 @@ data = imgPtr.read('X', cols, 'Y', rows, 'C', channels, 'Z', planes, ...
 
 % return also the metadata, is requested
 if nargout > 1
+  warning('off', 'MATLAB:structOnObject');
   metadata = imgPtr.packMetadata();
 end
 
