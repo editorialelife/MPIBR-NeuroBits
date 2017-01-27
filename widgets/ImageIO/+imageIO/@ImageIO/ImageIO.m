@@ -79,10 +79,6 @@ classdef (Abstract = true) ImageIO < handle
       DIMORDER = 'XYCZT'; 
     end
     
-    properties (Hidden = true)
-      cleanup;
-    end
-    
     methods
       function obj = ImageIO(filename)
       %IMAGEIO ImageIo Constructor
@@ -102,8 +98,6 @@ classdef (Abstract = true) ImageIO < handle
         obj.fileFullPath = GetFullPath(filename);
         [obj.fileFolder, obj.fileName, obj.fileExt] = fileparts(obj.fileFullPath);
         
-        %manage delete
-        obj.cleanup = onCleanup(@()delete(obj));
       end
       
       function [major, minor] = getVersion(object)

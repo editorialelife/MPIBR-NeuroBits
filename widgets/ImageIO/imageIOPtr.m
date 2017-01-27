@@ -7,8 +7,9 @@ function [imgPtr] = imageIOPtr( file, varargin )
 % 
 % INPUT:
 %   file: [mandatory] the input image to be read or a folder containing a collection of
-%     tiff images 
-%   filePattern: [optional] used only when 'file' is a directory.
+%     tiff images
+% NAME-VALUE INPUT ARGUMENTS:
+%   filePattern:  used only when 'file' is a directory.
 %     Specifies the pattern used to number the images. It uses the same
 %     formatting rules used by Matlab and C 'sprintf' function. For example, 
 %     if the folder contains files like 'img_001.tif', 'img_002.tif' and so on, 
@@ -18,7 +19,7 @@ function [imgPtr] = imageIOPtr( file, varargin )
 %     the channel and the Z value. If no pattern is specified, it is
 %     assumed that the images represent a Z stack whose order is
 %     determined by alphabetical sorting of the filenames
-%   dimensionOrder: [optional] used only when 'file' is a directory.
+%   dimOrder: [optional] used only when 'file' is a directory.
 %     Represents the order of the dimensions presented in the file
 %     pattern. Each dimension is represented by a single character, uppercase.
 %     Valid values could be 'Z', 'XYCZ', 'T'. If not specified,
@@ -49,9 +50,9 @@ p.KeepUnmatched = true;
 
 p.addRequired('file', @(x) ischar(x) && exist(x, 'file'));
 
-p.addOptional('filePattern', '', @ischar);
-p.addOptional('dimensionOrder', 'Z', @(x) ischar(x) && length(x) <= 5);
-p.addOptional('overlap', 0, @(x) isscalar(x) && isnumeric(x) && x>= 0 && x < 100);
+p.addParameter('filePattern', '', @ischar);
+p.addParameter('dimOrder', 'Z', @(x) ischar(x) && length(x) <= 6);
+p.addParameter('overlap', 0, @(x) isscalar(x) && isnumeric(x) && x>= 0 && x < 100);
 
 p.parse(file, varargin{:})
 
