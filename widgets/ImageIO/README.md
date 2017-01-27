@@ -188,35 +188,35 @@ Here's a description on how to use the **imageIORead** function:
 
    Reading all the content from single files:
    
-    ```
-     tiffData = imageIORead('myTiff.tif');
-     cziData = imageIORead('aCZIFile.czi');
-    ```
+ ```
+ tiffData = imageIORead('myTiff.tif');
+cziData = imageIORead('aCZIFile.czi');
+```
    
    Reading a Z stack from a folder
    
-     ```
-     tiffStack = imageIORead('folderWithImages'); % no need to specify pattern
-     tiffStack = imageIORead('folderWithImages', 'Planes', 100:150); % subset
-    ```
+ ```
+tiffStack = imageIORead('folderWithImages'); % no need to specify pattern
+tiffStack = imageIORead('folderWithImages', 'Planes', 100:150); % subset
+```
    
    Reading complex datasets from a folder
    
-     ```
-     multiChTiffStack = imageIORead('folder', 'filePattern', 'filePattern_Ch_%d_Z_%04d.tif', 'dimOrder', 'CZ');
-     ```
+```
+multiChTiffStack = imageIORead('folder', 'filePattern', 'filePattern_Ch_%d_Z_%04d.tif', 'dimOrder', 'CZ');
+```
    
    Reading a subset from complex datasets from a folder
    
-     ```
-     multiChTiffStack = imageIORead('folder', 'filePattern', 'filePattern_Pos_%02dx%02d_Ch_%d_Z_%04d.tif', 'dimOrder', 'YXCZ', 'Channels', 2, 'TileRows', 1:2, 'TileCols', 1:3);
-     ```
+ ```
+multiChTiffStack = imageIORead('folder', 'filePattern', 'filePattern_Pos_%02dx%02d_Ch_%d_Z_%04d.tif', 'dimOrder', 'YXCZ', 'Channels', 2, 'TileRows', 1:2, 'TileCols', 1:3);
+ ```
    
    Read from file of size 4000x3000, subset of a factor 4, only first and third channel
    
-     ```
-     bioReaderData = imageIORead('sample.lsm', 'Channels', [1 3], 'Cols', 1:4:4000, 'Rows', 1:4:3000);
-     ```
+ ```
+bioReaderData = imageIORead('sample.lsm', 'Channels', [1 3], 'Cols', 1:4:4000, 'Rows', 1:4:3000);
+ ```
 
 
 ## Folder containing test data
