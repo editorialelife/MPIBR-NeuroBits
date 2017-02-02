@@ -13,7 +13,9 @@ function [data, metadata, imgPtr] = imageIORead( file, varargin )
 % 
 % INPUT:
 %   file: [mandatory] the input image to be read or a folder containing a collection of
-%     tiff images
+%     tiff images. The file can also be passed with wildcards (currently
+%     only * and ?). In case of multiple matches, a warning will be issued,
+%     and only the first match will be considered.
 % NAME-VALUE INPUT ARGUMENTS:
 %   filePattern: used only when 'file' is a directory.
 %     Specifies the pattern used to number the images. It uses the same
