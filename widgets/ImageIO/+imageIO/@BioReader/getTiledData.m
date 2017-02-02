@@ -64,6 +64,17 @@ data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
 pixelStartTileRow = 1 + round((0:max(tileRow)-1) * (1 - obj.tileOverlap) * length(rows));
 pixelStartTileCol = 1 + round((0:max(tileCol)-1) * (1 - obj.tileOverlap) * length(cols));
 
+% get numelements in each dimension
+nS = numel(stacks);
+nCh = numel(channels);
+nT = numel(timeseries);
+nR = numel(tileRow);
+nC = numel(tileCol);
+maxNum = nS * nCh * nT * nR * nC;
+
+% define progress bar
+progBar = TextProgressBar('BioReader --> Extracting data: ', 30);
+
 % For every combination of Time, Z, Channel
 idxS = 1;
 for s = stacks
@@ -75,6 +86,10 @@ for s = stacks
       %Create the whole 2D image
       for row = tileRow
         for col = tileCol
+          % update progress bar
+          currNum = t + (idxCh-1)*nT + (idxS-1)*nCh*nT + ...
+              (col-1)*nS*nCh*nT + (row-1)*nC*nS*nCh*nT;
+          progBar.update(currNum/maxNum * 100);
           %set series
           obj.bfPtr.setSeries((row-1) * obj.numTilesCol + col - 1);
           %set index
