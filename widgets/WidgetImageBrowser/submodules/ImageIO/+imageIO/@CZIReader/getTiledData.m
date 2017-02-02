@@ -68,6 +68,16 @@ sizeCols = round(length(cols) * (1 + (length(tileCols) - 1) * (1 - obj.tileOverl
 data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
   length(timeseries), length(series), obj.datatype);
 
+% get numelements in each dimension
+nZ = numel(stacks);
+nC = numel(channels);
+nT = numel(timeseries);
+nS = numel(series);
+maxNum = nZ * nC * nT * nS;
+
+% define progress bar
+progBar = TextProgressBar('BioReader --> Extracting data: ', 30);
+
 %get index of start of each new tile
 pixelStartTileRow = 1 + round((0:length(tileRows)-1) * (1 - obj.tileOverlap) * length(rows));
 pixelStartTileCol = 1 + round((0:length(tileCols)-1) * (1 - obj.tileOverlap) * length(cols));
@@ -82,6 +92,11 @@ for z = stacks
     for t = timeseries
       idxS = 1;
       for s = series
+        % update progress bar
+        currNum = idxS + (idxT-1)*nS + (idxCh-1)*nS*nT + ...
+          (idxZ-1)*nS*nC*nT;
+        progBar.update(currNum/maxNum * 100);
+        
         %get directory entry
         dirEntries = obj.directoryEntries(obj.dirEntryIndices{ch, z, t, s});
         for k = 1:length(dirEntries)

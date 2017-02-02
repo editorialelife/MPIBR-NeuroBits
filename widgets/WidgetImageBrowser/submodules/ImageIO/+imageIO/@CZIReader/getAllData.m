@@ -5,6 +5,9 @@ function [ data ] = getAllData( obj )
 % AUTHOR: Stefano Masneri
 % Date: 13.10.2016
 
+progBar = TextProgressBar('BioReader --> Extracting data: ', 30);
+numDirEntries = length(obj.directoryEntries);
+
 if obj.wrongMetadata
   %initialize data
   data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, ...
@@ -12,7 +15,9 @@ if obj.wrongMetadata
  
   %now browse through directory entries again, and extract the subblocks
   % Now go through all the directory entries
-  for k = 1:length(obj.directoryEntries)
+  for k = 1:numDirEntries
+    progBar.update(k/numDirEntries * 100);
+    
     dirEntry = obj.directoryEntries(k);
     % Get image
     tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntry);
@@ -36,7 +41,9 @@ else
     obj.series, obj.datatype);
 
   % Now go through all the directory entries
-  for k = 1:length(obj.directoryEntries)
+  for k = 1:numDirEntries
+    progBar.update(k/numDirEntries * 100);
+    
     dirEntry = obj.directoryEntries(k);
     % Get image
     tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntry);
