@@ -63,7 +63,7 @@ for s = stacks
     idxT = 1;
     for t = timeseries
       % update progress bar
-      currNum = t + (idxCh-1)*nT + (idxS-1)*nCh*nT;
+      currNum = idxT + (idxCh-1)*nT + (idxS-1)*nCh*nT;
       progBar.update(currNum/maxNum * 100);
       
       %set index

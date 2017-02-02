@@ -47,6 +47,15 @@ series = p.Results.S;
 data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
   length(timeseries), length(series), obj.datatype);
 
+% get numelements in each dimension
+nS = numel(stacks);
+nCh = numel(channels);
+nT = numel(timeseries);
+maxNum = nS * nCh * nT;
+
+% define progress bar
+progBar = TextProgressBar('BioReader --> Extracting data: ', 30);
+
 idxZ = 1;
 for z = stacks
   idxCh = 1;
@@ -55,6 +64,10 @@ for z = stacks
     for t = timeseries
       idxS = 1;
       for s = series
+        % update progress bar
+        currNum = idxS + (idxT-1)*nS + (idxCh-1)*nT*nS;
+        progBar.update(currNum/maxNum * 100);
+        
         %get directory entry
         dirEntry = obj.directoryEntries(obj.dirEntryIndices{ch, z, t, s});
         tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntry);

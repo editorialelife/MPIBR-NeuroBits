@@ -87,7 +87,7 @@ for s = stacks
       for row = tileRow
         for col = tileCol
           % update progress bar
-          currNum = t + (idxCh-1)*nT + (idxS-1)*nCh*nT + ...
+          currNum = idxT + (idxCh-1)*nT + (idxS-1)*nCh*nT + ...
               (col-1)*nS*nCh*nT + (row-1)*nC*nS*nCh*nT;
           progBar.update(currNum/maxNum * 100);
           %set series
