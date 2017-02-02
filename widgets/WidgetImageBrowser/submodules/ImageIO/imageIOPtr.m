@@ -48,7 +48,7 @@ function [imgPtr] = imageIOPtr( file, varargin )
 p = inputParser();
 p.KeepUnmatched = true;
 
-p.addRequired('file', @(x) ischar(x));
+p.addRequired('file', @(x) ischar(x) && exist(x, 'file'));
 
 p.addParameter('filePattern', '', @ischar);
 p.addParameter('dimOrder', 'Z', @(x) ischar(x) && length(x) <= 6);

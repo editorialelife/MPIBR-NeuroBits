@@ -95,6 +95,8 @@ function [data, metadata, imgPtr] = imageIORead( file, varargin )
 %   imageIO, imageIO.imageIO, imageIO.TiffReader, imageIO.BioReader, 
 %   imageIO.CZIReader, imageIO.TiffDirReader
 
+% check for wildcards in the image
+
 % parse the input parameters using imageIOPtr
 imgPtr = imageIOPtr(file, varargin{:});
 
