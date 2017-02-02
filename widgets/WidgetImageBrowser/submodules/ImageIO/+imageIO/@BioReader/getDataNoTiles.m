@@ -44,6 +44,15 @@ timeseries = p.Results.T;
 data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
   length(timeseries), obj.datatype);
 
+% get numelements in each dimension
+nS = numel(stacks);
+nCh = numel(channels);
+nT = numel(timeseries);
+maxNum = nS * nCh * nT;
+
+% define progress bar
+progBar = TextProgressBar('BioReader --> Extracting data: ', 30);
+
 %set series
 obj.bfPtr.setSeries(0);
 
@@ -53,6 +62,10 @@ for s = stacks
   for ch = channels
     idxT = 1;
     for t = timeseries
+      % update progress bar
+      currNum = t + (idxCh-1)*nT + (idxS-1)*nCh*nT;
+      progBar.update(currNum/maxNum * 100);
+      
       %set index
       tileIdx = obj.bfPtr.getIndex(s-1, ch-1, t-1) + 1;
       %get plane
