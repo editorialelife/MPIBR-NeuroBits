@@ -96,6 +96,20 @@ function [data, metadata, imgPtr] = imageIORead( file, varargin )
 %   imageIO.CZIReader, imageIO.TiffDirReader
 
 % check for wildcards in the image
+if any(file == '*') || any(file == '?')
+  [inputDir, ~, ~] = fileparts(file);
+  listFiles = dir(file);
+  switch length(listFiles)
+    case 0
+      error('imageIORead: No files found matching the specified pattern')
+    case 1
+      file = [inputDir filesep() listFiles(1).name];
+    otherwise
+      warning('imageIORead: Multiple files found matching the specified pattern, picking:')
+      disp([listFiles(1).name]);
+      file = [inputDir filesep() listFiles(1).name];
+  end
+end
 
 % parse the input parameters using imageIOPtr
 imgPtr = imageIOPtr(file, varargin{:});
