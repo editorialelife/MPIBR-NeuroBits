@@ -103,8 +103,11 @@ classdef TiffReader < imageIO.ImageIO
         data = zeros(length(rows), length(cols), length(channels), ...
           length(stacks), obj.datatype);
         idx = 1;
+        
+        progBar = TextProgressBar('TiffReader --> Extracting data: ', 30);
 
-        for k = stacks            
+        for k = stacks
+          progBar.update(idx/(length(stacks)) * 100);
           img = obj.readImage(k);
           data(:, :, :, idx) = img(rows, cols, channels);
           idx = idx + 1;
