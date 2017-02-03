@@ -1,11 +1,11 @@
 classdef TiffReader < imageIO.ImageIO
   %TIFFREADER Wrapper for Tiff interface, based on Matlab TIFF class
-  %   This class is just a single wrapper around Matlab Tiff class, adapted
+  %   This class is just a simple wrapper around Matlab Tiff class, adapted
   %   to conform to the structure of the imageIO library. Unlike
   %   TiffWriter, this class does not interface directly with the Tiff
   %   library, since no speed-ups are expected compared to the Matlab
   %   version.
-  %   Author: Stefano.Masneri@brain.mpge.de
+  %   Author: Stefano.Masneri@brain.mpg.de
   %   Date: 29.07.2016
   %   SEE ALSO: imageIO.TiffWriter, Tiff
   
