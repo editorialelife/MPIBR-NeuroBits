@@ -5,7 +5,7 @@ function [ data ] = getAllData( obj )
 % AUTHOR: Stefano Masneri
 % Date: 13.10.2016
 
-progBar = TextProgressBar('BioReader --> Extracting data: ', 30);
+progBar = TextProgressBar('CZIReader --> Extracting data: ', 30);
 numDirEntries = length(obj.directoryEntries);
 
 if obj.wrongMetadata

@@ -54,7 +54,7 @@ nT = numel(timeseries);
 maxNum = nS * nCh * nT;
 
 % define progress bar
-progBar = TextProgressBar('BioReader --> Extracting data: ', 30);
+progBar = TextProgressBar('CZIReader --> Extracting data: ', 30);
 
 idxZ = 1;
 for z = stacks

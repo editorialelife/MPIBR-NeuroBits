@@ -76,7 +76,7 @@ nS = numel(series);
 maxNum = nZ * nC * nT * nS;
 
 % define progress bar
-progBar = TextProgressBar('BioReader --> Extracting data: ', 30);
+progBar = TextProgressBar('CZIReader --> Extracting data: ', 30);
 
 %get index of start of each new tile
 pixelStartTileRow = 1 + round((0:length(tileRows)-1) * (1 - obj.tileOverlap) * length(rows));
