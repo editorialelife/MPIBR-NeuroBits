@@ -33,6 +33,8 @@ classdef LSMReader < imageIO.ImageIO
       
       % Set as many properties from the superclass as possible
       obj = obj.readMetadata();
+      
+      % Set metadata
     end
     
     function delete(obj)
