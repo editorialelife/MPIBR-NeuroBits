@@ -17,6 +17,9 @@ classdef LSMReader < imageIO.ImageIO
   properties
     lsmPtr = 0;     % pointer to the lsm file
     offsets = [];   % offset to each image directory
+    channelColors;  % ChannelColors object
+    timeStamps;     % TimeStamps object
+    scanInfo;       % ScanInfo object
   end
   
   properties (Hidden = true)
@@ -43,9 +46,6 @@ classdef LSMReader < imageIO.ImageIO
       
       % Set as many properties from the superclass as possible
       obj = obj.readMetadata();
-      
-      % Set metadata
-      obj.fileInfo = LSMFileInfo(filename);
     end
     
     function delete(obj)
@@ -53,6 +53,9 @@ classdef LSMReader < imageIO.ImageIO
       if obj.lsmPtr
         fclose(obj.lsmPtr);
       end
+    end
+    
+    function data = read(obj, varargin)
     end
     
   end

@@ -1,12 +1,13 @@
 function obj = readMetadata(obj)
 
 % open file stream
-obj.lsmPtr = fopen(filename);
+obj.lsmPtr = fopen(obj.fileFullPath);
 if -1 == obj.lsmPtr
   error(['LSMReader.readMetadata: Could not open file ', filename]);
 end
 
 % Read special LSM IFD
+ifd = obj.ifdread();
 lsmifd = ifd([ifd.tagcode] == obj.LSMTAG);
 if isempty(lsmifd)
   error('LSMReader.readMetadata: Could not find LSMINFO IFD entry');
@@ -17,6 +18,8 @@ codes = LSMSpecs.getInstance();
 if fseek(obj.lsmPtr, lsmifd.offset, 'bof')
   error(['LSMReader.readMetadata: Received error on file seek to LSMInfoOffset(' lsmifd.offset '): ' ferror(obj.lsmPtr)]);
 end
+
+obj.originalMetadata = struct('unknown', {[]}, 'datatype', {[]});
 
 % Go through all the properties
 for i = 1:length(codes.LSMINF)
@@ -41,40 +44,24 @@ for i = 1:length(codes.LSMINF)
     value = char(value);
   end
   
-  if strfind(mapKey, '_')
-    propName = fromUpperToCamelCase(mapKey);
-  elseif sum(isstrprop(mapKey, 'upper')) == length(mapKey)
-    propName = lower(mapKey);
-  else
-    propName = mapKey;
-  end
-  
   % for "unknown" and "datatype" put all the values together in a
   % cell array (consistent with script from Peter Li)
   if isstrprop(mapKey(end), 'digit')
-    propName = propName(1:end-1);
-    obj.(propName) = [ obj.(propName) value ];
+    mapKey = mapKey(1:end-1);
+    obj.originalMetadata.(mapKey) = [ obj.originalMetadata.(mapKey) {value} ];
   else %otherwise just set property
-    propName = [ lower(propName(1)) propName(2:end) ];
-    try
-      obj.(propName) = value;
-    catch %do nothing
-      %disp(['Property ' propName ' does not exist, skipping.'])
-    end
+    obj.originalMetadata.(mapKey) = value;
   end
 end
 
 % Read additional small database ChannelColors
-chanCol = LSMChannelColors(obj.lsmPtr, obj.offsetChannelColors);
-obj.channelColors = chanCol;
+obj.originalMetadata.channelColors = LSMChannelColors(obj.lsmPtr, obj.originalMetadata.OFFSET_CHANNELCOLORS);
 
 % Read additional small database TimeStamps
-timSta = LSMTimeStamps(obj.lsmPtr, obj.offsetTimestamps);
-obj.timeStamps = timSta;
+obj.originalMetadata.timeStamps = LSMTimeStamps(obj.lsmPtr, obj.originalMetadata.OFFSET_TIMESTAMPS);
 
 % Read ScanInfo directory
-scanInf = LSMScanInfo(obj.lsmPtr, obj.offsetScaninfo);
-obj.scanInfo = scanInf;
+obj.originalMetadata.scanInfo = LSMScanInfo(obj.lsmPtr, obj.originalMetadata.OFFSET_SCANINFO);
 
 end
 

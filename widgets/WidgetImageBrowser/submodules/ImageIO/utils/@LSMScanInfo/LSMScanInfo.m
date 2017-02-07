@@ -158,7 +158,7 @@ classdef LSMScanInfo
   end
   
   methods
-    function obj = ScanInfo(fid, offsetScanInformation)
+    function obj = LSMScanInfo(fid, offsetScanInformation)
       if fseek(fid, offsetScanInformation, 'bof')
         error(['Received error on file seek to SCANINFO_OFFSET(' offsetScanInformation '): ' ferror(fid)]); 
       end
@@ -229,9 +229,9 @@ classdef LSMScanInfo
     
     function SI = appendField(SI, propName, value)
       if iscell(SI.(propName)) % Already converted this field into cells
-          SI.(propName){end+1} = value;
+      	SI.(propName){end+1} = value;
       else     % just set it
-         SI.(propName) = value;
+      	SI.(propName) = value;
       end        
     end
   end

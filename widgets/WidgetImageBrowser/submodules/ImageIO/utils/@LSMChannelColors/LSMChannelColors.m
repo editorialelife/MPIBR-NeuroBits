@@ -19,7 +19,7 @@ classdef LSMChannelColors
   end
   
   methods
-    function obj = ChannelColors(fid, offsetChannelColors)
+    function obj = LSMChannelColors(fid, offsetChannelColors)
       if 0 == offsetChannelColors
         return
       else

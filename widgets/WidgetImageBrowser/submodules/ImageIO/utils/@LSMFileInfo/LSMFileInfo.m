@@ -69,7 +69,7 @@ classdef LSMFileInfo
       end
       
       % Read special LSM IFD
-      ifd = obj.ifdread(fid);
+      ifd = obj.ifdread();
       lsmifd = ifd([ifd.tagcode] == 34412);
       if isempty(lsmifd)
         error('Could not find LSMINFO IFD entry');
