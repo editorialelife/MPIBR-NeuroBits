@@ -19,6 +19,16 @@ classdef LSMReader < imageIO.ImageIO
     offsets = [];   % offset to each image directory
   end
   
+  properties (Hidden = true)
+    offsetChannelColors;
+    offsetTimestamps;
+    offsetScanInfo;
+  end
+  
+  properties (Constant = true)
+    LSMTAG = 34412;
+  end
+  
   methods
     
     function obj = LSMReader(filename)
@@ -35,6 +45,7 @@ classdef LSMReader < imageIO.ImageIO
       obj = obj.readMetadata();
       
       % Set metadata
+      obj.fileInfo = LSMFileInfo(filename);
     end
     
     function delete(obj)
@@ -43,6 +54,13 @@ classdef LSMReader < imageIO.ImageIO
         fclose(obj.lsmPtr);
       end
     end
+    
+  end
+  
+  methods (Access = protected)
+    
+    ifd = ifdread(obj);       % Implemented in separate file
+    obj = readMetadata(obj);  % Implemented in separate file
     
   end
   

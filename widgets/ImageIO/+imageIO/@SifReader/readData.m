@@ -40,8 +40,8 @@ if ~obj.readAll % implement random frame reading mode
     warning('Sifread.readData: Trying to read beyond the end of the file, last window size reduced.');
   end
   
-  n_frames = sum(obj.window);
-  data = zeros(framesize, n_frames, 'uint16');
+  no_frames = sum(obj.window);
+  data = zeros(framesize, no_frames, 'uint16');
   framecnt = 0;
   for w = 1:length(window)
     start_read = obj.startFrame(w);
@@ -74,11 +74,11 @@ if ~obj.readAll % implement random frame reading mode
   end
 else %readAll == true
 
-  size_recording = framesize * no_frames;
+  size_recording = framesize * numFrames;
   [~, data] = atsif_getallframes(signal, size_recording);
   
   %first no_frames is just for memory allocation
-  for kk = [no_frames, 1:no_frames]
+  for kk = [numFrames, 1:numFrames]
     
     metatmp = andor_allprops(signal, kk);
     %add further metadata:
