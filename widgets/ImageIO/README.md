@@ -22,7 +22,7 @@ The library relies on other software. In particular we use these APIs:
 1. BioFormats (version 5.1.10)
 2. TiffLib (version 4.0.5)
 3. OpenExr (version 2.2.0)
-4. Andor Sif Reader (dll for windows)
+4. Andor Sif Reader (dll for windows, Linux requires [Andor SDK](https://github.com/RJ3/AndorSIF))
 5. Imspector omex (reads .msr and .obf files on windows)
 
 ## Reading metadata
