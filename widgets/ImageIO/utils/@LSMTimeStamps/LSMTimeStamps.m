@@ -17,7 +17,7 @@ classdef LSMTimeStamps
   end
   
   methods
-    function obj = TimeStamps(fid, offsetTimeStamps)
+    function obj = LSMTimeStamps(fid, offsetTimeStamps)
       if 0 == offsetTimeStamps
         return
       else
