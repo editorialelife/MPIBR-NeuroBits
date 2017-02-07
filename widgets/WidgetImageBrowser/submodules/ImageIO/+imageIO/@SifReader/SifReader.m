@@ -43,7 +43,7 @@ classdef SifReader < imageIO.ImageIO
       % Check OS, will be used to decide how to extract data
       if ispc
         obj.useAndorMex = true;
-        openWin(filename);
+        obj.openWin(filename);
       else
         warning('SifReader: Reading data on Linux / Mac not supported ath the moment')
         obj.useAndorMex = false;
@@ -126,7 +126,7 @@ classdef SifReader < imageIO.ImageIO
     %READMETADATA Read all object metadata
     end
     
-    function openWin(filename)
+    function openWin(obj, filename)
       atsif_setfileaccessmode(obj.ATSIF_ReadAll);
       % attempt to open the file
       rc = atsif_readfromfile(filename);
