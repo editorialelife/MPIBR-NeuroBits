@@ -111,12 +111,12 @@ classdef BioReader < imageIO.ImageIO
             rowDiffs = diff(obj.rowTilePos);
             rowDiffs(rowDiffs <= 0) = Inf;
             adjacentDiff = min(rowDiffs);
-            obj.tileOverlap = 1 - adjacentDiff / (obj.pixPerTileRow * obj.pixelSizeY);
+            obj.tileOverlap = 1 - adjacentDiff / (obj.pixPerTileRow * obj.scaleSize(2));
           elseif obj.numTilesCol > 1
             colDiffs = diff(obj.colTilePos);
             colDiffs(colDiffs == 0) = Inf;
             adjacentDiff = min(colDiffs);
-            obj.tileOverlap = 1 - adjacentDiff / (obj.pixPerTileCol * obj.pixelSizeX);
+            obj.tileOverlap = 1 - adjacentDiff / (obj.pixPerTileCol * obj.scaleSize(1));
           else
             obj.tileOverlap = 0;
           end

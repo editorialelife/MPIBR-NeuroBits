@@ -16,16 +16,6 @@ classdef LSMReader < imageIO.ImageIO
   
   properties
     lsmPtr = 0;     % pointer to the lsm file
-    offsets = [];   % offset to each image directory
-    channelColors;  % ChannelColors object
-    timeStamps;     % TimeStamps object
-    scanInfo;       % ScanInfo object
-  end
-  
-  properties (Hidden = true)
-    offsetChannelColors;
-    offsetTimestamps;
-    offsetScanInfo;
   end
   
   properties (Constant = true)
@@ -64,6 +54,13 @@ classdef LSMReader < imageIO.ImageIO
     
     ifd = ifdread(obj);       % Implemented in separate file
     obj = readMetadata(obj);  % Implemented in separate file
+    
+    function obj = setChannelInfo(obj, chanInfo)
+      for k = 1:obj.channels
+        chanData = struct('name', chanInfo.names{k}, 'color', chanInfo.colors{k});
+        obj.channelInfo = [obj.channelInfo, ChannelInfo(chanData, 'LSM')];
+      end
+    end
     
   end
   

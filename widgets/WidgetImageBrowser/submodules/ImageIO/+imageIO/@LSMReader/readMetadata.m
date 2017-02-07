@@ -55,13 +55,38 @@ for i = 1:length(codes.LSMINF)
 end
 
 % Read additional small database ChannelColors
-obj.originalMetadata.channelColors = LSMChannelColors(obj.lsmPtr, obj.originalMetadata.OFFSET_CHANNELCOLORS);
+obj.originalMetadata.channelColors = LSMChannelColors(obj.lsmPtr, obj.originalMetadata.OFFSET_CHANNELSCOLORS);
 
 % Read additional small database TimeStamps
 obj.originalMetadata.timeStamps = LSMTimeStamps(obj.lsmPtr, obj.originalMetadata.OFFSET_TIMESTAMPS);
 
 % Read ScanInfo directory
 obj.originalMetadata.scanInfo = LSMScanInfo(obj.lsmPtr, obj.originalMetadata.OFFSET_SCANINFO);
+
+% Set the metadata just read into the appropriate properties
+obj.height = obj.originalMetadata.DimensionX;
+obj.width = obj.originalMetadata.DimensionY;
+obj.channels = obj.originalMetadata.DimensionChannels;
+obj.stacks = obj.originalMetadata.DimensionZ;
+obj.time = obj.originalMetadata.DimensionTime;
+obj = obj.setChannelInfo(obj.originalMetadata.channelColors);
+obj.scaleSize = obj.originalMetadata.VOXELSIZES;
+
+% Finally, use the BioFormat reader to get info about overlap and number of
+% tiles.
+bfPtr = bfGetReader(obj.fileFullPath);
+ome = bfPtr.getMetadataStore();
+obj.datatype = char(ome.getPixelsType(0));
+try
+  obj.tile = ome.getImageCount();
+catch
+  obj.tile = 1;
+end
+obj = obj.setTileProperties(ome);
+if obj.tile ~= 1
+  obj.height = round(obj.pixPerTileRow * (1 + (obj.numTilesRow - 1) * (1 - obj.tileOverlap)));
+  obj.width = round(obj.pixPerTileCol * (1 + (obj.numTilesCol - 1) * (1 - obj.tileOverlap)));
+end
 
 end
 

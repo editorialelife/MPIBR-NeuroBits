@@ -44,6 +44,14 @@ classdef ChannelInfo
         catch
           obj.color = [255 255 255 255]; % white, arbitrary
         end
+      elseif strcmpi('LSM', whereFrom)
+        obj.color = data.color;
+        try
+          obj.dyeName = data.name;
+        catch
+          obj.dyeName = '';
+        end
+        obj.gamma = 1;
       else
         warning('ChannelInfo.ChannelInfo: Unsupported input filetype')
       end
