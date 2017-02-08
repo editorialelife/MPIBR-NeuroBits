@@ -71,7 +71,7 @@ classdef CZIReader < imageIO.ImageIO
     %   	channel is extracted (or the input is single channel), the singleton
     %   	dimension relative to channel is squeezed.
     % EXAMPLES
-    %   myCZI = CZIReader('testfile.czi');
+    %   myCZI = imageIO.CZIReader('testfile.czi');
     %   data = myCZI.getData(); %Reads all the data
     %   data = myCZI.getData('Cols', 1:10) %Reads only the first then rows
     %   data = myCZI.getData('Cols', 1:2:end) %Reads only the odd rows
