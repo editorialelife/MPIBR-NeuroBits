@@ -57,11 +57,11 @@ function File = GetFullPath(File, Style)
 % Tested: Matlab 6.5, 7.7, 7.8, 7.13, WinXP/32, Win7/64
 %         Compiler: LCC2.4/3.8, BCC5.5, OWC1.8, MSVC2008/2010
 % Assumed Compatibility: higher Matlab versions
-% Author: Jan Simon, Heidelberg, (C) 2009-2013 matlab.THISYEAR(a)nMINUSsimon.de
+% Author: Jan Simon, Heidelberg, (C) 2009-2016 matlab.2010(a)n(MINUS)simon.de
 %
 % See also: CD, FULLFILE, FILEPARTS.
 
-% $JRev: R-G V:032 Sum:7Xd/JS0+yfax Date:15-Jan-2013 01:06:12 $
+% $JRev: R-G V:032 Sum:zBDFj0/m8a0f Date:15-Jan-2013 01:06:12 $
 % $License: BSD (use/copy/change/redistribute on own risk, mention the author) $
 % $UnitTest: uTest_GetFullPath $
 % $File: Tools\GLFile\GetFullPath.m $

@@ -103,11 +103,16 @@ if any(file == '*') || any(file == '?')
     case 0
       error('imageIORead: No files found matching the specified pattern')
     case 1
-      file = [inputDir filesep() listFiles(1).name];
+      % Do nothing
     otherwise
       warning('imageIORead: Multiple files found matching the specified pattern, picking:')
       disp([listFiles(1).name]);
-      file = [inputDir filesep() listFiles(1).name];
+  end
+  
+  if isempty(inputDir)
+    file = listFiles(1).name;
+  else
+    file = [inputDir filesep() listFiles(1).name];
   end
 end
 
