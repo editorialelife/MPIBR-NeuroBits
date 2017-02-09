@@ -280,6 +280,11 @@ classdef TiffWriter < imageIO.ImageIO
       
     end
     
+    
+    function data = read(obj, varargin)
+      % Do nothing, it's here because abstarct in superclass
+    end
+    
   end
   
   methods (Access = protected)
@@ -459,17 +464,13 @@ classdef TiffWriter < imageIO.ImageIO
     % Do nothing, it's here because abstarct in superclass
     end
     
-    function data = read(obj, varargin)
-    % Do nothing, it's here because abstarct in superclass
-    end
-    
   end
   
   methods (Static = true)
     function delete()
       %DELETE Close object instances.
       %Close performs the cleanup and release of the instantiated object.
-      %This method is static because the fast method fro writing Tiff
+      %This method is static because the fast method for writing Tiff
       %requires that at most one file is open at the same time, so calling
       %the close will just close the instance opened, indipendently from
       %what the user has been doing
