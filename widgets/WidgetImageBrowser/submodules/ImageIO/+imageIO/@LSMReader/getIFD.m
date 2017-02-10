@@ -3,14 +3,14 @@ function [ obj ] = getIFD( obj )
 %   Detailed explanation goes here
 
 progBar = TextProgressBar('LSMReader --> Extracting IFD: ', 30);
-estimatedNumIFD = 2 * obj.numTilesRow * obj*numTilesRow * obj.stacks;
+estimatedNumIFD = 2 * obj.numTilesRow * obj.numTilesRow * obj.stacks;
 
 fseek(obj.lsmPtr, 4, 'bof');
 ifdPos = fread(obj.lsmPtr, 1, 'uint32', obj.byteOrder);
 fseek(obj.lsmPtr, ifdPos, 'bof');
 IFDIdx = 0;
 while ifdPos ~= 0
-  progBar.update(IFDIdx/estimatedNumIFD * 100);
+  progBar.update((IFDIdx+1)/estimatedNumIFD * 100);
   IFDIdx = IFDIdx+1;
   fseek(obj.lsmPtr, ifdPos, 'bof');
   numEntries = fread(obj.lsmPtr, 1, 'uint16',obj.byteOrder);
@@ -24,7 +24,7 @@ while ifdPos ~= 0
   % IFD is structured like this: bytes 1-2 : tag, bytes 3-4: type,
   % bytes 5-8: count, bytes 9-12: value/offset
   for ii = 1:numEntries
-    fseek(obj.fID, entryPos+12*(ii-1), 'bof');
+    fseek(obj.lsmPtr, entryPos+12*(ii-1), 'bof');
     obj.IFD{IFDIdx}(1,ii) = fread(obj.lsmPtr, 1, 'uint16', obj.byteOrder);
     obj.IFD{IFDIdx}(2,ii) = fread(obj.lsmPtr, 1, 'uint16', obj.byteOrder);
     obj.IFD{IFDIdx}(3,ii) = fread(obj.lsmPtr, 1, 'uint32', obj.byteOrder);
@@ -39,7 +39,7 @@ else
   fseek(obj.lsmPtr, obj.IFD{1}(4, obj.IFD{1}(1,:) == 258),'bof');
   obj.datatypeInput = fread(obj.lsmPtr, 1, 'uint16', obj.byteOrder);
 end
-obj.datatypeInput = strcat('uint',num2str(obj.fileInfo.bitsPerSample ));
+obj.datatypeInput = strcat('uint',num2str(obj.datatypeInput));
 
 %now create offset list for each IFD
 obj.offsets = uint64(zeros(1, IFDIdx/2));

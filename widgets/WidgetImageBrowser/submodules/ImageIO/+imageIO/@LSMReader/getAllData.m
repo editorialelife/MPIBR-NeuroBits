@@ -23,7 +23,7 @@ for indT = 1:obj.time
 
         %seek to beginning of current tile
         tilePos = indT + (indZ-1)*(obj.time) + (col-1)*obj.stacks*obj.time + ...
-          (row-1)*obj.stacks*obj.time*numTilesCol;
+          (row-1)*obj.stacks*obj.time*obj.numTilesCol;
         fseek(obj.lsmPtr, obj.offsets(tilePos), 'bof');
 
         %read data
@@ -32,8 +32,8 @@ for indT = 1:obj.time
           progBar.update(incr/numSteps * 100);
           incr = incr + 1;
           
-          tmpImg = typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
-            obj.datatypeInput, obj.byteOrder));
+          tmpImg = reshape(typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
+            obj.datatypeInput, obj.byteOrder)), obj.pixPerTileCol, obj.pixPerTileRow)';
           
           % Manage overlap
           if 1 ~= row
@@ -50,12 +50,15 @@ for indT = 1:obj.time
           startC = 1 + (col - 1) * (obj.pixPerTileCol - ovDiffCol);
           endR   = startR + obj.pixPerTileRow - 1;
           endC   = startC + obj.pixPerTileCol - 1;
-          data(startR:endR, startC:endC, C, Z, T, S) = tmpImg;
+          data(startR:endR, startC:endC, indC, indZ, indT) = tmpImg;
         end
       end
     end
   end
 end
+
+%squeeze data, to remove singleton dimensions
+data = squeeze(data);
 
 end
 
