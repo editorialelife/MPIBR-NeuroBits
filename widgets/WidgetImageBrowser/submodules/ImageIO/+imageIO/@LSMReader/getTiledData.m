@@ -107,7 +107,8 @@ for t = timeseries
               pixelStartTileCol(outTileCol) : pixelStartTileCol(outTileCol) + cc - 1, ...
               idxCh, idxZ, idxT) = tmpImg(rows, cols);
           else
-            fseek(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol * obj.bitsPerSample / 8, 'cof');
+            %fseek(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol * obj.bitsPerSample / 8, 'cof');
+            fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, obj.datatypeInput, obj.byteOrder);
           end
           
         end
