@@ -37,9 +37,9 @@ if obj.IFD{1}(3, obj.IFD{1}(1,:) == 258) == 1
   obj.datatypeInput = obj.IFD{1}(4, obj.IFD{1}(1,:) == 258);
 else
   fseek(obj.lsmPtr, obj.IFD{1}(4, obj.IFD{1}(1,:) == 258),'bof');
-  obj.datatypeInput = fread(obj.lsmPtr, 1, 'uint16', obj.byteOrder);
+  obj.bitsPerSample = fread(obj.lsmPtr, 1, 'uint16', obj.byteOrder);
 end
-obj.datatypeInput = strcat('uint',num2str(obj.datatypeInput));
+obj.datatypeInput = strcat('uint',num2str(obj.bitsPerSample));
 
 %now create offset list for each IFD
 obj.offsets = uint64(zeros(1, IFDIdx/2));

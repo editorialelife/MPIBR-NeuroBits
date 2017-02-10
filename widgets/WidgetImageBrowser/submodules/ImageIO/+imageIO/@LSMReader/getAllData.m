@@ -6,8 +6,6 @@ function [ data ] = getAllData( obj )
 % Date: 08.02.2017
 
 
-obj = obj.getIFD();
-
 progBar = TextProgressBar('LSMReader --> Extracting data: ', 30);
 
 data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.datatype);
