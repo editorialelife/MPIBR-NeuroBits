@@ -10,6 +10,9 @@ classdef LSMReader < imageIO.ImageIO
   %   The constructor of the class will do the heavy part of the job,
   %   namely parsing the header and segment files in order to extract the
   %   metadata required by the ImageIO library.
+  %   The LSM Reader class does not support, at the moment, files
+  %   containing series. It does support files with multiple tiles,
+  %   channels, planes.
   %   Author: Stefano.Masneri@brain.mpge.de
   %   Date: 06.02.2017
   %   SEE ALSO: imageIO.imageIO
@@ -21,6 +24,7 @@ classdef LSMReader < imageIO.ImageIO
     offsets;        % offset associated to each IFD
     bigTiff;        % true if the file is bigger than 4Gb
     datatypeInput;  % LSM format also supports 12 bits, unsupported by Matlab
+    bitsPerSample;  % number of bits used for each pixel
   end
   
   properties (Constant = true)
@@ -71,6 +75,8 @@ classdef LSMReader < imageIO.ImageIO
     %   data = myLSM.getData('C', 1, 'Z', 4:8) %Reads stacks 4 to 8, only 1st channel
     %   data = myLSM.getData('TileRows', 1:6, 'TileCols, 2:4) %Reads first six rows of
     %     tiles, and column tiles from 2 to 4
+    
+      obj = obj.getIFD();
     
       if isempty(varargin) % Read all the data
         data = obj.getAllData();
