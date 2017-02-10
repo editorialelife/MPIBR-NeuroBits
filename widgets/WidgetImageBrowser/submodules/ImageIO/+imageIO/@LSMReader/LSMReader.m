@@ -16,6 +16,11 @@ classdef LSMReader < imageIO.ImageIO
   
   properties
     lsmPtr = 0;     % pointer to the lsm file
+    byteOrder;      % big endian or little endian
+    IFD;            % directory entries
+    offsets;        % offset associated to each IFD
+    bigTiff;        % true if the file is bigger than 4Gb
+    datatypeInput;  % LSM format also supports 12 bits, unsupported by Matlab
   end
   
   properties (Constant = true)

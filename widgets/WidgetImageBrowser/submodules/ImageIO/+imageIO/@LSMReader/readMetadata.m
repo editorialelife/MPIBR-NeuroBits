@@ -6,6 +6,31 @@ if -1 == obj.lsmPtr
   error(['LSMReader.readMetadata: Could not open file ', filename]);
 end
 
+%Check file size and set bigtiff accordingly
+s = dir(obj.fileFullPath);
+filesize = s.bytes;
+if filesize > 2^32
+  obj.bigTiff = true;
+else
+  obj.bigTiff = false;
+end
+
+%check byte ordering
+byteOrder=fread(obj.lsmPtr, 2, '*char')';
+if (strcmp(byteOrder,'II'))
+  obj.byteOrder = 'ieee-le';
+elseif (strcmp(byteOrder,'MM'))
+  obj.byteOrder = 'ieee-be';
+else
+  error('LSMReader.readMetadata: This is not a correct LSM file');
+end
+
+%Check that Tiff code number is there
+tiffID = fread(obj.lsmPtr, 1, 'uint16', obj.byteOrder);
+if tiffID ~= 42
+  error('LSMReader.readMetadata: This is not a correct LSM file');
+end
+
 % Read special LSM IFD
 ifd = obj.ifdread();
 lsmifd = ifd([ifd.tagcode] == obj.LSMTAG);
@@ -34,7 +59,7 @@ for i = 1:length(codes.LSMINF)
   num    = codes.LSMINF{i}{2};
   type   = codes.LSMINF{i}{3};
   
-  [value, readnum] = fread(obj.lsmPtr, num, type);
+  [value, readnum] = fread(obj.lsmPtr, num, type, obj.byteOrder);
   if readnum ~= num
     error(['LSMReader.readMetadata: Failed to read more than ' num2str(readnum) ' values for ' field '(' num2str(num) ')']);
   end
