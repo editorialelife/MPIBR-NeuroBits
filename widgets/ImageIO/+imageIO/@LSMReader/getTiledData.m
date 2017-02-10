@@ -61,9 +61,11 @@ data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
 nZ = numel(stacks);
 nC = numel(channels);
 nT = numel(timeseries);
-nS = numel(series);
-maxNum = nZ * nC * nT * nS;
+nTC = numel(tileCols);
+nTR = numel(tileRows);
+maxNum = nZ * nC * nT * nTC * nTR;
 incr = 1;
+typeOut = str2func(obj.datatype);
 
 % define progress bar
 progBar = TextProgressBar('LSMReader --> Extracting data: ', 30);
@@ -79,33 +81,38 @@ for t = timeseries
   idxZ = 1;
   for z = stacks
     %seek to beginning of current tile
-    tilePos = indT + (indZ-1)*(obj.time);
+    tilePos = idxT + (idxZ-1)*(obj.time);
     fseek(obj.lsmPtr, obj.offsets(tilePos), 'bof');
     
     idxCh = 1;
     for ch = channels
-      % update progress bar
-      progBar.update(incr/maxNum * 100);
-      incr = incr + 1;
       
-      currTileRow = obj.rowIndex(dirEntries(k).YPos);
-      currTileCol = obj.colIndex(dirEntries(k).XPos);
-      outTileRow = currTileRow - initialTileRow + 1;
-      outTileCol = currTileCol - initialTileCol + 1;
-      
-      if any(currTileRow == tileRows) && any(currTileCol == tileCols)
-        tmpImg = reshape(typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
-          obj.datatypeInput, obj.byteOrder)), obj.pixPerTileCol, obj.pixPerTileRow)';
-
-        [rr, cc] = size(tmpImg(rows, cols));
-
-        data(pixelStartTileRow(outTileRow) : pixelStartTileRow(outTileRow) + rr - 1, ...
-          pixelStartTileCol(outTileCol) : pixelStartTileCol(outTileCol) + cc - 1, ...
-          idxCh, idxZ, idxT) = tmpImg(rows, cols);
-      else
-        fseek(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol * obj.bitsPerSample / 8, 'cof');
+      for tr = 1:obj.numTilesRow
+        for tc = 1:obj.numTilesCol
+          outTileRow = tr - initialTileRow + 1;
+          outTileCol = tc - initialTileCol + 1;
+          
+          if any(tr == tileRows) && any(tc == tileCols)
+            
+            % update progress bar
+            progBar.update(incr/maxNum * 100);
+            incr = incr + 1;
+            
+            tmpImg = reshape(typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
+              obj.datatypeInput, obj.byteOrder)), obj.pixPerTileCol, obj.pixPerTileRow)';
+            
+            [rr, cc] = size(tmpImg(rows, cols));
+            
+            data(pixelStartTileRow(outTileRow) : pixelStartTileRow(outTileRow) + rr - 1, ...
+              pixelStartTileCol(outTileCol) : pixelStartTileCol(outTileCol) + cc - 1, ...
+              idxCh, idxZ, idxT) = tmpImg(rows, cols);
+          else
+            fseek(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol * obj.bitsPerSample / 8, 'cof');
+          end
+          
+        end
       end
-
+      
       idxCh = idxCh + 1;
     end
     idxZ = idxZ + 1;

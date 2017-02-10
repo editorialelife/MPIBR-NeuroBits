@@ -2,8 +2,8 @@ function [ obj ] = getIFD( obj )
 %GETIFD Get all Image file directories from file
 %   Detailed explanation goes here
 
-progBar = TextProgressBar('LSMReader --> Extracting IFD: ', 30);
-estimatedNumIFD = 2 * obj.numTilesRow * obj.numTilesRow * obj.stacks;
+progBar = TextProgressBar('LSMReader --> Extracting IFD (estimate): ', 30);
+estimatedNumIFD = 2 * obj.numTilesRow * obj.numTilesRow * obj.stacks * obj.time;
 
 fseek(obj.lsmPtr, 4, 'bof');
 ifdPos = fread(obj.lsmPtr, 1, 'uint32', obj.byteOrder);
@@ -34,7 +34,7 @@ end
 
 %Check datatype
 if obj.IFD{1}(3, obj.IFD{1}(1,:) == 258) == 1
-  obj.datatypeInput = obj.IFD{1}(4, obj.IFD{1}(1,:) == 258);
+  obj.bitsPerSample = obj.IFD{1}(4, obj.IFD{1}(1,:) == 258);
 else
   fseek(obj.lsmPtr, obj.IFD{1}(4, obj.IFD{1}(1,:) == 258),'bof');
   obj.bitsPerSample = fread(obj.lsmPtr, 1, 'uint16', obj.byteOrder);

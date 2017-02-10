@@ -61,7 +61,7 @@ for t = timeseries
   idxZ = 1;
   for z = stacks
     %seek to beginning of current tile
-    tilePos = indT + (indZ-1)*(obj.time);
+    tilePos = idxT + (idxZ-1)*(obj.time);
     fseek(obj.lsmPtr, obj.offsets(tilePos), 'bof');
     
     idxCh = 1;

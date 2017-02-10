@@ -30,8 +30,9 @@ for indT = 1:obj.time
           progBar.update(incr/numSteps * 100);
           incr = incr + 1;
           
-          tmpImg = reshape(typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
-            obj.datatypeInput, obj.byteOrder)), obj.pixPerTileCol, obj.pixPerTileRow)';
+          tmpImg = typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
+            obj.datatypeInput, obj.byteOrder));
+          tmpImg = reshape(tmpImg, obj.pixPerTileCol, obj.pixPerTileRow)';
           
           % Manage overlap
           if 1 ~= row

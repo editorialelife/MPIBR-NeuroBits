@@ -155,6 +155,18 @@ classdef LSMScanInfo
     ratioConst4 = {};
     ratioConst5 = {};
     ratioConst6 = {};
+    
+    collimator1Position;
+    collimator1Name;
+    idTubelens;
+    idTubelensPosition;
+    collimator2Position;
+    collimator2Name;
+    repeatBleach;
+    enableSpotBleachPos;
+    spotBleachPosx;
+    spotBleachPosy;
+    bleachPositionZ;
   end
   
   methods
@@ -228,11 +240,15 @@ classdef LSMScanInfo
     end
     
     function SI = appendField(SI, propName, value)
-      if iscell(SI.(propName)) % Already converted this field into cells
-      	SI.(propName){end+1} = value;
-      else     % just set it
-      	SI.(propName) = value;
-      end        
+      try
+        if iscell(SI.(propName)) % Already converted this field into cells
+          SI.(propName){end+1} = value;
+        else     % just set it
+          SI.(propName) = value;
+        end
+      catch
+        % DO NOTHING
+      end
     end
   end
   
