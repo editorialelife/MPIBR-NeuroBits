@@ -78,11 +78,11 @@ for k = files
   lsmFile = imageIO.LSMReader(fullPath);
   
   if k == files(1) % read some Z
-    lsmData = lsmFile.read('Z', 2:26, 'Cols', 1:128, 'TileRows', 1:3);
+    lsmData = lsmFile.read('Z', 2:26, 'TileCols', 1:4, 'TileRows', 1:5);
   end
   
   for m = 1:size(lsmData, 3)
-    imshow(imadjust(lsmData(:,:,m)))
+    imshow(imadjust(lsmData(:,:,2,m)))
     pause(0.5)
   end
 end
