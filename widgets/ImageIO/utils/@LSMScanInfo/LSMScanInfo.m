@@ -215,7 +215,7 @@ classdef LSMScanInfo
           if isempty(tag)
             propName = [ 'h' taghex ];
           else
-            propName = util.fromUpperToCamelCase(tag);
+            propName = fromUpperToCamelCase(tag);
           end
           obj = obj.appendField(propName, value);
         end
