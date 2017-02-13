@@ -80,41 +80,41 @@ idxT = 1;
 for t = timeseries
   idxZ = 1;
   for z = stacks
-    %seek to beginning of current tile
-    tilePos = idxT + (idxZ-1)*(obj.time);
-    fseek(obj.lsmPtr, obj.offsets(tilePos), 'bof');
     
-    idxCh = 1;
-    for ch = channels
-      
-      for tr = 1:obj.numTilesRow
-        for tc = 1:obj.numTilesCol
-          outTileRow = tr - initialTileRow + 1;
-          outTileCol = tc - initialTileCol + 1;
-          
-          if any(tr == tileRows) && any(tc == tileCols)
-            
+    for tr = tileRows
+      for tc = tileCols
+        outTileRow = tr - initialTileRow + 1;
+        outTileCol = tc - initialTileCol + 1;
+        
+        idxCh = 1;
+        for ch = 1:obj.channels
+    
+          if any(ch == channels) 
+
+            %seek to beginning of current tile
+            tilePos = idxT + (idxZ-1)*(obj.time) + (tc-1)*obj.stacks*obj.time + ...
+              (tr-1)*obj.stacks*obj.time*obj.numTilesCol;
+            fseek(obj.lsmPtr, obj.offsets(tilePos), 'bof');
+
             % update progress bar
             progBar.update(incr/maxNum * 100);
             incr = incr + 1;
-            
+
             tmpImg = reshape(typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
               obj.datatypeInput, obj.byteOrder)), obj.pixPerTileCol, obj.pixPerTileRow)';
-            
+
             [rr, cc] = size(tmpImg(rows, cols));
-            
+
             data(pixelStartTileRow(outTileRow) : pixelStartTileRow(outTileRow) + rr - 1, ...
               pixelStartTileCol(outTileCol) : pixelStartTileCol(outTileCol) + cc - 1, ...
               idxCh, idxZ, idxT) = tmpImg(rows, cols);
+            
+            idxCh = idxCh + 1;
           else
-            %fseek(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol * obj.bitsPerSample / 8, 'cof');
-            fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, obj.datatypeInput, obj.byteOrder);
+            fseek(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol * obj.bitsPerSample / 8, 'cof');
           end
-          
         end
       end
-      
-      idxCh = idxCh + 1;
     end
     idxZ = idxZ + 1;
   end
