@@ -78,6 +78,8 @@ else %ok, which type of file?
       else
         error('imageIOPtr: Reading of sif files currently supported only on windows')
       end
+    case '.lsm'
+      imgPtr = imageIO.LSMReader(file);
     otherwise %assume it could be opened using the BioFormatReader
       imgPtr = imageIO.BioReader(file);
   end

@@ -264,7 +264,7 @@ classdef TiffWriter < imageIO.ImageIO
         try
           obj.writeFast(writeMode, close, data);
         catch ME
-          if strcmpi(ME.identifier,'MATLAB:invalidMEXFile');
+          if strcmpi(ME.identifier,'MATLAB:invalidMEXFile')
             warning('You probably do not have the Microsoft C++ runtime installed. Install it from https://www.microsoft.com/en-us/download/details.aspx?id=48145')
           end
           multitiff('close');
