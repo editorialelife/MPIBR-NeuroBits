@@ -89,8 +89,8 @@ obj.originalMetadata.timeStamps = LSMTimeStamps(obj.lsmPtr, obj.originalMetadata
 obj.originalMetadata.scanInfo = LSMScanInfo(obj.lsmPtr, obj.originalMetadata.OFFSET_SCANINFO);
 
 % Set the metadata just read into the appropriate properties
-obj.height = obj.originalMetadata.DimensionX;
-obj.width = obj.originalMetadata.DimensionY;
+obj.width = obj.originalMetadata.DimensionX;
+obj.height = obj.originalMetadata.DimensionY;
 obj.channels = obj.originalMetadata.DimensionChannels;
 obj.stacks = obj.originalMetadata.DimensionZ;
 obj.time = obj.originalMetadata.DimensionTime;
