@@ -62,13 +62,14 @@ function [data, metadata, imgPtr] = imageIORead( file, varargin )
 %   'Channels': Specify which channels to extract
 %   'Planes': Specify which planes to extract
 %   'Time': Specify which timeseries to extract
+%   'Series': Specify which series to extract (for example, in LSM and CZI files
 %   'TileRows': Specify which row tiles to read.
 %   'TileCols': Specify which col tiles to read.
 % OUTPUT:
 %   data: image data, up to 5 dimension (in this order: XYCZT). If only one
 %   	channel is extracted (or the input is single channel), the singleton
 %   	dimension relative to channel is squeezed.
-%   metadata: structure containing all of the 
+%   metadata: structure containing all the metadata extracted from the file
 %   imgPtr: imageIO instance (actually instance of a subclass of imageIO)
 %     that can be used to extract other data or access the image properties
 %     and metadata
@@ -93,7 +94,8 @@ function [data, metadata, imgPtr] = imageIORead( file, varargin )
 %
 % SEE ALSO:
 %   imageIO, imageIO.imageIO, imageIO.TiffReader, imageIO.BioReader, 
-%   imageIO.CZIReader, imageIO.TiffDirReader
+%   imageIO.CZIReader, imageIO.TiffDirReader, imageIO.LSMReader,
+%   imageIO.ND2Reader, imageIOPtr, imageIO.ExrReader, imageIO.SifReader
 
 % check for wildcards in the image
 if any(file == '*') || any(file == '?')
@@ -129,6 +131,7 @@ p.addParameter('Rows', 1:imgPtr.pixPerTileRow, @(x) isvector(x) && all(x > 0) &&
 p.addParameter('Channels', 1:imgPtr.channels, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.channels);
 p.addParameter('Planes', 1:imgPtr.stacks, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.stacks);
 p.addParameter('Time', 1:imgPtr.time, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.time);
+p.addParameter('Series', 1:imgPtr.series, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.series);
 p.addParameter('TileCols', 1:imgPtr.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.numTilesCol);
 p.addParameter('TileRows', 1:imgPtr.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.numTilesRow);
 
@@ -155,7 +158,7 @@ end
 
 if closeFile
   if 3 == nargout % we are returning AND deleting it!
-    warning('imageIORead: returning pointer to image, but also closing it. Please set parameter ''closeFile'' to true')
+    warning('imageIORead: returning pointer to image, but also closing it. Please set parameter ''closeFile'' to false')
   end
   imgPtr.delete();
 end
