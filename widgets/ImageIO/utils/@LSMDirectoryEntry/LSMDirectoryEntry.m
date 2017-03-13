@@ -7,9 +7,16 @@ classdef LSMDirectoryEntry
 % Date: 13.3.2017
   
   properties
+    tag;
+    type;
+    length;         % number of values in value
+    value;          % File offset to the start of the values. If the values
+                    % require not more than 4 bytes, the values itself rather
+                    % than an offset are stored in the location value
   end
   
   properties (Constant = true)
+    % TIFF TAGS
     TIF_NEWSUBFILETYPE = 254;
     TIF_IMAGEWIDTH = 256;
     TIF_IMAGELENGTH = 257;
@@ -23,6 +30,12 @@ classdef LSMDirectoryEntry
     TIF_PREDICTOR = 317;
     TIF_COLORMAP = 320;
     TIF_CZ_LSMINFO = 34412;
+    % DATA TYPE
+    TIF_BYTE = 1;
+    TIF_ASCII = 2;
+    TIF_SHORT = 3;
+    TIF_LONG = 4;
+    TIF_RATIONAL = 5;
   end
   
   methods
@@ -41,6 +54,11 @@ classdef LSMDirectoryEntry
     %     field
     % OUTPUT
     %   obj: the instance of the class 
+    
+      obj.tag = fread(lsmPtr, 1, 'uint16', byteOrder);
+      obj.type = fread(lsmPtr, 1, 'uint16', byteOrder);
+      obj.length = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.value = fread(lsmPtr, 1, 'uint32', byteOrder);
     end
   end
   
