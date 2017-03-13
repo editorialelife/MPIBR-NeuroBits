@@ -36,6 +36,8 @@ classdef LSMDirectoryEntry
     TIF_SHORT = 3;
     TIF_LONG = 4;
     TIF_RATIONAL = 5;
+    % LENGTH IN BYTES OF A DIRECTORY ENTRY
+    ENTRY_LENGTH = 12;
   end
   
   methods
@@ -55,10 +57,48 @@ classdef LSMDirectoryEntry
     % OUTPUT
     %   obj: the instance of the class 
     
+      entryPos = ftell(lsmPtr);
       obj.tag = fread(lsmPtr, 1, 'uint16', byteOrder);
       obj.type = fread(lsmPtr, 1, 'uint16', byteOrder);
+      
+      if obj.type == obj.TIF_BYTE || obj.type == obj.TIF_ASCII
+        bytes = 1;
+      elseif obj.type == obj.TIF_SHORT
+        bytes = 2;
+      elseif obj.type == obj.TIF_LONG
+        bytes = 4;
+      elseif obj.type == obj.TIF_RATIONAL
+        bytes = 8;
+      else
+        error('LSMDirectoryEntry.init: Invalid type')
+      end
+      
       obj.length = fread(lsmPtr, 1, 'uint32', byteOrder);
-      obj.value = fread(lsmPtr, 1, 'uint32', byteOrder);
+      
+      if bytes * obj.length > 4 || (obj.tag == obj.TIF_BITSPERSAMPLE && obj.length == 2)
+        offset = fread(lsmPtr, 1, 'uint32', byteOrder);
+        if fseek(lsmPtr, offset, 'bof')
+          error(['LSMDirectoryEntry.init: Received error on file seek to data for entry ' num2str(obj.tag) ': ' ferror(lsmPtr)]);
+        end
+        %read values
+        if obj.type == obj.TIF_BYTE
+          obj.value = fread(lsmPtr, obj.length, 'uint8', byteOrder);
+        elseif obj.type == obj.TIF_ASCII
+          obj.value = fread(lsmPtr, obj.length, '*char', byteOrder)';
+        elseif obj.type == obj.TIF_SHORT
+          obj.value = fread(lsmPtr, obj.length, 'uint16', byteOrder);
+        elseif obj.type == obj.TIF_LONG
+          obj.value = fread(lsmPtr, obj.length, 'uint32', byteOrder);
+        elseif obj.type == obj.TIF_RATIONAL
+          tmp = fread(lsmPtr, 2*obj.length, 'uint32', byteOrder);
+          num = tmp(1:2:end);
+          den = tmp(2:2:end);
+          obj.value = double(num) ./ double(den);
+        end
+      else
+        obj.value = fread(lsmPtr, 1, 'uint32', byteOrder);
+      end
+      fseek(lsmPtr, entryPos + obj.ENTRY_LENGTH, 'bof');
     end
   end
   
