@@ -11,7 +11,12 @@ classdef LSMReader < imageIO.ImageIO
   
   properties
     lsmPtr = 0;              % Pointer to the LSM file (returned by fopen)
+    bigTiff;                 % Boolean, true if file size is bigger than 4Gb
     verbose = false;         % set to true only when displaying additional inf
+  end
+  
+  properties (Constant = true)
+    BYTE_ORDER = 'ieee-le'; %always little endian!
   end
   
   methods
@@ -50,12 +55,12 @@ classdef LSMReader < imageIO.ImageIO
     %   	channel is extracted (or the input is single channel), the singleton
     %   	dimension relative to channel is squeezed.
     % EXAMPLES
-    %   myCZI = imageIO.CZIReader('testfile.czi');
-    %   data = myCZI.getData(); %Reads all the data
-    %   data = myCZI.getData('Cols', 1:10) %Reads only the first then rows
-    %   data = myCZI.getData('Cols', 1:2:end) %Reads only the odd rows
-    %   data = myCZI.getData('C', 1, 'Z', 4:8) %Reads stacks 4 to 8, only 1st channel
-    %   data = myCZI.getData('TileRows', 1:6, 'TileCols, 2:4) %Reads first six rows of
+    %   myLSM = imageIO.LSMReader('testfile.czi');
+    %   data = myLSM.getData(); %Reads all the data
+    %   data = myLSM.getData('Cols', 1:10) %Reads only the first then rows
+    %   data = myLSM.getData('Cols', 1:2:end) %Reads only the odd rows
+    %   data = myLSM.getData('C', 1, 'Z', 4:8) %Reads stacks 4 to 8, only 1st channel
+    %   data = myLSM.getData('TileRows', 1:6, 'TileCols, 2:4) %Reads first six rows of
     %     tiles, and column tiles from 2 to 4
     
       if isempty(varargin) % Read all the data
