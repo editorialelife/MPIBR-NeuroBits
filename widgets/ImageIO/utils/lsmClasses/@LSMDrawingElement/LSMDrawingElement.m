@@ -5,7 +5,7 @@ classdef LSMDrawingElement
   %   drawing elements. The second part is drawing element type specific.
   %
   % AUTHOR: Stefano Masneri
-  % Date: 13.3.2017
+  % Date: 14.3.2017
   
   properties
     % fixed part
@@ -99,6 +99,7 @@ classdef LSMDrawingElement
   methods
     function obj = LSMDrawingElement(lsmPtr, byteOrder)
     %LSMDRAWINGELEMENT Constructor
+    % Assumes the file pointer in the correct position already
       obj.type = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.size = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.lineWidth = fread(lsmPtr, 1, 'int32', byteOrder);

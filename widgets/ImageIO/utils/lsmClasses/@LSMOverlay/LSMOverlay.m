@@ -57,6 +57,7 @@ classdef LSMOverlay
   methods
     function obj = LSMOverlay(lsmPtr, byteOrder)
     %LSMOVERLAY Constructor
+    % Assumes the file pointer in the correct position already
       obj.numberDrawingElements = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.lineWidth = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.measure = fread(lsmPtr, 1, 'int32', byteOrder);

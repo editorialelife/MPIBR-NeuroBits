@@ -102,6 +102,7 @@ classdef LSMInfo
     
     %PROPERTIES REACHED AFTER GOING TO OFFSET
     vectorOverlay;
+    timeStamps;
   end
   
   methods
@@ -171,12 +172,24 @@ classdef LSMInfo
       reserved2 = fread(lsmPtr, 21, 'uint32', byteOrder);
       
       if obj.offsetVectorOverlay ~= 0
+        fseek(lsmPtr, obj.offsetVectorOverlay, 'bof');
+        obj.vectorOverlay = LSMOverlay(lsmPtr, byteOrder);
       end
       
       if obj.offsetInputLut ~= 0
       end
       
       if obj.offsetOutputLut ~= 0
+      end
+      
+      if obj.offsetTimeStamps ~= 0
+        fseek(lsmPtr, obj.offsetTimeStamps, 'bof');
+        obj.timeStamps = LSMTimeStamps(lsmPtr, byteOrder);
+      end
+      
+      if obj.offsetEventList ~= 0
+        fseek(lsmPtr, obj.offsetEventList, 'bof');
+        obj.timeStamps = LSMEventList(lsmPtr, byteOrder);
       end
     end
   end
