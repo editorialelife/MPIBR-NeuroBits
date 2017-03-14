@@ -102,6 +102,8 @@ classdef LSMInfo
     
     %PROPERTIES REACHED AFTER GOING TO OFFSET
     vectorOverlay;
+    inputLut;
+    outputLut;
     timeStamps;
   end
   
@@ -177,9 +179,13 @@ classdef LSMInfo
       end
       
       if obj.offsetInputLut ~= 0
+        fseek(lsmPtr, obj.offsetInputLut, 'bof');
+        obj.inputLut = LSMLookupTable(lsmPtr, byteOrder);
       end
       
       if obj.offsetOutputLut ~= 0
+        fseek(lsmPtr, obj.offsetOutputLut, 'bof');
+        obj.outputLut = LSMLookupTable(lsmPtr, byteOrder);
       end
       
       if obj.offsetTimeStamps ~= 0
