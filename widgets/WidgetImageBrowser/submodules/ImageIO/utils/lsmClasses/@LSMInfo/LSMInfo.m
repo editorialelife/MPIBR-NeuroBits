@@ -5,7 +5,9 @@ classdef LSMInfo
   %   and the states of several editors. Basic information is stored directly
   %   in the structure. For additional information there are file offsets to
   %   further structures.
-  
+  %
+  % AUTHOR: Stefano Masneri
+  % Date: 14.3.2017
   properties
     % PROPERTIES AVAILABLE DIRECTLY 
     structureSize;                  % Number of bytes in the structure
@@ -98,7 +100,8 @@ classdef LSMInfo
     dimensionM;                     % Number of intensity values in tile (mosaic)-direction
     offsetTilePositions;            % File offset to a block with the positions of the tiles
     
-    %PROPETRIES REACHED AFTER GOING TO OFFSET
+    %PROPERTIES REACHED AFTER GOING TO OFFSET
+    vectorOverlay;
   end
   
   methods
@@ -166,6 +169,15 @@ classdef LSMInfo
       reserved = fread(lsmPtr, 9, 'uint32', byteOrder);
       offsetPositions = fread(lsmPtr, 1, 'uint32', byteOrder);
       reserved2 = fread(lsmPtr, 21, 'uint32', byteOrder);
+      
+      if obj.offsetVectorOverlay ~= 0
+      end
+      
+      if obj.offsetInputLut ~= 0
+      end
+      
+      if obj.offsetOutputLut ~= 0
+      end
     end
   end
   
