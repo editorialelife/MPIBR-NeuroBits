@@ -32,6 +32,21 @@ if fortytwo ~= 42
   error('LSMReader.readMetadata: This is not a correct LSM file');
 end
 offsetFirstIFD = fread(obj.lsmPtr, 1, 'uint32', obj.BYTE_ORDER);
+fseek(obj.lsmPtr, offsetFirstIFD, 'bof');
+
+% Now read the first image directory, the one containing all the metadata
+imgDir = LSMImageDirectory();
+imgDir = imgDir.init(obj.lsmPtr, obj.BYTE_ORDER);
+infoDirEntry = imgDir.dirEntryArray([imgDir.dirEntryArray.tag] == obj.TIF_CZ_LSMINFO );
+
+% Create the LSMInfo object checking the specific Directory Entry
+if infoDirEntry.isOffset
+  fseek(obj.lsmPtr, infoDirEntry.value, 'bof');
+  obj.originalMetadata = LSMInfo(obj.lsmPtr, obj.BYTE_ORDER);
+else
+  error('LSMReader.readMetadata: CZ_LSMINFO tag should contain offset to metadata')
+end
+
 
   
 end

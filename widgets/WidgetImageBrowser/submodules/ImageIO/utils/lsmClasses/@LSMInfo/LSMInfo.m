@@ -7,6 +7,7 @@ classdef LSMInfo
   %   further structures.
   
   properties
+    % PROPERTIES AVAILABLE DIRECTLY 
     structureSize;                  % Number of bytes in the structure
     dimensionX;                     % Number of intensity values in x-direction
     dimensionY;                     % Number of intensity values in y-direction
@@ -96,9 +97,76 @@ classdef LSMInfo
     dimensionP;                     % Number of intensity values in position-direction
     dimensionM;                     % Number of intensity values in tile (mosaic)-direction
     offsetTilePositions;            % File offset to a block with the positions of the tiles
+    
+    %PROPETRIES REACHED AFTER GOING TO OFFSET
   end
   
   methods
+    function obj = LSMInfo(lsmPtr, byteOrder)
+    %LSMINFO Constructor
+    %Read all the info contained in the CZ_LSMINFO tag. Assumes the file
+    %pointer in the correct position already
+    
+      magicNumber = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.structureSize = fread(lsmPtr, 1, 'int32', byteOrder);
+      obj.dimensionX = fread(lsmPtr, 1, 'int32', byteOrder);
+      obj.dimensionY = fread(lsmPtr, 1, 'int32', byteOrder);
+      obj.dimensionZ = fread(lsmPtr, 1, 'int32', byteOrder);
+      obj.dimensionChannels = fread(lsmPtr, 1, 'int32', byteOrder);
+      obj.dimensionTime = fread(lsmPtr, 1, 'int32', byteOrder);
+      obj.dataType = fread(lsmPtr, 1, 'int32', byteOrder);
+      obj.thumbnailX = fread(lsmPtr, 1, 'int32', byteOrder);
+      obj.thumbnailY = fread(lsmPtr, 1, 'int32', byteOrder);
+      obj.voxelSizeX = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.voxelSizeY = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.voxelSizeZ = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.originX = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.originY = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.originZ = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.scanType = fread(lsmPtr, 1, 'uint16', byteOrder);
+      obj.spectralScan = fread(lsmPtr, 1, 'uint16', byteOrder);
+      obj.uDataType = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetVectorOverlay = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetInputLut = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetOutputLut = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetChannelColors = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.timeInterval = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.offsetChannelDatatype = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetScanInformation = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetKsData = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetTimeStamps = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetEventList = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetRoi = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetBleachRoi = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetNextRecording = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.displayAspectX = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.displayAspectY = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.displayAspectZ = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.displayAspectTime = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.offsetMeanOfRoisOverlay = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetTopoIsolineOverlay = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetTopoProfileOverlay = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetLinescanOverlay = fread(lsmPtr, 1, 'uint32', byteOrder);
+      offsetToolbarFlags = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetChannelWavelength = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetChannelFactors = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.objectiveSphereCorrection = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.offsetUnmixParameters = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetAcquisitionParameters = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetCharacteristics = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetPalette = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.timeDifferenceX = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.timeDifferenceY = fread(lsmPtr, 1, 'double', byteOrder);
+      obj.timeDifferenceZ = fread(lsmPtr, 1, 'double', byteOrder);
+      internalUse1 = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.dimensionP = fread(lsmPtr, 1, 'int32', byteOrder);
+      obj.dimensionM = fread(lsmPtr, 1, 'int32', byteOrder);
+      internalUse2 = fread(lsmPtr, 16, 'int32', byteOrder);
+      obj.offsetTilePositions = fread(lsmPtr, 1, 'uint32', byteOrder);
+      reserved = fread(lsmPtr, 9, 'uint32', byteOrder);
+      offsetPositions = fread(lsmPtr, 1, 'uint32', byteOrder);
+      reserved2 = fread(lsmPtr, 21, 'uint32', byteOrder);
+    end
   end
   
 end

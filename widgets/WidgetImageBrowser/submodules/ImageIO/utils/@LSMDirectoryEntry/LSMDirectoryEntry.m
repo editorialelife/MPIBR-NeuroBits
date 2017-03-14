@@ -9,10 +9,11 @@ classdef LSMDirectoryEntry
   properties
     tag;
     type;
-    length;         % number of values in value
-    value;          % File offset to the start of the values. If the values
-                    % require not more than 4 bytes, the values itself rather
-                    % than an offset are stored in the location value
+    length;           % number of values in value
+    value;            % File offset to the start of the values. If the values
+                      % require not more than 4 bytes, the values itself rather
+                      % than an offset are stored in the location value
+    isOffset = false; % true if value represents an offset
   end
   
   properties (Constant = true)
@@ -76,10 +77,9 @@ classdef LSMDirectoryEntry
       obj.length = fread(lsmPtr, 1, 'uint32', byteOrder);
       
       if bytes * obj.length > 4 || (obj.tag == obj.TIF_BITSPERSAMPLE && obj.length == 2)
-        offset = fread(lsmPtr, 1, 'uint32', byteOrder);
-        if fseek(lsmPtr, offset, 'bof')
-          error(['LSMDirectoryEntry.init: Received error on file seek to data for entry ' num2str(obj.tag) ': ' ferror(lsmPtr)]);
-        end
+        obj.value = fread(lsmPtr, 1, 'uint32', byteOrder);
+        obj.isOffset = true;
+      else
         %read values
         if obj.type == obj.TIF_BYTE
           obj.value = fread(lsmPtr, obj.length, 'uint8', byteOrder);
@@ -95,8 +95,6 @@ classdef LSMDirectoryEntry
           den = tmp(2:2:end);
           obj.value = double(num) ./ double(den);
         end
-      else
-        obj.value = fread(lsmPtr, 1, 'uint32', byteOrder);
       end
       fseek(lsmPtr, entryPos + obj.ENTRY_LENGTH, 'bof');
     end

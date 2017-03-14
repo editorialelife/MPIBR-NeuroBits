@@ -1,5 +1,5 @@
-classdef LSMReader < imageIO.ImageIO
-  %LSMREADER Class used to read LSM files
+classdef LSMReaderOld < imageIO.ImageIO
+  %LSMREADEROLD Class used to read LSM files
   %   This class implements a Matlab API for reading files specified using
   %   the LSM file format. The class relies on some existing implementations, 
   %   available in the Matlab FEX:
@@ -33,8 +33,8 @@ classdef LSMReader < imageIO.ImageIO
   
   methods
     
-    function obj = LSMReader(filename)
-    %LSMREADER Constructor of the class
+    function obj = LSMReaderOld(filename)
+    %LSMReaderOld Constructor of the class
     %The constructor calls the constructor of the superclass, and then
     %tries to parse the file to extract as much information as
     %possible from the file. No actual data is read in the constructor
@@ -68,7 +68,7 @@ classdef LSMReader < imageIO.ImageIO
     %   	channel is extracted (or the input is single channel), the singleton
     %   	dimension relative to channel is squeezed.
     % EXAMPLES
-    %   myLSM = imageIO.LSMReader('testfile.czi');
+    %   myLSM = imageIO.LSMReaderOld('testfile.czi');
     %   data = myLSM.getData(); %Reads all the data
     %   data = myLSM.getData('Cols', 1:10) %Reads only the first then rows
     %   data = myLSM.getData('Cols', 1:2:end) %Reads only the odd rows
