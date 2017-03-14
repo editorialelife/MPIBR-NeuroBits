@@ -9,7 +9,7 @@ classdef LSMImageDirectory
   properties
     numDirectories;         % number of directory entries
     dirEntryArray;          % array of directory entries
-    ofssetNextImageDir;     % offset to the next image directory
+    offsetNextImageDir;     % offset to the next image directory
   end
   
   methods
@@ -32,7 +32,7 @@ classdef LSMImageDirectory
       for k = 1:obj.numDirectories
         obj.dirEntryArray(k) = obj.dirEntryArray(k).init(lsmPtr, byteOrder);
       end
-      obj.ofssetNextImageDir = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetNextImageDir = fread(lsmPtr, 1, 'uint32', byteOrder);
     end
   end
   

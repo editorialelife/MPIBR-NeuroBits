@@ -11,12 +11,14 @@ classdef LSMReader < imageIO.ImageIO
   
   properties
     lsmPtr = 0;              % Pointer to the LSM file (returned by fopen)
+    imgDirArray;             % Array of image directories
     bigTiff;                 % Boolean, true if file size is bigger than 4Gb
     verbose = false;         % set to true only when displaying additional inf
   end
   
   properties (Constant = true)
     BYTE_ORDER = 'ieee-le'; %always little endian!
+    TIF_CZ_LSMINFO = 34412;
   end
   
   methods
