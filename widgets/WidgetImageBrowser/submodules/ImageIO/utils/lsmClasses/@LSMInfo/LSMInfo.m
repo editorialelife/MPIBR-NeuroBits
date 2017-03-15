@@ -278,6 +278,11 @@ classdef LSMInfo
       if obj.offsetChannelWavelength ~= 0
         fseek(lsmPtr, obj.offsetChannelWavelength, 'bof');
         obj.channelWavelength = LSMChannelWavelength(lsmPtr, byteOrder);
+      end
+      
+      if obj.offsetTilePositions ~= 0
+        fseek(lsmPtr, obj.offsetTilePositions, 'bof');
+        obj.tilePositions = LSMTilePositions(lsmPtr, byteOrder);
       end 
     end
   end
