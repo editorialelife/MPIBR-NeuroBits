@@ -25,14 +25,16 @@ classdef LSMEventList
     % Assumes the file pointer in the correct position already
       obj.size = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.numberEvents = fread(lsmPtr, 1, 'int32', byteOrder);
-      tmp = struct('size', 0, 'time', 0.0, 'type', 0, 'description', '');
-      obj.eventEntries(obj.numberEvents) = tmp; %initialize struct array
-      for k = 1:obj.numberEvents
-        obj.eventEntries(k).size = fread(lsmPtr, 1, 'uint32', byteOrder);
-        obj.eventEntries(k).time = fread(lsmPtr, 1, 'double', byteOrder);
-        obj.eventEntries(k).type = fread(lsmPtr, 1, 'uint32', byteOrder);
-        textToRead = obj.eventEntries(k).size - 16;
-        obj.eventEntries(k).description = fread(lsmPtr, textToRead, '*char')';
+      if obj.numberEvents > 0
+        tmp = struct('size', 0, 'time', 0.0, 'type', 0, 'description', '');
+        obj.eventEntries(obj.numberEvents) = tmp; %initialize struct array
+        for k = 1:obj.numberEvents
+          obj.eventEntries(k).size = fread(lsmPtr, 1, 'uint32', byteOrder);
+          obj.eventEntries(k).time = fread(lsmPtr, 1, 'double', byteOrder);
+          obj.eventEntries(k).type = fread(lsmPtr, 1, 'uint32', byteOrder);
+          textToRead = obj.eventEntries(k).size - 16;
+          obj.eventEntries(k).description = fread(lsmPtr, textToRead, '*char')';
+        end
       end
     end
   end

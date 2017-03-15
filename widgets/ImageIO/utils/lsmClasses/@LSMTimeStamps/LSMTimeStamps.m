@@ -1,16 +1,13 @@
 classdef LSMTimeStamps
   %TIMESTAMPS Simple class representing the Timestamps part of LSM metadata
   %
+  % AUTHOR: Stefano Masneri
+  % Date: 14.3.2017
   
   properties
     size             = 0;
     numberTimeStamps = 0;
     timeStamps;
-  end
-  
-  properties (Constant = true)
-    FIELDS = 2;
-    FIELDS_SIZE = 2*4; %They are all int32
   end
   
   methods

@@ -13,7 +13,7 @@ classdef LSMScanInformation
   
   
   properties
-    entries;        % Cell containing all the properties read from the ScanInformation
+    entries;        % Dictionary containing all the properties read from the ScanInformation
 
     propertyList;   % Cell array matching hex codes to metadata, based on LSM 
                     % file format specifications
@@ -25,6 +25,8 @@ classdef LSMScanInformation
     % Assumes the file pointer in the correct position already
       obj = obj.createPropertyList();
       
+      obj.entries = containers.Map('UniformValues', false);
+      
       % The algorithm for reading the scaninfo database depends on keeping track of a
       % "level" hierarchy.  As the database is read, some entries are level
       % instructions, navigating up or down the hierarchy.  The database is done when
@@ -32,7 +34,7 @@ classdef LSMScanInformation
       level = 0;
       while (1)
         
-        taghex      = dec2hex(fread(lsmPtr, 1, 'uint32'), byteOrder);
+        taghex      = dec2hex(fread(lsmPtr, 1, 'uint32', byteOrder));
         typecode    = fread(lsmPtr, 1, 'uint32', byteOrder);
         size        = fread(lsmPtr, 1, 'uint32', byteOrder);
         tag         = obj.getTag(['h' taghex]);
@@ -66,13 +68,18 @@ classdef LSMScanInformation
           else
             propName = tag;
           end
-          obj = obj.appendField(propName, value);
+          obj = obj.addEntry(propName, value);
         end
         
         if 0 == level
           break;
         end
       end
+    end
+    
+    function [keys, values] = getAllEntries(obj)
+      keys = obj.entries.keys();
+      values = obj.entries.values();
     end
   end
   
@@ -88,15 +95,11 @@ classdef LSMScanInformation
       end
     end
     
-    function obj = appendField(obj, propName, value)
+    function obj = addEntry(obj, propName, value)
       try
-        if iscell(obj.(propName)) % Already converted this field into cells
-          obj.(propName){end+1} = value;
-        else     % just set it
-          obj.(propName) = value;
-        end
+        obj.entries(propName) = value;
       catch
-        error('LSMScanInformation: error appending field to entries')
+        error('LSMScanInformation: error adding field to entries')
       end
     end
     
