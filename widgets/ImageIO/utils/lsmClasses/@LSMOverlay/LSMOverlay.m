@@ -63,10 +63,13 @@ classdef LSMOverlay
       obj.measure = fread(lsmPtr, 1, 'int32', byteOrder);
       reserved1 = fread(lsmPtr, 1, 'int32', byteOrder);
       reserved2 = fread(lsmPtr, 1, 'int32', byteOrder);
-      color = fread(lsmPtr, 1, 'int32', byteOrder);
-      r = bitand(255, color, 'uint32');
-      g = bitand(65280, color, 'uint32') / 256;
-      b = bitand(16711680, color, 'uint32') / 65536;
+      r = fread(lsmPtr, 1, 'uint8', byteOrder);
+      g = fread(lsmPtr, 1, 'uint8', byteOrder);
+      b = fread(lsmPtr, 1, 'uint8', byteOrder);
+      zero = fread(lsmPtr, 1, 'uint8', byteOrder);
+      if zero
+        error('LSMOverlay: Error parsing LSM file')
+      end
       obj.color = [r, g, b];
       obj.valid = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.knotWidth = fread(lsmPtr, 1, 'int32', byteOrder);
