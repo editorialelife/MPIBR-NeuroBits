@@ -57,18 +57,34 @@ classdef LSMLookupTable
       obj.advanced = fread(lsmPtr, 1, 'uint32', byteOrder);
       obj.currentChannel = fread(lsmPtr, 1, 'uint32', byteOrder);
       reserved = fread(lsmPtr, 9, 'uint32', byteOrder);
-      if any(cane)
+      if any(reserved)
         error('LSMLookupTable: Error parsing from file')
       end
-      % now read all the subblocks
+      % now read all the subblocks. Refer to the LSM File format
+      % implementations for details on how the LUT is computed from these
+      % values
       for k = 1:obj.numberSubBlocks
         type = fread(lsmPtr, 1, 'uint32', byteOrder);
+        size = fread(lsmPtr, 1, 'uint32', byteOrder) / 8; % /8 because size is in bytes, we read doubles
         if type == obj.SUBBLOCK_GAMMA
+          obj.gamma = fread(lsmPtr, size, 'double', byteOrder);
         elseif type == obj.SUBBLOCK_BRIGHTNESS
+          obj.brightness = fread(lsmPtr, size, 'double', byteOrder);
         elseif type == obj.SUBBLOCK_CONTRAST
+          obj.contrast = fread(lsmPtr, size, 'double', byteOrder);
         elseif type == obj.SUBBLOCK_RAMP
+          data = fread(lsmPtr, size, 'double', byteOrder);
+          obj.ramp.startX = data(1:4:end);
+          obj.ramp.startY = data(2:4:end);
+          obj.ramp.endX = data(3:4:end);
+          obj.ramp.endY = data(4:4:end);
         elseif type == obj.SUBBLOCK_KNOTS
-        elseif type == obj.SUBBLOCK_LIST_END
+          obj.knots = fread(lsmPtr, size, 'double', byteOrder);
+        elseif type == obj.SUBBLOCK_PALETTE_12_TO_12
+          size = size * 4; % here we are using 16 bit integers, not dowubles!
+          data = fread(lsmPtr, size, 'int16', byteOrder);
+          numCh = length(data) / 4096;
+          obj.palette12To12 = reshape(data, numCh, 4096);
         end
       end
       subblockEnd = fread(lsmPtr, 1, 'uint32', byteOrder);
