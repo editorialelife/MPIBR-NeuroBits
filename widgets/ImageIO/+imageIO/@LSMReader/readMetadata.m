@@ -75,10 +75,33 @@ end
 if length(obj.datatype) == 1
   obj.datytype = obj.datatype{1};
 end
-obj.scaleSize = [];
+obj.channelInfo = obj.originalMetadata.channelColors;
+obj.scaleSize = [obj.originalMetadata.voxelSizeY obj.originalMetadata.voxelSizeY obj.originalMetadata.voxelSizeZ];
 obj.scaleUnits = {'m', 'm', 'm'};
+if ~isempty(obj.originalMetadata.channelWavelength)
+  for k = 1:obj.originalMetadata.channelWavelength.numChannels
+    obj.wavelengthExc{k} = [obj.originalMetadata.channelWavelength.startWavelength(k) ...
+                            obj.originalMetadata.channelWavelength.endWavelength(k)];
+  end
+end
+try
+  obj.objectiveName = obj.originalMetadata.scanInformation.entries('ENTRY_OBJECTIVE');
+catch % do nothing
+end
+try
+  obj.timePixel = obj.originalMetadata.scanInformation.entries('PIXEL_TIME');
+catch % do nothing
+end
+obj.colTilePos = obj.originalMetadata.tilesPositions.XPos / obj.scaleSize(2);
+obj.colTilePos = obj.colTilePos - min(obj.colTilePos);
 
+obj.rowTilePos = obj.originalMetadata.tilesPositions.YPos / obj.scaleSize(1);
+obj.rowTilePos = obj.rowTilePos - min(obj.rowTilePos);
 
+obj.tileOverlap = (obj.colTilePos(2) - obj.colTilePos(1)) / obj.pixPerTileCol;
+
+obj.height = max(obj.rowTilePos) + obj.pixPerTileRow;
+obj.width = max(obj.colTilePos) + obj.pixPerTileCol;
   
 end
 
