@@ -18,9 +18,9 @@ classdef LSMInfo
                                     % the Number of ROIs.
     dimensionChannels;              % Number of channels
     dimensionTime;                  % Number of intensity values in time-direction
-    dataType;                       % format of intensity values. 1 for uint8,
-                                    % 2 for uint12, 5 for float 32bit, 0
-                                    % for differente data tyoes for
+    datatype;                       % format of intensity values. 1 for uint8,
+                                    % 2 for uint12, 3 for uint16, 5 for float 32bit, 0
+                                    % for differente data types for
                                     % different channels
     thumbnailX;                     % Width in pixels of a thumbnail.
     thumbnailY;                     % Height in pixels of a thumbnail.
@@ -46,61 +46,19 @@ classdef LSMInfo
                                     % 10 - point mode (release 3.0 or later)
     spectralScan;                   % Spectral scan flag (0 = no scan, 1 = spectral scan mode)
     uDataType;                      % 0 = original data, 1 = calculated data, 2 = 3d Recon, 3 = Topograpy height map
-    offsetVectorOverlay;            % File offset to the description of the vector overlay
-    offsetInputLut;                 % File offset to the channel input LUT with brightness and contrast properties
-    offsetOutputLut;                % File offset to the color palette
-    offsetChannelColors;            % File offset to the list of channel colors and channel names
     timeInterval;                   % Time interval for time series in "s"
-    offsetChannelDatatype;          % File offset to an array with UINT32-values with the
-                                    % format of the intensity values for the respective channels 
-                                    % (can be 0, if not present). 
-                                    % 1 - for 8-bit unsigned integer,
-                                    % 2 - for 12-bit unsigned integer and
-                                    % 5 - for 32-bit float (for "Time Series Mean-of-ROIs" ).
-    offsetScanInformation;          % File offset to a structure with information of the device
-                                    % settings used to scan the image
-    offsetKsData;                   % File offset to “Zeiss Vision KS-3D” specific data
-    offsetTimeStamps;               % File offset to a structure containing the time stamps for the time indexes
-    offsetEventList;                % File offset to a structure containing the experimental notations recorded during a time series
-    offsetRoi;                      % File offset to a structure containing a list of the ROIs used during the scan operation
-    offsetBleachRoi;                % File offset to a structure containing a description of the bleach region used during the scan operation
-    offsetNextRecording;            % For "Time Series Mean-of-ROIs" and for "Line scans" it is
-                                    % possible that a second image is stored in the file
-                                    % (can be 0, if not present). For "Time Series Mean-of-ROIs"
-                                    % it is an image with the ROIs. For "Line scans" 
-                                    % it is the image with the selected line.
                                     % Currently not implemented in MATLAB!
     displayAspectX;                 % Zoom factor for the image display in x-direction
     displayAspectY;                 % Zoom factor for the image display in y-direction
     displayAspectZ;                 % Zoom factor for the image display in z-direction
     displayAspectTime;              % Zoom factor for the image display in time-direction
-    offsetMeanOfRoisOverlay;        % File offset to the description of the vector overlay
-                                    % with the ROIs used during a scan in "Mean of ROIs" mode
-    offsetTopoIsolineOverlay;       % File offset to the description of the vector overlay for the
-                                    % topography–iso–lines and height display with
-                                    % the profile selection line
-    offsetTopoProfileOverlay;       % File offset to the description of the vector overlay
-                                    % for the topography–profile display
-    offsetLinescanOverlay;          % File offset to the description of the vector overlay
-                                    % for the line scan line selection with the selected
-                                    % line or Bezier curve
-    offsetChannelWavelength;        % Offset to memory block with the wavelength range
-                                    % used during acquisition for the individual channels
-    offsetChannelFactors;           % too long to explain ^_^'          
     objectiveSphereCorrection;      % The inverse radius of the spherical error of the
                                     % objective that was used during acquisition
-    offsetUnmixParameters;          % File offset to the parameters for linear unmixing
-    offsetAcquisitionParameters;    % File offset to a block with acquisition parameters
-    offsetCharacteristics;          % File offset to a block with user specified properties
-    offsetPalette;                  % File offset to a block with detailed color palette properties
     timeDifferenceX;                % The time difference for the acquisition of adjacent pixels in x-direction in seconds
     timeDifferenceY;                % The time difference for the acquisition of adjacent pixels in y-direction in seconds
     timeDifferenceZ;                % The time difference for the acquisition of adjacent pixels in z-direction in seconds
     dimensionP;                     % Number of intensity values in position-direction
     dimensionM;                     % Number of intensity values in tile (mosaic)-direction
-    offsetTilePositions;            % File offset to a block with the positions of the tiles
-    offsetPositions;                % File offset to a block with the positions of the acquisition regions
-                                    %   this represents position of each series.
     
     %PROPERTIES REACHED AFTER GOING TO OFFSET
     vectorOverlay;
@@ -128,6 +86,51 @@ classdef LSMInfo
     seriesPositions;
   end
   
+  properties (Hidden = true)
+    offsetVectorOverlay;            % File offset to the description of the vector overlay
+    offsetInputLut;                 % File offset to the channel input LUT with brightness and contrast properties
+    offsetOutputLut;                % File offset to the color palette
+    offsetChannelColors;            % File offset to the list of channel colors and channel names
+    offsetChannelDatatype;          % File offset to an array with UINT32-values with the
+                                    % format of the intensity values for the respective channels 
+                                    % (can be 0, if not present). 
+                                    % 1 - for 8-bit unsigned integer,
+                                    % 2 - for 12-bit unsigned integer and
+                                    % 5 - for 32-bit float (for "Time Series Mean-of-ROIs" ).
+    offsetScanInformation;          % File offset to a structure with information of the device
+                                    % settings used to scan the image
+    offsetKsData;                   % File offset to “Zeiss Vision KS-3D” specific data
+    offsetTimeStamps;               % File offset to a structure containing the time stamps for the time indexes
+    offsetEventList;                % File offset to a structure containing the experimental notations recorded during a time series
+    offsetRoi;                      % File offset to a structure containing a list of the ROIs used during the scan operation
+    offsetBleachRoi;                % File offset to a structure containing a description of the bleach region used during the scan operation
+    offsetNextRecording;            % For "Time Series Mean-of-ROIs" and for "Line scans" it is
+                                    % possible that a second image is stored in the file
+                                    % (can be 0, if not present). For "Time Series Mean-of-ROIs"
+                                    % it is an image with the ROIs. For "Line scans" 
+                                    % it is the image with the selected line.
+    offsetMeanOfRoisOverlay;        % File offset to the description of the vector overlay
+                                    % with the ROIs used during a scan in "Mean of ROIs" mode
+    offsetTopoIsolineOverlay;       % File offset to the description of the vector overlay for the
+                                    % topography–iso–lines and height display with
+                                    % the profile selection line
+    offsetTopoProfileOverlay;       % File offset to the description of the vector overlay
+                                    % for the topography–profile display
+    offsetLinescanOverlay;          % File offset to the description of the vector overlay
+                                    % for the line scan line selection with the selected
+                                    % line or Bezier curve
+    offsetChannelWavelength;        % Offset to memory block with the wavelength range
+                                    % used during acquisition for the individual channels
+    offsetChannelFactors;           % too long to explain ^_^'
+    offsetUnmixParameters;          % File offset to the parameters for linear unmixing
+    offsetAcquisitionParameters;    % File offset to a block with acquisition parameters
+    offsetCharacteristics;          % File offset to a block with user specified properties
+    offsetPalette;                  % File offset to a block with detailed color palette properties
+    offsetTilePositions;            % File offset to a block with the positions of the tiles
+    offsetPositions;                % File offset to a block with the positions of the acquisition regions
+                                    %   this represents position of each series.
+  end
+  
   properties (Constant = true)
     CHANNEL_DATATYPE_UINT8 = 1;
     CHANNEL_DATATYPE_UINT12 = 2;
@@ -152,7 +155,7 @@ classdef LSMInfo
       obj.dimensionZ = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.dimensionChannels = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.dimensionTime = fread(lsmPtr, 1, 'int32', byteOrder);
-      obj.dataType = fread(lsmPtr, 1, 'int32', byteOrder);
+      obj.datatype = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.thumbnailX = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.thumbnailY = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.voxelSizeX = fread(lsmPtr, 1, 'double', byteOrder);
@@ -228,6 +231,10 @@ classdef LSMInfo
       if obj.offsetChannelDatatype ~= 0
         fseek(lsmPtr, obj.offsetChannelDatatype, 'bof');
         obj.channelDatatype = fread(lsmPtr, obj.dimensionChannels, 'uint32', byteOrder);
+        obj.datatype = obj.channelDatatype;
+        if length(unique(obj.datatype)) == 1
+          obj.datatype = obj.datatype(1); % to simplify
+        end
       end
       
       if obj.offsetScanInformation ~= 0
@@ -250,7 +257,7 @@ classdef LSMInfo
       end
       
       if obj.offsetRoi ~= 0
-        fseek(lsmPtr, obj.offsetROI, 'bof');
+        fseek(lsmPtr, obj.offsetRoi, 'bof');
         obj.roi = LSMOverlay(lsmPtr, byteOrder);
       end
       
@@ -293,7 +300,7 @@ classdef LSMInfo
         obj.tilePositions = LSMTilePositions(lsmPtr, byteOrder);
       end
       
-      if obj.offsetPositionss ~= 0
+      if obj.offsetPositions ~= 0
         fseek(lsmPtr, obj.offsetPositions, 'bof');
         obj.seriesPositions = LSMSeriesPositions(lsmPtr, byteOrder);
         if ~isempty(obj.tilePositions) % Must update

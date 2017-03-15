@@ -47,6 +47,37 @@ else
   error('LSMReader.readMetadata: CZ_LSMINFO tag should contain offset to metadata')
 end
 
+% Now assign all the ImageIO property
+
+obj.channels = obj.originalMetadata.dimensionChannels;
+obj.stacks = obj.originalMetadata.dimensionZ;
+obj.time = obj.originalMetadata.dimensionTime;
+obj.series = obj.originalMetadata.dimensionP;
+obj.tile = obj.originalMetadata.dimensionM;
+obj.numTilesRow = unique(obj.originalMetadata.tilesPositions.YPos);
+obj.numTilesCol = unique(obj.originalMetadata.tilesPositions.XPos);
+obj.pixPerTileRow = obj.originalMetadata.dimensionY;
+obj.pixPerTileCol = obj.originalMetadata.dimensionX;
+for k = 1:length(obj.originalMetadata.datatype)
+  switch obj.originalMetadata.datatype(k)
+    case 1
+      obj.datatype{k} = 'uint8';
+    case 2
+      obj.datatype{k} = 'uint12';
+    case 3
+      obj.datatype{k} = 'uint16';
+    case 5
+      obj.datatype{k} = 'float';
+    otherwise
+      error('LSMReader.readMetadata: Unrecognized datatype')
+  end
+end
+if length(obj.datatype) == 1
+  obj.datytype = obj.datatype{1};
+end
+obj.scaleSize = [];
+obj.scaleUnits = {'m', 'm', 'm'};
+
 
   
 end
