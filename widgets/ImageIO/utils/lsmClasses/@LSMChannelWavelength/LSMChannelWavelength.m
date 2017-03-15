@@ -4,6 +4,9 @@ classdef LSMChannelWavelength
   % detected emission light is known. The information is stored in a block in
   % the image file. The u32OffsetChannelWavelength entry of the CZ-Private 
   % tag contains the offset to this block.
+  %
+  % AUTHOR: Stefano Masneri
+  % Date: 15.3.2017
   
   properties
     numChannels;     % Number of channels for which wavelength information is stored
@@ -15,7 +18,7 @@ classdef LSMChannelWavelength
     function obj = LSMChannelWavelength(lsmPtr, byteOrder)
     %LSMCHANNELWAVELENGTH Constructor
       obj.numChannels = fread(lsmPtr, 1, 'int32', byteOrder);
-      wl = fread(lsmPtr, obj.numChannels, 'double', byteOrder);
+      wl = fread(lsmPtr, obj.numChannels * 2, 'double', byteOrder);
       obj.startWavelength = wl(1:2:end);
       obj.endWavelength = wl(2:2:end);
     end
