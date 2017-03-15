@@ -120,7 +120,7 @@ classdef (Sealed) LSMSpecs < handle
       scan{19}  = {'h10000012',    'LINESCAN_X_Y'                     };
       scan{20}  = {'h10000013',    'SCAN_DIRECTION'                  };
       scan{21}  = {'h10000014',    'TIME_SERIES'                   	 };
-      scan{22}  = {'h10000015',    'ORIGNAL_SCAN_DATA'             	 };
+      scan{22}  = {'h10000015',    'ORIGINAL_SCAN_DATA'             	 };
       scan{23}  = {'h10000016',    'ZOOM_X'                          };
       scan{24}  = {'h10000017',    'ZOOM_Y'                          };
       scan{25}  = {'h10000018',    'ZOOM_Z'                          };
@@ -135,7 +135,7 @@ classdef (Sealed) LSMSpecs < handle
       scan{34}  = {'h10000021',    'VOLUME_DEPTH'                  	 };
       scan{35}  = {'h10000034',    'ROTATION'                      	 };
       scan{36}  = {'h10000035',    'PRECESSION'                    	 };
-      scan{37}  = {'h10000036',    'SAMPLE_0_TIME'                  	 };
+      scan{37}  = {'h10000036',    'SAMPLE_0_TIME'                   };
       scan{38}  = {'h10000037',    'START_SCAN_TRIGGER_IN'         	 };
       scan{39}  = {'h10000038',    'START_SCAN_TRIGGER_OUT'          };
       scan{40}  = {'h10000039',    'START_SCAN_EVENT'                };
