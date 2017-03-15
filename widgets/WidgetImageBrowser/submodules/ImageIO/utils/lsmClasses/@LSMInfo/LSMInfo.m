@@ -125,6 +125,12 @@ classdef LSMInfo
     tilePositions;
   end
   
+  properties (Constant = true)
+    CHANNEL_DATATYPE_UINT8 = 1;
+    CHANNEL_DATATYPE_UINT12 = 2;
+    CHANNEL_DATATYPE_FLOAT32 = 5;
+  end
+  
   methods
     function obj = LSMInfo(lsmPtr, byteOrder)
     %LSMINFO Constructor
@@ -213,12 +219,12 @@ classdef LSMInfo
       
       if obj.offsetChannelColors ~= 0
         fseek(lsmPtr, obj.offsetChannelColors, 'bof');
-        % TODO
+        obj.channelColors = LSMChannelColors(lsmPtr, byteOrder);
       end
       
       if obj.offsetChannelDatatype ~= 0
         fseek(lsmPtr, obj.offsetChannelDatatype, 'bof');
-        % TODO
+        obj.channelDatatype = fread(lsmPtr, obj.dimensionChannels, 'uint32', byteOrder);
       end
       
       if obj.offsetScanInformation ~= 0
@@ -227,8 +233,7 @@ classdef LSMInfo
       end
       
       if obj.offsetKsData ~= 0
-        fseek(lsmPtr, obj.offsetKsData, 'bof');
-        % TODO
+        warning('LSMInfo: KsData part of the metadata is not implemented')
       end
       
       if obj.offsetTimeStamps ~= 0

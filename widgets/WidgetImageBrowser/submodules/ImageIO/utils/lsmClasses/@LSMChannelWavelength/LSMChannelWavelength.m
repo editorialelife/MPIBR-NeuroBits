@@ -17,6 +17,7 @@ classdef LSMChannelWavelength
   methods
     function obj = LSMChannelWavelength(lsmPtr, byteOrder)
     %LSMCHANNELWAVELENGTH Constructor
+    % Assumes the file pointer in the correct position already
       obj.numChannels = fread(lsmPtr, 1, 'int32', byteOrder);
       wl = fread(lsmPtr, obj.numChannels * 2, 'double', byteOrder);
       obj.startWavelength = wl(1:2:end);
