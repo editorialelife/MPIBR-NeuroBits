@@ -16,9 +16,9 @@ classdef LSMTilePositions
   % Date: 15.3.2017
   
   properties
-    numTiles;     % Number of channels for which wavelength information is stored
-    XPos;         % The horizontal positions for the tiles in meters
-    YPos;         % The vertical positions for the tiles in in meters
+    numTiles;     % Number of tiles for which position information is stored
+    XPos;         % The horizontal positions for the regions in meters
+    YPos;         % The vertical positions for the regions in in meters
     ZPos;
   end
   
@@ -26,7 +26,7 @@ classdef LSMTilePositions
     function obj = LSMTilePositions(lsmPtr, byteOrder)
     %LSMTILEPOSITIONS Constructor
     % Assumes the file pointer in the correct position already
-      obj.numTiles = fread(lsmPtr, 1, 'int32', byteOrder);
+      obj.numTiles = fread(lsmPtr, 1, 'uint32', byteOrder);
       tp = fread(lsmPtr, obj.numTiles * 3, 'double', byteOrder);
       obj.XPos = tp(1:3:end);
       obj.YPos = tp(2:3:end);

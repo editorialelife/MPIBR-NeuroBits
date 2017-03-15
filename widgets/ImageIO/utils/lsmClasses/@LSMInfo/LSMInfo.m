@@ -99,6 +99,8 @@ classdef LSMInfo
     dimensionP;                     % Number of intensity values in position-direction
     dimensionM;                     % Number of intensity values in tile (mosaic)-direction
     offsetTilePositions;            % File offset to a block with the positions of the tiles
+    offsetPositions;                % File offset to a block with the positions of the acquisition regions
+                                    %   this represents position of each series.
     
     %PROPERTIES REACHED AFTER GOING TO OFFSET
     vectorOverlay;
@@ -123,6 +125,7 @@ classdef LSMInfo
     characteristics;
     palette;
     tilePositions;
+    seriesPositions;
   end
   
   properties (Constant = true)
@@ -199,7 +202,7 @@ classdef LSMInfo
       internalUse2 = fread(lsmPtr, 16, 'int32', byteOrder);
       obj.offsetTilePositions = fread(lsmPtr, 1, 'uint32', byteOrder);
       reserved = fread(lsmPtr, 9, 'uint32', byteOrder);
-      offsetPositions = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.offsetPositions = fread(lsmPtr, 1, 'uint32', byteOrder);
       reserved2 = fread(lsmPtr, 21, 'uint32', byteOrder);
       
       if obj.offsetVectorOverlay ~= 0
@@ -288,7 +291,17 @@ classdef LSMInfo
       if obj.offsetTilePositions ~= 0
         fseek(lsmPtr, obj.offsetTilePositions, 'bof');
         obj.tilePositions = LSMTilePositions(lsmPtr, byteOrder);
-      end 
+      end
+      
+      if obj.offsetPositionss ~= 0
+        fseek(lsmPtr, obj.offsetPositions, 'bof');
+        obj.seriesPositions = LSMSeriesPositions(lsmPtr, byteOrder);
+        if ~isempty(obj.tilePositions) % Must update
+          obj.tilePositions.XPos = obj.tilePositions.XPos + obj.seriesPositions.XPos(1);
+          obj.tilePositions.YPos = obj.tilePositions.YPos + obj.seriesPositions.YPos(1);
+          obj.tilePositions.ZPos = obj.seriesPositions.ZPos(1);
+        end
+      end
     end
   end
   
