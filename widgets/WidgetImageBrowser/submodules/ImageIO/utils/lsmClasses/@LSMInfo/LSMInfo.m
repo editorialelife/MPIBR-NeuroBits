@@ -223,7 +223,7 @@ classdef LSMInfo
       
       if obj.offsetScanInformation ~= 0
         fseek(lsmPtr, obj.offsetScanInformation, 'bof');
-        obj.scanInformation = LSMScanInformation(lsmPtr, byteOrder);
+        obj.scanInformation = LSMScanInformation(lsmPtr, byteOrder); %TO BE FINISHED
       end
       
       if obj.offsetKsData ~= 0
@@ -273,6 +273,11 @@ classdef LSMInfo
       if obj.offsetLinescanOverlay ~= 0
         fseek(lsmPtr, obj.offsetLinescanOverlay, 'bof');
         obj.linescanOverlay = LSMOverlay(lsmPtr, byteOrder);
+      end 
+      
+      if obj.offsetChannelWavelength ~= 0
+        fseek(lsmPtr, obj.offsetChannelWavelength, 'bof');
+        obj.channelWavelength = LSMChannelWavelength(lsmPtr, byteOrder);
       end 
     end
   end
