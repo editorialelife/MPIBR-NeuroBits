@@ -51,11 +51,11 @@ classdef LSMScanInformation
   
   methods
     function obj = LSMScanInformation()
-      % does nothing
-    end
-    
-    function obj = init(lsmPtr, byteOrder)
+      obj.entry = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.type = fread(lsmPtr, 1, 'uint32', byteOrder);
+      obj.size = fread(lsmPtr, 1, 'uint32', byteOrder);
       
+      % SUPER BORING - SOMEBODY WILL IMPLEMENT IT IN THE FUTURE
     end
   end
   
