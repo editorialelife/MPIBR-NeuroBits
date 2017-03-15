@@ -56,7 +56,7 @@ classdef LSMInfo
                                     % (can be 0, if not present). 
                                     % 1 - for 8-bit unsigned integer,
                                     % 2 - for 12-bit unsigned integer and
-                                    % 5 - for 32-bit float (for “Time Series Mean-of-ROIs” ).
+                                    % 5 - for 32-bit float (for "Time Series Mean-of-ROIs" ).
     offsetScanInformation;          % File offset to a structure with information of the device
                                     % settings used to scan the image
     offsetKsData;                   % File offset to “Zeiss Vision KS-3D” specific data
@@ -104,7 +104,25 @@ classdef LSMInfo
     vectorOverlay;
     inputLut;
     outputLut;
+    channelColors;
+    channelDatatype;
+    scanInformation;
+    ksData;
     timeStamps;
+    eventList;
+    roi;
+    bleachRoi;
+    meanOfRoisOverlay;
+    topoIsolineOverlay;
+    topoProfileOverlay;
+    linescanOverlay;
+    channelWavelength;
+    channelFactors;
+    unmixParameters;
+    acquisitionParameters;
+    characteristics;
+    palette;
+    tilePositions;
   end
   
   methods
@@ -114,6 +132,11 @@ classdef LSMInfo
     %pointer in the correct position already
     
       magicNumber = fread(lsmPtr, 1, 'uint32', byteOrder);
+      if magicNumber == 50350412 % Release 1.3
+        warning('LSMInfo: LSM File written using release 1.3, reading will probably fail!!!')
+      elseif magicNumber ~= 67127628 % Release 1.5 to 6.0
+        error('LSMInfo: Invalid version number. Error parsing file metadata?')
+      end
       obj.structureSize = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.dimensionX = fread(lsmPtr, 1, 'int32', byteOrder);
       obj.dimensionY = fread(lsmPtr, 1, 'int32', byteOrder);
@@ -188,6 +211,26 @@ classdef LSMInfo
         obj.outputLut = LSMLookupTable(lsmPtr, byteOrder);
       end
       
+      if obj.offsetChannelColors ~= 0
+        fseek(lsmPtr, obj.offsetChannelColors, 'bof');
+        % TODO
+      end
+      
+      if obj.offsetChannelDatatype ~= 0
+        fseek(lsmPtr, obj.offsetChannelDatatype, 'bof');
+        % TODO
+      end
+      
+      if obj.offsetScanInformation ~= 0
+        fseek(lsmPtr, obj.offsetScanInformation, 'bof');
+        obj.scanInformation = LSMScanInformation(lsmPtr, byteOrder);
+      end
+      
+      if obj.offsetKsData ~= 0
+        fseek(lsmPtr, obj.offsetKsData, 'bof');
+        % TODO
+      end
+      
       if obj.offsetTimeStamps ~= 0
         fseek(lsmPtr, obj.offsetTimeStamps, 'bof');
         obj.timeStamps = LSMTimeStamps(lsmPtr, byteOrder);
@@ -195,8 +238,42 @@ classdef LSMInfo
       
       if obj.offsetEventList ~= 0
         fseek(lsmPtr, obj.offsetEventList, 'bof');
-        obj.timeStamps = LSMEventList(lsmPtr, byteOrder);
+        obj.eventList = LSMEventList(lsmPtr, byteOrder);
       end
+      
+      if obj.offsetRoi ~= 0
+        fseek(lsmPtr, obj.offsetROI, 'bof');
+        obj.roi = LSMOverlay(lsmPtr, byteOrder);
+      end
+      
+      if obj.offsetBleachRoi ~= 0
+        fseek(lsmPtr, obj.offsetBleachRoi, 'bof');
+        obj.bleachRoi = LSMOverlay(lsmPtr, byteOrder);
+      end
+      
+      if obj.offsetNextRecording ~= 0
+        warning('LSMInfo: Next Recording part of the metadata is not implemented')
+      end
+      
+      if obj.offsetMeanOfRoisOverlay ~= 0
+        fseek(lsmPtr, obj.offsetMeanOfRoisOverlay, 'bof');
+        obj.meanOfRoisOverlay = LSMOverlay(lsmPtr, byteOrder);
+      end
+      
+      if obj.offsetTopoIsolineOverlay ~= 0
+        fseek(lsmPtr, obj.offsetTopoIsolineOverlay, 'bof');
+        obj.topoIsolineOverlay = LSMOverlay(lsmPtr, byteOrder);
+      end
+      
+      if obj.offsetTopoProfileOverlay ~= 0
+        fseek(lsmPtr, obj.offsetTopoProfileOverlay, 'bof');
+        obj.topoProfileOverlay = LSMOverlay(lsmPtr, byteOrder);
+      end
+      
+      if obj.offsetLinescanOverlay ~= 0
+        fseek(lsmPtr, obj.offsetLinescanOverlay, 'bof');
+        obj.linescanOverlay = LSMOverlay(lsmPtr, byteOrder);
+      end 
     end
   end
   
