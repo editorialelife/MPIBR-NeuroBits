@@ -62,7 +62,7 @@ for row = 1:obj.numTilesRow
             startC = 1 + (col - 1) * (obj.pixPerTileCol - ovDiffCol);
             endR   = startR + obj.pixPerTileRow - 1;
             endC   = startC + obj.pixPerTileCol - 1;
-            data(startR:endR, startC:endC, idxC, idxZ, idxT) = tmpImg;
+            data(startR:endR, startC:endC, idxC, idxZ, idxT, idxS) = tmpImg;
           end
         end
       end
