@@ -67,7 +67,6 @@ for s = series
     for z = stacks
       %seek to beginning of current tile
       tilePos = (idxS-1)*(obj.time)*(obj.stacks) + (idxT-1)*(obj.stacks) + idxZ;
-      disp(['Z: ' num2str(z) ' T: ' num2str(t) ' S: ' num2str(s) ' tilePos: ' num2str(tilePos) ' offset: ' num2str(obj.offsets(tilePos))])
       fseek(obj.lsmPtr, obj.offsets(tilePos), 'bof');
 
       idxCh = 1;
