@@ -59,19 +59,6 @@ typeOut = str2func(obj.datatype);
 % define progress bar
 progBar = TextProgressBar('LSMReader --> Extracting data: ', 30);
 
-%% TEST
-numSteps = obj.channels * obj.stacks * obj.time * obj.series * obj.numTilesRow * obj.numTilesCol;
-for k = 1:numSteps
-  fseek(obj.lsmPtr, obj.offsets(k), 'bof');
-  tmpImg = typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
-                         obj.datatypeInput, obj.BYTE_ORDER));
-  tmpImg = reshape(tmpImg, obj.pixPerTileCol, obj.pixPerTileRow)';
-  imshow(imadjust(tmpImg))
-  set(gcf, 'Position', [-1000, 309 855 778]);
-  disp([' offset: ' num2str(obj.offsets(k))])
-end
-%% END TEST
-
 idxS = 1;
 for s = series
   idxT = 1;
