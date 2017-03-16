@@ -1,3 +1,5 @@
+This is a local copy of the [AndorSIF repository](https://github.com/RJ3/AndorSIF) placed here for convenience.
+
 # AndorSIF
 This is a repository for certain files which allow you to compile a mex file to load the proprietary Andor SIF format into MATLAB
 
