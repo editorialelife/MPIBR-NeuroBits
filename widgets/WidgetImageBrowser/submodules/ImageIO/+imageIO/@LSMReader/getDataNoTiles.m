@@ -33,6 +33,7 @@ p.addParameter('Rows', 1:obj.height, @(x) isvector(x) && all(x > 0) && max(x) <=
 p.addParameter('C', 1:obj.channels, @(x) isvector(x) && all(x > 0) && max(x) <= obj.channels);
 p.addParameter('Z', 1:obj.stacks, @(x) isvector(x) && all(x > 0) && max(x) <= obj.stacks);
 p.addParameter('T', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.time);
+p.addParameter('S', 1:obj.series, @(x) isvector(x) && all(x > 0) && max(x) <= obj.series);
 
 p.parse(varargin{:});
 
@@ -41,46 +42,51 @@ cols = p.Results.Cols;
 channels = p.Results.C;
 stacks = p.Results.Z;
 timeseries = p.Results.T;
+series = p.Results.S;
 
 data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
-  length(timeseries), obj.datatype);
+  length(timeseries), length(series), obj.datatype);
 
 % get numelements in each dimension
-nS = numel(stacks);
+nZ = numel(stacks);
 nCh = numel(channels);
 nT = numel(timeseries);
-maxNum = nS * nCh * nT;
+nS = numel(series);
+maxNum = nZ * nCh * nT * nS;
 incr = 1;
 typeOut = str2func(obj.datatype);
 
 % define progress bar
 progBar = TextProgressBar('LSMReader --> Extracting data: ', 30);
 
-idxT = 1;
-for t = timeseries
-  idxZ = 1;
-  for z = stacks
-    %seek to beginning of current tile
-    tilePos = idxT + (idxZ-1)*(obj.time);
-    fseek(obj.lsmPtr, obj.offsets(tilePos), 'bof');
-    
-    idxCh = 1;
-    for ch = channels
-      % update progress bar
-      progBar.update(incr/maxNum * 100);
-      incr = incr + 1;
-      
-      tmpImg = reshape(typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
-      	obj.datatypeInput, obj.byteOrder)), obj.pixPerTileCol, obj.pixPerTileRow)';
-      data(:, :, idxCh, idxZ, idxT) = tmpImg(rows, cols);
-      
-      idxCh = idxCh + 1;
-    end
-    idxZ = idxZ + 1;
-  end
-  idxT = idxT + 1;
-end
+idxS = 1;
+for s = series
+  idxT = 1;
+  for t = timeseries
+    idxZ = 1;
+    for z = stacks
+      %seek to beginning of current tile
+      tilePos = (idxS-1)*(obj.time)*(obj.stacks) + (idxT-1)*(obj.stacks) + idxZ;
+      fseek(obj.lsmPtr, obj.offsets(tilePos), 'bof');
 
+      idxCh = 1;
+      for ch = channels
+        % update progress bar
+        %progBar.update(incr/maxNum * 100);
+        incr = incr + 1;
+
+        tmpImg = reshape(typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
+          obj.datatypeInput, obj.BYTE_ORDER)), obj.pixPerTileCol, obj.pixPerTileRow)';
+        data(:, :, idxCh, idxZ, idxT, idxS) = tmpImg(rows, cols);
+
+        idxCh = idxCh + 1;
+      end
+      idxZ = idxZ + 1;
+    end
+    idxT = idxT + 1;
+  end
+  idxS = idxS + 1;
+end
 %squeeze data, to remove singleton dimensions
 data = squeeze(data);
 

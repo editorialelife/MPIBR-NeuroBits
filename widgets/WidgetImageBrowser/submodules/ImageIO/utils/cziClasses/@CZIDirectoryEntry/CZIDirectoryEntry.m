@@ -1,6 +1,6 @@
 classdef CZIDirectoryEntry
 %CZIDIRECTORYENTRY Implementation of the Directory Entry schema
-%   The class represents the information stored in the DimrectionEntryDV schema, 
+%   The class represents the information stored in the DirectionEntryDV schema, 
 %   according to the CZI FileFormat specification
 %
 % AUTHOR: Stefano Masneri
