@@ -105,8 +105,8 @@ else
   obj.tileOverlap = 0;
 end
 
-obj.height = max(obj.rowTilePos) + obj.pixPerTileRow;
-obj.width = max(obj.colTilePos) + obj.pixPerTileCol;
+obj.height = uint32(max(obj.rowTilePos) + obj.pixPerTileRow);
+obj.width = uint32(max(obj.colTilePos) + obj.pixPerTileCol);
   
 end
 
