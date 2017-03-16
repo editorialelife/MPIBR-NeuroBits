@@ -79,6 +79,7 @@ end
 obj.channelInfo = obj.originalMetadata.channelColors;
 obj.scaleSize = [obj.originalMetadata.voxelSizeY obj.originalMetadata.voxelSizeY obj.originalMetadata.voxelSizeZ];
 obj.scaleUnits = {'m', 'm', 'm'};
+obj.scaleTime = obj.originalMetadata.timeInterval;
 if ~isempty(obj.originalMetadata.channelWavelength)
    obj.wavelengthEm = cell(1, obj.originalMetadata.channelWavelength.numChannels);
   for k = 1:obj.originalMetadata.channelWavelength.numChannels

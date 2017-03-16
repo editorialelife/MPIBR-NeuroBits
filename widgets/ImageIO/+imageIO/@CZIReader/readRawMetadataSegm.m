@@ -15,6 +15,7 @@ function obj = readRawMetadataSegm( obj )
 
   % Read xml
   xmlData = fread(obj.cziPtr, xmlSize, '*char')';
+  obj.originalMetadata = xmlData;
   
   % Convert to struct
   metadataStruct = xml2struct(xmlData);
