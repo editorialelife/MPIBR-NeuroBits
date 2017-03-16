@@ -12,7 +12,11 @@ classdef LSMReader < imageIO.ImageIO
   properties
     lsmPtr = 0;              % Pointer to the LSM file (returned by fopen)
     imgDirArray;             % Array of image directories
+    IFD;                     % directory entries
+    offsets;                 % offset associated to each IFD
     bigTiff;                 % Boolean, true if file size is bigger than 4Gb
+    datatypeInput;           % LSM format also supports 12 bits, unsupported by Matlab
+    bitsPerSample;           % number of bits used for each pixel
     verbose = false;         % set to true only when displaying additional inf
   end
   
@@ -64,6 +68,8 @@ classdef LSMReader < imageIO.ImageIO
     %   data = myLSM.getData('C', 1, 'Z', 4:8) %Reads stacks 4 to 8, only 1st channel
     %   data = myLSM.getData('TileRows', 1:6, 'TileCols, 2:4) %Reads first six rows of
     %     tiles, and column tiles from 2 to 4
+    
+      obj = obj.getIFD(obj.BYTE_ORDER);
     
       if isempty(varargin) % Read all the data
         data = obj.getAllData();
