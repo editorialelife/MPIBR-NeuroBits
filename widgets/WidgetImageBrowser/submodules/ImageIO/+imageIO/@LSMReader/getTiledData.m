@@ -56,7 +56,7 @@ sizeRows = round(length(rows) * (1 + (length(tileRows) - 1) * (1 - obj.tileOverl
 sizeCols = round(length(cols) * (1 + (length(tileCols) - 1) * (1 - obj.tileOverlap)));
 
 data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
-  length(timeseries), obj.datatype);
+  length(timeseries), length(series), obj.datatype);
 
 % get numelements in each dimension
 nZ = numel(stacks);
