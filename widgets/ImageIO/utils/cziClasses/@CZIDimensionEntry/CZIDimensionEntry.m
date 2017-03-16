@@ -22,7 +22,7 @@ classdef CZIDimensionEntry
     end
     
     function obj = init(obj, cziPtr)
-    %INIT initializes the CZIDiemnsionEntry object
+    %INIT initializes the CZIDimensionEntry object
     % The function reads from file the fields related to the
     % DimensionEntry
     % INPUT

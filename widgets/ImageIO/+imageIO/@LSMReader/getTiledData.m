@@ -48,6 +48,7 @@ cols = p.Results.Cols;
 channels = p.Results.C;
 stacks = p.Results.Z;
 timeseries = p.Results.T;
+series = p.Results.S;
 tileCols = p.Results.TileCols;
 tileRows = p.Results.TileRows;
 
@@ -76,49 +77,66 @@ pixelStartTileCol = 1 + round((0:length(tileCols)-1) * (1 - obj.tileOverlap) * l
 initialTileRow = tileRows(1);
 initialTileCol = tileCols(1);
 
-idxT = 1;
-for t = timeseries
-  idxZ = 1;
-  for z = stacks
-    
-    for tr = tileRows
-      for tc = tileCols
-        outTileRow = tr - initialTileRow + 1;
-        outTileCol = tc - initialTileCol + 1;
-        
-        idxCh = 1;
-        for ch = 1:obj.channels
-    
-          if any(ch == channels) 
+% %% TEST
+% numSteps = obj.stacks * obj.time * obj.series * obj.numTilesRow * obj.numTilesCol;
+% for k = 1:numSteps
+%   fseek(obj.lsmPtr, obj.offsets(k), 'bof');
+%   tmpImg = typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
+%                          obj.datatypeInput, obj.BYTE_ORDER));
+%   tmpImg = reshape(tmpImg, obj.pixPerTileCol, obj.pixPerTileRow)';
+% %   imshow(imadjust(tmpImg))
+% 	disp(['Step: ' num2str(k) ' offset: ' num2str(obj.offsets(k))])
+% %   set(gcf, 'Position', [-1000, 309 855 778]);
+% end
+% %% END TEST
 
-            %seek to beginning of current tile
-            tilePos = idxT + (idxZ-1)*(obj.time) + (tc-1)*obj.stacks*obj.time + ...
-              (tr-1)*obj.stacks*obj.time*obj.numTilesCol;
-            fseek(obj.lsmPtr, obj.offsets(tilePos), 'bof');
+for tr = tileRows
+  for tc = tileCols
+    outTileRow = tr - initialTileRow + 1;
+    outTileCol = tc - initialTileCol + 1;
 
-            % update progress bar
-            progBar.update(incr/maxNum * 100);
-            incr = incr + 1;
+    idxS = 1;
+    for s = series
+      idxT = 1;
+      for t = timeseries
+        idxZ = 1;
+        for z = stacks
+          idxCh = 1;
+          
+          %seek to beginning of current tile
+          tilePos = idxZ + (idxT-1)*(obj.stacks) + (idxS-1)*(obj.time)*(obj.stacks) + ...
+            (tc-1)*obj.stacks*obj.time*obj.series + ...
+            (tr-1)*obj.stacks*obj.time*obj.numTilesCol*obj.series;
+          fseek(obj.lsmPtr, obj.offsets(tilePos), 'bof');
+          
+          for ch = 1:obj.channels
 
-            tmpImg = reshape(typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
-              obj.datatypeInput, obj.byteOrder)), obj.pixPerTileCol, obj.pixPerTileRow)';
+            if any(ch == channels) 
+              % update progress bar
+              progBar.update(incr/maxNum * 100);
+              incr = incr + 1;
 
-            [rr, cc] = size(tmpImg(rows, cols));
+              tmpImg = reshape(typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
+                obj.datatypeInput, obj.BYTE_ORDER)), obj.pixPerTileCol, obj.pixPerTileRow)';
 
-            data(pixelStartTileRow(outTileRow) : pixelStartTileRow(outTileRow) + rr - 1, ...
-              pixelStartTileCol(outTileCol) : pixelStartTileCol(outTileCol) + cc - 1, ...
-              idxCh, idxZ, idxT) = tmpImg(rows, cols);
-            
-            idxCh = idxCh + 1;
-          else
-            fseek(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol * obj.bitsPerSample / 8, 'cof');
+              [rr, cc] = size(tmpImg(rows, cols));
+
+              data(pixelStartTileRow(outTileRow) : pixelStartTileRow(outTileRow) + rr - 1, ...
+                pixelStartTileCol(outTileCol) : pixelStartTileCol(outTileCol) + cc - 1, ...
+                idxCh, idxZ, idxT, idxS) = tmpImg(rows, cols);
+
+              idxCh = idxCh + 1;
+            else
+              fseek(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol * obj.bitsPerSample / 8, 'cof');
+            end
           end
+          idxZ = idxZ + 1;
         end
+        idxT = idxT + 1;
       end
+      idxS = idxS + 1;
     end
-    idxZ = idxZ + 1;
   end
-  idxT = idxT + 1;
 end
 
 %squeeze data, to remove singleton dimensions

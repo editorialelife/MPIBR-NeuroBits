@@ -1,12 +1,19 @@
-function obj = readMetadata(obj)
+function obj = readMetadata( obj )
+%READMETADATA Read the metadata information and stores it in the object
+%properties
+%   This function parses the file according to the LSM file specifications,
+%   and stores header and segment information that is hten used to fill all
+%   the metadata fields of the object.
+%
+% AUTHOR: Stefano Masneri
+% Date: 13.3.2017
 
-% open file stream
-obj.lsmPtr = fopen(obj.fileFullPath);
-if -1 == obj.lsmPtr
-  error(['LSMReader.readMetadata: Could not open file ', filename]);
+%open file for reading
+[obj.lsmPtr, errMsg] = fopen(obj.fileFullPath);
+if obj.lsmPtr < 0
+  error(['LSMReader.readMetadata: Could not open file ', filename, ' - ' errMsg]);
 end
 
-%Check file size and set bigtiff accordingly
 s = dir(obj.fileFullPath);
 filesize = s.bytes;
 if filesize > 2^32
@@ -15,103 +22,91 @@ else
   obj.bigTiff = false;
 end
 
-%check byte ordering
-byteOrder=fread(obj.lsmPtr, 2, '*char')';
-if (strcmp(byteOrder,'II'))
-  obj.byteOrder = 'ieee-le';
-elseif (strcmp(byteOrder,'MM'))
-  obj.byteOrder = 'ieee-be';
+%read TIFF header
+byteOrder = fread(obj.lsmPtr, 2, '*char')';
+if ~(strcmp(byteOrder,'II')) %only little endian allowed!
+  error('LSMReader.readMetadata: This is not a correct LSM file');
+end
+fortytwo = fread(obj.lsmPtr, 1, 'uint16', obj.BYTE_ORDER);
+if fortytwo ~= 42
+  error('LSMReader.readMetadata: This is not a correct LSM file');
+end
+offsetFirstIFD = fread(obj.lsmPtr, 1, 'uint32', obj.BYTE_ORDER);
+fseek(obj.lsmPtr, offsetFirstIFD, 'bof');
+
+% Now read the first image directory, the one containing all the metadata
+imgDir = LSMImageDirectory();
+imgDir = imgDir.init(obj.lsmPtr, obj.BYTE_ORDER);
+infoDirEntry = imgDir.dirEntryArray([imgDir.dirEntryArray.tag] == obj.TIF_CZ_LSMINFO );
+
+% Create the LSMInfo object checking the specific Directory Entry
+if infoDirEntry.isOffset
+  fseek(obj.lsmPtr, infoDirEntry.value, 'bof');
+  obj.originalMetadata = LSMInfo(obj.lsmPtr, obj.BYTE_ORDER);
 else
-  error('LSMReader.readMetadata: This is not a correct LSM file');
+  error('LSMReader.readMetadata: CZ_LSMINFO tag should contain offset to metadata')
 end
 
-%Check that Tiff code number is there
-tiffID = fread(obj.lsmPtr, 1, 'uint16', obj.byteOrder);
-if tiffID ~= 42
-  error('LSMReader.readMetadata: This is not a correct LSM file');
-end
+% Now assign all the ImageIO property
 
-% Read special LSM IFD
-ifd = obj.ifdread();
-lsmifd = ifd([ifd.tagcode] == obj.LSMTAG);
-if isempty(lsmifd)
-  error('LSMReader.readMetadata: Could not find LSMINFO IFD entry');
-end
-
-% Read LSMINFO Header
-codes = LSMSpecs.getInstance();
-if fseek(obj.lsmPtr, lsmifd.offset, 'bof')
-  error(['LSMReader.readMetadata: Received error on file seek to LSMInfoOffset(' lsmifd.offset '): ' ferror(obj.lsmPtr)]);
-end
-
-obj.originalMetadata = struct('unknown', {[]}, 'datatype', {[]});
-
-% Go through all the properties
-for i = 1:length(codes.LSMINF)
-  
-  %ugly hack to allow compatibility with lsminfo (which also uses a
-  %hack for backward compatibility... ugly)
-  if 23 == i
-    fseek(obj.lsmPtr, lsmifd.offset, 'bof');
-  end
-  
-  mapKey = codes.LSMINF{i}{1};
-  num    = codes.LSMINF{i}{2};
-  type   = codes.LSMINF{i}{3};
-  
-  [value, readnum] = fread(obj.lsmPtr, num, type, obj.byteOrder);
-  if readnum ~= num
-    error(['LSMReader.readMetadata: Failed to read more than ' num2str(readnum) ' values for ' field '(' num2str(num) ')']);
-  end
-  
-  % If value is character string, convert to char.
-  if strfind(type, 'char')
-    value = char(value);
-  end
-  
-  % for "unknown" and "datatype" put all the values together in a
-  % cell array (consistent with script from Peter Li)
-  if isstrprop(mapKey(end), 'digit')
-    mapKey = mapKey(1:end-1);
-    obj.originalMetadata.(mapKey) = [ obj.originalMetadata.(mapKey) {value} ];
-  else %otherwise just set property
-    obj.originalMetadata.(mapKey) = value;
+obj.channels = obj.originalMetadata.dimensionChannels;
+obj.stacks = obj.originalMetadata.dimensionZ;
+obj.time = obj.originalMetadata.dimensionTime;
+obj.series = obj.originalMetadata.dimensionP;
+obj.tile = obj.originalMetadata.dimensionM;
+obj.numTilesRow = length(unique(obj.originalMetadata.tilePositions.YPos));
+obj.numTilesCol = length(unique(obj.originalMetadata.tilePositions.XPos));
+obj.pixPerTileRow = obj.originalMetadata.dimensionY;
+obj.pixPerTileCol = obj.originalMetadata.dimensionX;
+for k = 1:length(obj.originalMetadata.datatype)
+  switch obj.originalMetadata.datatype(k)
+    case 1
+      obj.datatype{k} = 'uint8';
+    case 2
+      obj.datatypeInput = 'uint12';
+      obj.datatype{k} = 'uint16';
+    case 3
+      obj.datatype{k} = 'uint16';
+    case 5
+      obj.datatype{k} = 'float';
+    otherwise
+      error('LSMReader.readMetadata: Unrecognized datatype')
   end
 end
-
-% Read additional small database ChannelColors
-obj.originalMetadata.channelColors = LSMChannelColors(obj.lsmPtr, obj.originalMetadata.OFFSET_CHANNELSCOLORS);
-
-% Read additional small database TimeStamps
-obj.originalMetadata.timeStamps = LSMTimeStamps(obj.lsmPtr, obj.originalMetadata.OFFSET_TIMESTAMPS);
-
-% Read ScanInfo directory
-obj.originalMetadata.scanInfo = LSMScanInfo(obj.lsmPtr, obj.originalMetadata.OFFSET_SCANINFO);
-
-% Set the metadata just read into the appropriate properties
-obj.width = obj.originalMetadata.DimensionX;
-obj.height = obj.originalMetadata.DimensionY;
-obj.channels = obj.originalMetadata.DimensionChannels;
-obj.stacks = obj.originalMetadata.DimensionZ;
-obj.time = obj.originalMetadata.DimensionTime;
-obj = obj.setChannelInfo(obj.originalMetadata.channelColors);
-obj.scaleSize = obj.originalMetadata.VOXELSIZES;
-
-% Finally, use the BioFormat reader to get info about overlap and number of
-% tiles.
-bfPtr = bfGetReader(obj.fileFullPath);
-ome = bfPtr.getMetadataStore();
-obj.datatype = char(ome.getPixelsType(0));
+if length(obj.datatype) == 1
+  obj.datatype = obj.datatype{1};
+end
+obj.channelInfo = obj.originalMetadata.channelColors;
+obj.scaleSize = [obj.originalMetadata.voxelSizeY obj.originalMetadata.voxelSizeY obj.originalMetadata.voxelSizeZ];
+obj.scaleUnits = {'m', 'm', 'm'};
+if ~isempty(obj.originalMetadata.channelWavelength)
+   obj.wavelengthExc = cell(1, obj.originalMetadata.channelWavelength.numChannels);
+  for k = 1:obj.originalMetadata.channelWavelength.numChannels
+    obj.wavelengthExc{k} = [obj.originalMetadata.channelWavelength.startWavelength(k) ...
+                            obj.originalMetadata.channelWavelength.endWavelength(k)];
+  end
+end
 try
-  obj.tile = ome.getImageCount();
-catch
-  obj.tile = 1;
+  obj.objectiveName = obj.originalMetadata.scanInformation.entries('ENTRY_OBJECTIVE');
+catch % do nothing
 end
-obj = obj.setTileProperties(ome);
-if obj.tile ~= 1
-  obj.height = round(obj.pixPerTileRow * (1 + (obj.numTilesRow - 1) * (1 - obj.tileOverlap)));
-  obj.width = round(obj.pixPerTileCol * (1 + (obj.numTilesCol - 1) * (1 - obj.tileOverlap)));
+try
+  obj.timePixel = obj.originalMetadata.scanInformation.entries('PIXEL_TIME');
+catch % do nothing
+end
+obj.colTilePos = obj.originalMetadata.tilePositions.XPos / obj.scaleSize(2);
+obj.colTilePos = obj.colTilePos - min(obj.colTilePos);
+
+obj.rowTilePos = obj.originalMetadata.tilePositions.YPos / obj.scaleSize(1);
+obj.rowTilePos = obj.rowTilePos - min(obj.rowTilePos);
+if length(obj.colTilePos) > 1
+  obj.tileOverlap = 1 - ((obj.colTilePos(2) - obj.colTilePos(1)) / obj.pixPerTileCol);
+else
+  obj.tileOverlap = 0;
 end
 
+obj.height = uint32(max(obj.rowTilePos) + obj.pixPerTileRow);
+obj.width = uint32(max(obj.colTilePos) + obj.pixPerTileCol);
+  
 end
 

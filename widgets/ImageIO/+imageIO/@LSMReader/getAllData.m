@@ -8,48 +8,62 @@ function [ data ] = getAllData( obj )
 
 progBar = TextProgressBar('LSMReader --> Extracting data: ', 30);
 
-data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.datatype);
+data = zeros(obj.height, obj.width, obj.channels, obj.stacks, obj.time, obj.series, obj.datatype);
 
-numSteps = obj.channels * obj.stacks * obj.time * obj.numTilesRow * obj.numTilesCol;
+numSteps = obj.channels * obj.stacks * obj.time * obj.series * obj.numTilesRow * obj.numTilesCol;
 incr = 1;
 typeOut = str2func(obj.datatype);
 
-for indT = 1:obj.time
-  for indZ = 1:obj.stacks
-    for row = 1:obj.numTilesRow
-      for col = 1:obj.numTilesCol
+% %% TEST
+% for k = 1:numSteps
+%   fseek(obj.lsmPtr, obj.offsets(k), 'bof');
+%   tmpImg = typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
+%                          obj.datatypeInput, obj.obj.BYTE_ORDER));
+%   tmpImg = reshape(tmpImg, obj.pixPerTileCol, obj.pixPerTileRow)';
+% end
+% %% END TEST
 
-        %seek to beginning of current tile
-        tilePos = indT + (indZ-1)*(obj.time) + (col-1)*obj.stacks*obj.time + ...
-          (row-1)*obj.stacks*obj.time*obj.numTilesCol;
-        fseek(obj.lsmPtr, obj.offsets(tilePos), 'bof');
 
-        %read data
-        for indC = 1:obj.channels
+for row = 1:obj.numTilesRow
+  for col = 1:obj.numTilesCol
+    for idxS = 1:obj.series
+      for idxT = 1:obj.time
+        for idxZ = 1:obj.stacks
           
-          progBar.update(incr/numSteps * 100);
-          incr = incr + 1;
           
-          tmpImg = typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
-            obj.datatypeInput, obj.byteOrder));
-          tmpImg = reshape(tmpImg, obj.pixPerTileCol, obj.pixPerTileRow)';
+          %seek to beginning of current tile
+          tilePos = idxZ + (idxT-1)*(obj.stacks) + (idxS-1)*(obj.time)*(obj.stacks) + ...
+            (col-1)*obj.stacks*obj.time*obj.series + ...
+            (row-1)*obj.stacks*obj.time*obj.numTilesCol*obj.series;
+          fseek(obj.lsmPtr, obj.offsets(tilePos), 'bof');
           
-          % Manage overlap
-          if 1 ~= row
-            ovDiffRow = round(obj.tileOverlap * obj.pixPerTileRow);
-          else
-            ovDiffRow = 0;
+          %read data
+          for idxC = 1:obj.channels
+            
+            progBar.update(incr/numSteps * 100);
+            incr = incr + 1;
+            
+            tmpImg = typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
+              obj.datatypeInput, obj.BYTE_ORDER));
+            tmpImg = reshape(tmpImg, obj.pixPerTileCol, obj.pixPerTileRow)';
+            
+            % Manage overlap
+            if 1 ~= row
+              ovDiffRow = round(obj.tileOverlap * obj.pixPerTileRow);
+            else
+              ovDiffRow = 0;
+            end
+            if 1 ~= col
+              ovDiffCol = round(obj.tileOverlap * obj.pixPerTileCol);
+            else
+              ovDiffCol = 0;
+            end
+            startR = 1 + (row - 1) * (obj.pixPerTileRow - ovDiffRow);
+            startC = 1 + (col - 1) * (obj.pixPerTileCol - ovDiffCol);
+            endR   = startR + obj.pixPerTileRow - 1;
+            endC   = startC + obj.pixPerTileCol - 1;
+            data(startR:endR, startC:endC, idxC, idxZ, idxT) = tmpImg;
           end
-          if 1 ~= col
-            ovDiffCol = round(obj.tileOverlap * obj.pixPerTileCol);
-          else
-            ovDiffCol = 0;
-          end
-          startR = 1 + (row - 1) * (obj.pixPerTileRow - ovDiffRow);
-          startC = 1 + (col - 1) * (obj.pixPerTileCol - ovDiffCol);
-          endR   = startR + obj.pixPerTileRow - 1;
-          endC   = startC + obj.pixPerTileCol - 1;
-          data(startR:endR, startC:endC, indC, indZ, indT) = tmpImg;
         end
       end
     end
