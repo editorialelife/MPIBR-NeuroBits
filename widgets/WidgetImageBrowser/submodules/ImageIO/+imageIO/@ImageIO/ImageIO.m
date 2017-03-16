@@ -64,7 +64,7 @@ classdef (Abstract = true) ImageIO < handle
         wavelengthExc = nan;
         wavelengthEm = nan;
         laserPower = nan;
-        refractiveMedia = '';
+        refractiveMedium = '';
         refractiveIndex = nan;
         NA = nan;               % Numerical aperture
         
