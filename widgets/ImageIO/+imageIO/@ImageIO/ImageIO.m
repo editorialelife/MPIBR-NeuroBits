@@ -63,8 +63,9 @@ classdef (Abstract = true) ImageIO < handle
         
         wavelengthExc = nan;
         wavelengthEm = nan;
-        refractionMedia = '';
-        refractionIndex = nan;
+        laserPower = nan;
+        refractiveMedia = '';
+        refractiveIndex = nan;
         NA = nan;               % Numerical aperture
         
         microscopeName = '';
