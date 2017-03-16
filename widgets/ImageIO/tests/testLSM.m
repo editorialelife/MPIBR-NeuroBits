@@ -50,7 +50,7 @@ for k = 1:length(lsmFiles)
 end
 
 %% EXAMPLE FILES - READ PART OF THE DATA
-files = [2 3];
+files = [3 4];
 for k = files
   filename = lsmFiles{k};
   fullPath = fullfile(lsmFolder, filename);
@@ -70,7 +70,7 @@ end
 
 
 %% EXAMPLE FILES - READ PART OF THE DATA FOR MULTITILE IMAGES
-files = [4];
+files = [6];
 for k = files
   filename = lsmFiles{k};
   fullPath = fullfile(lsmFolder, filename);
