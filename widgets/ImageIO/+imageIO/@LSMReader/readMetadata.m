@@ -54,8 +54,8 @@ obj.stacks = obj.originalMetadata.dimensionZ;
 obj.time = obj.originalMetadata.dimensionTime;
 obj.series = obj.originalMetadata.dimensionP;
 obj.tile = obj.originalMetadata.dimensionM;
-obj.numTilesRow = unique(obj.originalMetadata.tilesPositions.YPos);
-obj.numTilesCol = unique(obj.originalMetadata.tilesPositions.XPos);
+obj.numTilesRow = length(unique(obj.originalMetadata.tilePositions.YPos));
+obj.numTilesCol = length(unique(obj.originalMetadata.tilePositions.XPos));
 obj.pixPerTileRow = obj.originalMetadata.dimensionY;
 obj.pixPerTileCol = obj.originalMetadata.dimensionX;
 for k = 1:length(obj.originalMetadata.datatype)
@@ -63,7 +63,8 @@ for k = 1:length(obj.originalMetadata.datatype)
     case 1
       obj.datatype{k} = 'uint8';
     case 2
-      obj.datatype{k} = 'uint12';
+      obj.datatypeInput = 'uint12';
+      obj.datatype{k} = 'uint16';
     case 3
       obj.datatype{k} = 'uint16';
     case 5
@@ -73,12 +74,13 @@ for k = 1:length(obj.originalMetadata.datatype)
   end
 end
 if length(obj.datatype) == 1
-  obj.datytype = obj.datatype{1};
+  obj.datatype = obj.datatype{1};
 end
 obj.channelInfo = obj.originalMetadata.channelColors;
 obj.scaleSize = [obj.originalMetadata.voxelSizeY obj.originalMetadata.voxelSizeY obj.originalMetadata.voxelSizeZ];
 obj.scaleUnits = {'m', 'm', 'm'};
 if ~isempty(obj.originalMetadata.channelWavelength)
+   obj.wavelengthExc = cell(1, obj.originalMetadata.channelWavelength.numChannels);
   for k = 1:obj.originalMetadata.channelWavelength.numChannels
     obj.wavelengthExc{k} = [obj.originalMetadata.channelWavelength.startWavelength(k) ...
                             obj.originalMetadata.channelWavelength.endWavelength(k)];
@@ -92,13 +94,16 @@ try
   obj.timePixel = obj.originalMetadata.scanInformation.entries('PIXEL_TIME');
 catch % do nothing
 end
-obj.colTilePos = obj.originalMetadata.tilesPositions.XPos / obj.scaleSize(2);
+obj.colTilePos = obj.originalMetadata.tilePositions.XPos / obj.scaleSize(2);
 obj.colTilePos = obj.colTilePos - min(obj.colTilePos);
 
-obj.rowTilePos = obj.originalMetadata.tilesPositions.YPos / obj.scaleSize(1);
+obj.rowTilePos = obj.originalMetadata.tilePositions.YPos / obj.scaleSize(1);
 obj.rowTilePos = obj.rowTilePos - min(obj.rowTilePos);
-
-obj.tileOverlap = (obj.colTilePos(2) - obj.colTilePos(1)) / obj.pixPerTileCol;
+if length(obj.colTilePos) > 1
+  obj.tileOverlap = 1 - ((obj.colTilePos(2) - obj.colTilePos(1)) / obj.pixPerTileCol);
+else
+  obj.tileOverlap = 0;
+end
 
 obj.height = max(obj.rowTilePos) + obj.pixPerTileRow;
 obj.width = max(obj.colTilePos) + obj.pixPerTileCol;
