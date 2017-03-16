@@ -11,7 +11,7 @@ function obj = readMetadata( obj )
 %open file for reading
 [obj.lsmPtr, errMsg] = fopen(obj.fileFullPath);
 if obj.lsmPtr < 0
-  error(['LSMReader.readMetadata: Could not open file ', filename, ' - ' errMsg]);
+  error(['LSMReader.readMetadata: Could not open file ', obj.fileFullPath, ' - ' errMsg]);
 end
 
 s = dir(obj.fileFullPath);
@@ -80,18 +80,84 @@ obj.channelInfo = obj.originalMetadata.channelColors;
 obj.scaleSize = [obj.originalMetadata.voxelSizeY obj.originalMetadata.voxelSizeY obj.originalMetadata.voxelSizeZ];
 obj.scaleUnits = {'m', 'm', 'm'};
 if ~isempty(obj.originalMetadata.channelWavelength)
-   obj.wavelengthExc = cell(1, obj.originalMetadata.channelWavelength.numChannels);
+   obj.wavelengthEm = cell(1, obj.originalMetadata.channelWavelength.numChannels);
   for k = 1:obj.originalMetadata.channelWavelength.numChannels
-    obj.wavelengthExc{k} = [obj.originalMetadata.channelWavelength.startWavelength(k) ...
+    obj.wavelengthEm{k} = [obj.originalMetadata.channelWavelength.startWavelength(k) ...
                             obj.originalMetadata.channelWavelength.endWavelength(k)];
   end
 end
 try
-  obj.objectiveName = obj.originalMetadata.scanInformation.entries('ENTRY_OBJECTIVE');
+  findON = find(strcmpi(obj.originalMetadata.scanInformation.entries, 'ENTRY_OBJECTIVE'));
+  obj.objectiveName = obj.originalMetadata.scanInformation.entries(findON, 2);
+  obj.objectiveName = obj.objectiveName{1};
+catch % do nothing
+end
+% parse the objective name to extract magnification, numerical aperture and
+% refractive medium
+if ~isempty(strfind(obj.objectiveName, 'x/'))
+  pieces = strsplit(obj.objectiveName, ' ');
+  myPos = find(~cellfun(@isempty,strfind(pieces, 'x/')));
+  magNA = pieces{myPos};
+  magNA = strsplit(magNA, '/');
+  obj.objectiveMagnification = magNA{1};
+  obj.NA = magNA{2};
+  rm = lower(pieces{myPos + 1});
+  switch rm
+    case 'w'
+      obj.refractiveMedium = 'Water';
+      obj.refractiveIndex = 1.33;
+    case 'oil'
+      obj.refractiveMedium = 'Oil';
+      obj.refractiveIndex = 1.5;
+    case 'imm'
+      obj.refractiveMedium = 'Imm Korr';
+      obj.refractiveIndex = nan;
+    otherwise % assume it's air
+      obj.refractiveMedium = 'Air';
+      obj.refractiveIndex = 1;
+  end
+end
+obj.microscopeName = 'LSM ZEISS';
+
+try
+  indZX = find(strcmpi(obj.originalMetadata.scanInformation.entries, 'ZOOM_X'));
+  indZY = find(strcmpi(obj.originalMetadata.scanInformation.entries, 'ZOOM_Y'));
+  indZZ = find(strcmpi(obj.originalMetadata.scanInformation.entries, 'ZOOM_Z'));
+  obj.zoom = [cell2mat(obj.originalMetadata.scanInformation.entries(indZX, 2)), ...
+              cell2mat(obj.originalMetadata.scanInformation.entries(indZY, 2)), ...
+              cell2mat(obj.originalMetadata.scanInformation.entries(indZZ, 2))];
+catch
+end
+
+try
+  indexLaserWl = find(strcmpi(obj.originalMetadata.scanInformation.entries, 'wavelength'));
+  obj.wavelengthExc = double(cell2mat(obj.originalMetadata.scanInformation.entries(indexLaserWl, 2)));
+catch
+end
+
+try
+  indexLP = find(strcmpi(obj.originalMetadata.scanInformation.entries, 'LASER_POWER'));
+  indexLA = find(strcmpi(obj.originalMetadata.scanInformation.entries, 'LASER_ACQUIRE'));
+  lp = cell2mat(obj.originalMetadata.scanInformation.entries(indexLP, 2));
+  la = cell2mat(obj.originalMetadata.scanInformation.entries(indexLA, 2));
+  obj.laserPower = [num2str(100*la/lp) '%'];
+catch
+end
+
+try
+  indexGain = find(strcmpi(obj.originalMetadata.scanInformation.entries, 'DETECTOR_GAIN'));
+  obj.gain = cell2mat(obj.originalMetadata.scanInformation.entries(indexGain, 2));
+catch
+end
+
+try
+  indexTP = find(strcmpi(obj.originalMetadata.scanInformation.entries, 'PIXEL_TIME'));
+  obj.timePixel = cell2mat(obj.originalMetadata.scanInformation.entries(indexTP, 2));
 catch % do nothing
 end
 try
-  obj.timePixel = obj.originalMetadata.scanInformation.entries('PIXEL_TIME');
+  indexLP = find(strcmpi(obj.originalMetadata.scanInformation.entries, 'RT_LINEPERIOD'));
+  obj.timeLine = cell2mat(obj.originalMetadata.scanInformation.entries(indexLP, 2));
 catch % do nothing
 end
 obj.colTilePos = obj.originalMetadata.tilePositions.XPos / obj.scaleSize(2);

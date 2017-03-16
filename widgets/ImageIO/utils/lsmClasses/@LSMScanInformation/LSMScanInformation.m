@@ -13,10 +13,14 @@ classdef LSMScanInformation
   
   
   properties
-    entries;        % Dictionary containing all the properties read from the ScanInformation
+    entries;        % Cell containing all the properties read from the ScanInformation
 
     propertyList;   % Cell array matching hex codes to metadata, based on LSM 
                     % file format specifications
+  end
+  
+  properties (Hidden = true)
+    idx = 1;
   end
   
   methods
@@ -25,7 +29,7 @@ classdef LSMScanInformation
     % Assumes the file pointer in the correct position already
       obj = obj.createPropertyList();
       
-      obj.entries = containers.Map('UniformValues', false);
+      obj.entries = cell(207, 2);
       
       % The algorithm for reading the scaninfo database depends on keeping track of a
       % "level" hierarchy.  As the database is read, some entries are level
@@ -97,7 +101,9 @@ classdef LSMScanInformation
     
     function obj = addEntry(obj, propName, value)
       try
-        obj.entries(propName) = value;
+        obj.entries{obj.idx, 1} = propName;
+        obj.entries{obj.idx, 2} = value;
+        obj.idx = obj.idx + 1;
       catch
         error('LSMScanInformation: error adding field to entries')
       end
