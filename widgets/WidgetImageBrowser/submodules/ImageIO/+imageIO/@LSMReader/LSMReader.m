@@ -10,9 +10,6 @@ classdef LSMReader < imageIO.ImageIO
   %   SEE ALSO: imageIO.imageIO
   
   properties
-    lsmPtr = 0;              % Pointer to the LSM file (returned by fopen)
-    IFD;                     % directory entries
-    offsets;                 % offset associated to each IFD
     bigTiff;                 % Boolean, true if file size is bigger than 4Gb
     datatypeInput;           % LSM format also supports 12 bits, unsupported by Matlab
     bitsPerSample;           % number of bits used for each pixel
@@ -21,6 +18,12 @@ classdef LSMReader < imageIO.ImageIO
   properties (Constant = true)
     BYTE_ORDER = 'ieee-le'; %always little endian!
     TIF_CZ_LSMINFO = 34412;
+  end
+  
+  properties (Hidden = true)
+    lsmPtr = 0;              % Pointer to the LSM file (returned by fopen)
+    IFD;                     % directory entries
+    offsets;                 % offset associated to each IFD
   end
   
   methods
