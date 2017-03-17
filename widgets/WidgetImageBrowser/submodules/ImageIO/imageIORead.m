@@ -160,10 +160,14 @@ if nargout > 1
   metadata = imgPtr.packMetadata();
 end
 
+if nargout > 2
+  originalMetadata = imgPtr.originalMetadata;
+end
+
 if closeFile
-  if 3 == nargout % we are returning AND deleting it!
-    warning('imageIORead: returning pointer to image, but also closing it. Please set parameter ''closeFile'' to false')
-  end
+  disp(['imageIORead: You are closing the image reader. If you intend to ' ...
+        'perform multiple read operations, please re-run imageIORead and set ' ...
+        'the parameter ''closeFile'' to false'])
   imgPtr.delete();
 end
 
