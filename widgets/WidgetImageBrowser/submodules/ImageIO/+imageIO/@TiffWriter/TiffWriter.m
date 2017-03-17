@@ -152,7 +152,7 @@ classdef TiffWriter < imageIO.ImageIO
       end
     end
     
-    function writeData(obj, data, varargin)
+    function write(obj, data, varargin)
     %WRITEDATA Write data on file
     %Writes data on the file linked to the TiffWriter object. Apart from
     %the mandatoy parameter data, all other parameters are passed as
