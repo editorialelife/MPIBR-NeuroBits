@@ -73,10 +73,10 @@ else %ok, which type of file?
     case '.nd2'
       imgPtr = imageIO.ND2Reader(file);
     case '.sif'
-      if ispc
-        imgPtr = imageIO.SifReader(file);
-      else
+      if strcmpi(computer(), 'MACI')
         error('imageIOPtr: Reading of sif files currently supported only on windows')
+      else
+        imgPtr = imageIO.SifReader(file);
       end
     case '.lsm'
       imgPtr = imageIO.LSMReader(file);
