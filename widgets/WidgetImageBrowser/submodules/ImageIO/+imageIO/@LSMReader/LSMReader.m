@@ -43,7 +43,7 @@ classdef LSMReader < imageIO.ImageIO
     
     function delete(obj)
       %DELETE close the file identifier
-      if obj.lsmPtr
+      if obj.lsmPtr > 0
         fclose(obj.lsmPtr);
       end
     end
