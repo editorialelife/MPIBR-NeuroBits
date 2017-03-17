@@ -32,9 +32,10 @@ function [ success ] = imageIOWrite( data, metadata, filename )
 
 % Parse input
 p = inputParser;
-p.addRequired(data, @isnumeric);
-p.addRequired(filename, @ischar);
-p.parse(data, filename);
+p.addRequired('data', @isnumeric);
+p.addRequired('metadata', @(x) isa(x, 'imageIO.ImageIO'));
+p.addRequired('filename', @ischar);
+p.parse(data, metadata, filename);
 
 % Check extension is correct
 [folder, name, ext] = fileparts(filename);
@@ -51,7 +52,7 @@ if 1 == ndims(data)
   warning('ImageIOWrite: data should be at least 2-dimensional')
   success = false;
   return
-elseif ndims(data) <= 4 && size(data, 3) <= 3
+elseif ndims(data) <= 3 || (ndims(data) == 4 && size(data, 3) <= 3)
   writeTiff = true;
 else
   writeTiff = false;
@@ -59,14 +60,43 @@ end
 
 if writeTiff
   try
+    % If just 2 channels, write an empty channel. Tiff requires 1 or 3 channels
+    if ~ismatrix(data) && size(data, 3) == 2 
+      if ndims(data) == 3
+        data(:,:,3) = 0;
+      elseif ndims(data) == 4
+        data(:,:,3,:) = 0;
+      end
+    end
+    % Set flag for big tiff (estimate)
+    checkBig = 0.95 * (2^32);
+    fs = whos('data');
+    sizeData = fs.bytes;
+    if sizeData > checkBig
+      bigTiff = true;
+    else
+      bigTiff = false;
+    end
+    % Write tiff
+    TW = imageIO.TiffWriter(filename, 'isBig', bigTiff);
+    TW.write(data);
+    % write XML
+    createXml(metadata, filenameXml);
   catch
+    warning('ImageIOWrite: cannot save as Tiff file')
     success = false;
     return
   end
 else % write .mat
   try
-    
+    % Change extension
+    filename = fullfile(folder, [name '.mat']);
+    % Create metadata structure
+    metadataStruct = createMetadataStruct(metadata);
+    % Write mat file
+    save(filename, data, metadataStruct);
   catch
+    warning('ImageIOWrite: cannot save as Matlab .mat file')
     success = false;
     return
   end
@@ -74,8 +104,63 @@ end
 
 success = true;
 
-  function createXml(metadata)
-  %CREATEXML Transform the metadata into an xml string
+  function s = createMetadataStruct(metadata)
+  %CREATEMETADATASTRUCT From metadata, create matlab struct
+    s.ImageMetadata.filename.Text = metadata.fileName;
+    s.ImageMetadata.height.Text = metadata.height;
+    s.ImageMetadata.width.Text = metadata.width;
+    s.ImageMetadata.channels.Text = metadata.channels;
+    s.ImageMetadata.stacks.Text = metadata.stacks;
+    s.ImageMetadata.series.Text = metadata.series;
+    s.ImageMetadata.time.Text = metadata.time;
+    s.ImageMetadata.tile.Text = metadata.tile;
+    s.ImageMetadata.numTileRows.Text = metadata.numTileRows;
+    s.ImageMetadata.numTileCols.Text = metadata.numTileCols;
+    for k = 1:length(metadata.metadata.numTileRows)
+      s.ImageMetadata.metadata.numTileRows{k}.Text = metadata.metadata.numTileRows(k);
+    end
+    for k = 1:length(metadata.metadata.numTileCols)
+      s.ImageMetadata.metadata.numTileCols{k}.Text = metadata.metadata.numTileCols(k);
+    end
+    s.ImageMetadata.pixPerTileRow.Text = metadata.pixPerTileRow;
+    s.ImageMetadata.pixPerTileCol.Text = metadata.pixPerTileCol;
+    s.ImageMetadata.tileOverlap.Text = metadata.tileOverlap;
+    s.ImageMetadata.datatype.Text = metadata.datatype;
+    s.ImageMetadata.scaleSize.Text = metadata.scaleSize;
+    for k = 1:length(metadata.scaleUnits)
+      s.ImageMetadata.scaleUnits{k}.Text = metadata.scaleUnits{k};
+    end
+    s.ImageMetadata.scaleTime.Text = metadata.scaleTime;
+    s.ImageMetadata.timePixel.Text = metadata.timePixel;
+    s.ImageMetadata.timeLine.Text = metadata.timeLine;
+    s.ImageMetadata.timeFrame.Text = metadata.timeFrame;
+    s.ImageMetadata.timeStack.Text = metadata.timeStack;
+    s.ImageMetadata.zoom.Text = metadata.zoom;
+    s.ImageMetadata.gain.Text = metadata.gain;
+    s.ImageMetadata.wavelengthExc.Text = metadata.wavelengthExc;
+    if iscell(metadata.wavelengthEm)
+      for k = 1:length(metadata.wavelengthEm)
+        s.ImageMetadata.wavelengthEm{k} = metadata.wavelengthEm{k};
+      end
+    else
+      s.ImageMetadata.wavelengthEm.Text = metadata.wavelengthEm;
+    end
+    s.ImageMetadata.laserPower.Text = metadata.laserPower;
+    s.ImageMetadata.refractiveMedium.Text = metadata.refractiveMedium;
+    s.ImageMetadata.refractiveIndex.Text = metadata.refractiveIndex;
+    s.ImageMetadata.numericalAperture.Text = metadata.NA;
+    s.ImageMetadata.microscopeName.Text = metadata.microscopeName;
+    s.ImageMetadata.microscopeType.Text = metadata.microscopeType;
+    s.ImageMetadata.objectiveMagnification.Text = metadata.objectiveMagnification;
+    s.ImageMetadata.objectiveName.Text = metadata.objectiveName;
+  end
+
+  function createXml(metadata, fileXml)
+  %CREATEXML From metadata, create an xml file
+  
+    %First convert metadata into a struct
+    s = createMetadataStruct(metadata);
+    struct2xml(s, fileXml);
   end
 
 end

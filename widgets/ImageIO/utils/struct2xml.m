@@ -1,6 +1,12 @@
-function [ ] = struct2xml( s, file )
-%Convert a MATLAB structure into a xml file 
+function [ xmlAsString ] = struct2xml( s, file )
+%STRUCT2XML Convert a MATLAB structure into a xml file 
+% Converts a Matlab structure into an xml object. If the file argument is
+% provided, the function will write the xml on file. Otherwise, it will
+% return the xml object represented as a char array
+%
+% USAGE:
 % [ ] = struct2xml( s, file )
+% xmlAsText = struct2xml(s)
 %
 % A structure containing:
 % s.XMLname.Attributes.attrib1 = "Some value";
@@ -19,21 +25,23 @@ function [ ] = struct2xml( s, file )
 % </XMLname>
 %
 % Written by W. Falkena, ASTI, TUDelft, 27-08-2010
+%
+% Modified by Stefano Masneri, 17.03.2017
     
-    if (nargin < 2)
-        clc;
+    if nargin > 2 || nargin == 0 || (nargin == 1 && nargout ~= 1)
         help struct2xml
         return
     end
     
-    if (~isstruct(s) || isempty(file))
-        clc;
+    if ~isstruct(s)
         help struct2xml
         return
     end
     
-    if (isempty(strfind(file,'.xml')))
-        file = [file '.xml'];
+    if nargin > 1
+      if (isempty(strfind(file,'.xml')))
+          file = [file '.xml'];
+      end
     end
     
     if (length(fieldnames(s)) > 1)
@@ -52,7 +60,11 @@ function [ ] = struct2xml( s, file )
     parseStruct(s.(xmlname),docNode,docRootNode,[inputname(1) '.' xmlname '.']);
     
     %save xml file
-    xmlwrite(file,docNode);    
+    if nargin > 1
+      xmlwrite(file,docNode);
+    else
+      xmlAsString = docNode;
+    end
 end
 
 % ----- Subfunction parseStruct -----
