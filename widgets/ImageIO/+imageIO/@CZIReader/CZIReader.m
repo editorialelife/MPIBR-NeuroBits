@@ -19,6 +19,8 @@ classdef CZIReader < imageIO.ImageIO
     tilesPos;                % position of each tile in the grid. This is required 
                              % because in some cases (e.g. after stitching)
                              % the tiles are not arranged in a grid
+    timeStamps;              % Time stamps in seconds relative to the start time of
+                             % the acquisition engine.
                         
   end
   
@@ -57,7 +59,7 @@ classdef CZIReader < imageIO.ImageIO
     
     function delete(obj)
     %DELETE close the file identifier  
-      if obj.cziPtr
+      if obj.cziPtr > 0
         fclose(obj.cziPtr);
       end
     end
@@ -91,6 +93,8 @@ classdef CZIReader < imageIO.ImageIO
       else
         data = obj.getTiledData(varargin{:});
       end
+      
+      data = squeeze(data);
     end
   end
 
