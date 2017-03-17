@@ -82,8 +82,8 @@ if writeTiff
     TW.write(data);
     % write XML
     createXml(metadata, filenameXml);
-  catch
-    warning('ImageIOWrite: cannot save as Tiff file')
+  catch ME
+    warning(['ImageIOWrite: cannot save as Tiff file, error: ' ME.message])
     success = false;
     return
   end
@@ -94,9 +94,9 @@ else % write .mat
     % Create metadata structure
     metadataStruct = createMetadataStruct(metadata);
     % Write mat file
-    save(filename, data, metadataStruct);
-  catch
-    warning('ImageIOWrite: cannot save as Matlab .mat file')
+    save(filename, 'data', 'metadataStruct');
+  catch ME
+    warning(['ImageIOWrite: cannot save as Matlab .mat file, error: ' ME.message])
     success = false;
     return
   end
@@ -114,13 +114,15 @@ success = true;
     s.ImageMetadata.series.Text = metadata.series;
     s.ImageMetadata.time.Text = metadata.time;
     s.ImageMetadata.tile.Text = metadata.tile;
-    s.ImageMetadata.numTileRows.Text = metadata.numTileRows;
-    s.ImageMetadata.numTileCols.Text = metadata.numTileCols;
-    for k = 1:length(metadata.metadata.numTileRows)
-      s.ImageMetadata.metadata.numTileRows{k}.Text = metadata.metadata.numTileRows(k);
+    s.ImageMetadata.numTilesRow.Text = metadata.numTilesRow;
+    s.ImageMetadata.numTilesCol.Text = metadata.numTilesCol;
+    rowTilePos = unique(metadata.rowTilePos);
+    colTilePos = unique(metadata.numTilesCol);
+    for k = 1:length(rowTilePos)
+      s.ImageMetadata.rowTilePos{k}.Text = rowTilePos(k);
     end
-    for k = 1:length(metadata.metadata.numTileCols)
-      s.ImageMetadata.metadata.numTileCols{k}.Text = metadata.metadata.numTileCols(k);
+    for k = 1:length(colTilePos)
+      s.ImageMetadata.colTilePos{k}.Text = colTilePos(k);
     end
     s.ImageMetadata.pixPerTileRow.Text = metadata.pixPerTileRow;
     s.ImageMetadata.pixPerTileCol.Text = metadata.pixPerTileCol;
