@@ -10,14 +10,8 @@ classdef CZIReader < imageIO.ImageIO
   %   SEE ALSO: imageIO.imageIO
   
   properties
-    cziPtr = 0;              % Pointer to the CZI file (returned by fopen)
-    segmentTypes;            % SegmentTypes present in the file
-    offsetToSegments;        % Offsets (from BOF) to the start of the data
     imageSubblocks = 0;      % Total number of image subblock (ZISRAWSUBBLOCK segments)
-    offsetMetadataSegm = 0;  % Offset to the Metadata segment (1 per file)
-    offsetDirectorySegm = 0; % Offset to the Directory segment (1 per file)
-    offsetAttachDirSegm = 0; % Offset to the Attachment segment (1 per file)
-    directoryEntries;        % Directory entry info associated to each subblock
+
     rowIndex;                % maps the absolute Y position of the subblock to 
                              % the index row position in the tiled image
     colIndex;                % maps the absolute X position of the subblock to 
@@ -25,14 +19,25 @@ classdef CZIReader < imageIO.ImageIO
     tilesPos;                % position of each tile in the grid. This is required 
                              % because in some cases (e.g. after stitching)
                              % the tiles are not arranged in a grid
-    dirEntryIndices;         % maps each directory entry as position in a 
-                             % multidimensional cell array, where the dimension
-                             % are specified by time, channel, stack and
-                             % series
-    wrongMetadata = false;   % set to true if the information acquired from the 
-                             % metadata block and the directory block is
-                             % contradictory
-    verbose = false;         % set to true only when displaying additional info                         
+                        
+  end
+  
+  properties (Hidden = true)
+    cziPtr = 0;              % Pointer to the CZI file (returned by fopen)
+    segmentTypes;            % SegmentTypes present in the file
+    offsetToSegments;        % Offsets (from BOF) to the start of the data
+    offsetMetadataSegm = 0;  % Offset to the Metadata segment (1 per file)
+    offsetDirectorySegm = 0; % Offset to the Directory segment (1 per file)
+    offsetAttachDirSegm = 0; % Offset to the Attachment segment (1 per file)
+    directoryEntries;        % Directory entry info associated to each subblock
+    dirEntryIndices;         % maps each directory entry as position in a
+    % multidimensional cell array, where the dimension
+    % are specified by time, channel, stack and
+    % series
+    wrongMetadata = false;   % set to true if the information acquired from the
+    % metadata block and the directory block is
+    % contradictory
+    verbose = false;         % set to true only when displaying additional info
   end
   
   methods
