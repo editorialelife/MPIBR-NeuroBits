@@ -1,4 +1,4 @@
-function [data, metadata, imgPtr] = imageIORead( file, varargin )
+function [data, metadata, originalMetadata] = imageIORead( file, varargin )
 %IMAGEIOREAD Main function for reading image data using imageIO library
 %   imageIORead provides a single interface for reading image data using
 %   any of the classes specified in the +imageIO package. The easiest way
@@ -41,6 +41,11 @@ function [data, metadata, imgPtr] = imageIORead( file, varargin )
 %     a directory, the value is inferred by the metadata contained in the
 %     file and, in that case, any user provided value would be overridden.
 %     If not specified, assumes 0
+%   separateTile: boolean, option valid only for multitile datasets. If
+%     set to true, the function will not merge all the tiles in a single
+%     plane together, but rather will leave them separate. That means that
+%     one or 2 more dimension are added to the data, containing the indices
+%     of the tile rows and columns. Default is false
 %   'closeFile': Specify if the file should be closed after reading the data.
 %     The default is true, should be set to false if the user wants to
 %     perform multiple reads on the same imageIOPtr.
@@ -70,9 +75,8 @@ function [data, metadata, imgPtr] = imageIORead( file, varargin )
 %   	channel is extracted (or the input is single channel), the singleton
 %   	dimension relative to channel is squeezed.
 %   metadata: structure containing all the metadata extracted from the file
-%   imgPtr: imageIO instance (actually instance of a subclass of imageIO)
-%     that can be used to extract other data or access the image properties
-%     and metadata
+%   originalMetadata: When available, an object containing all the
+%   metadata extracted from the file
 % EXAMPLES:
 %   Reading all the content from single files:
 %     tiffData = imageIORead('myTiff.tif');
