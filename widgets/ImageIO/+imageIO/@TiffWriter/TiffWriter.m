@@ -70,8 +70,15 @@ classdef TiffWriter < imageIO.ImageIO
     % OUTPUT:
     %   obj the constructed object
     %SEE ALSO imageIO.ImageIO.ImageIO, imageIO.TiffWriter.parseArgs,
-    %   imageIO.TiffWriter.writeData
+    %   imageIO.TiffWriter.write
     
+      % Fix filename if is not with tif extension
+      [~, ~, ext] = fileparts(filename);
+      if ~(strcmpi(ext, '.tif') || strcmpi(ext, '.tiff'))
+        warning('TiffWriter: Using incorrect extension! Appending ''.tif'' to filename')
+        filename = [filename '.tif'];
+      end
+
       % Must call explictily because we pass one argument
       obj = obj@imageIO.ImageIO(filename);
       
@@ -153,7 +160,7 @@ classdef TiffWriter < imageIO.ImageIO
     end
     
     function write(obj, data, varargin)
-    %WRITEDATA Write data on file
+    %WRITE Write data on file
     %Writes data on the file linked to the TiffWriter object. Apart from
     %the mandatoy parameter data, all other parameters are passed as
     %Name-Value pairs
@@ -175,16 +182,16 @@ classdef TiffWriter < imageIO.ImageIO
     %   tw = imageIO.TiffWriter('test.tiff');
     %   data = uint8(ones(1024, 512, 50));
     %
-    %   tw.writeData( data ) writes all the 50 images of data on
-    %   tw.writeData( data, 'numImages', 20 ) writes only the first 20 images
-    %   tw.writeData( data, 'numImages', 70 ) writes all the 50
+    %   tw.write( data ) writes all the 50 images of data on
+    %   tw.write( data, 'numImages', 20 ) writes only the first 20 images
+    %   tw.write( data, 'numImages', 70 ) writes all the 50
     %    images of data and issue a warning, because the specified number
     %    of images is greater than the number of images in
     %   tw.writeData( data, 'writeMode', 'a') appends data 
     %   For fast writing of multipage tiff on the same file:  
-    %     tw.writeData( data, 'close', false );
-    %     tw.writeData( newdata, 'writemode', 'write' )
-    %     tw.writeData( otherdata, 'writemode', 'write' )
+    %     tw.write( data, 'close', false );
+    %     tw.write( newdata, 'writemode', 'write' )
+    %     tw.write( otherdata, 'writemode', 'write' )
     %     tw.close();
     % SEE ALSO:
     %   imwrite, imageIO.TiffWriter.TiffWriter
