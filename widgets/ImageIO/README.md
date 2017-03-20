@@ -85,15 +85,20 @@ microscopeName;
 microscopeType;
 objectiveMagnification;
 objectiveName;
-formatSpecificMetadata;
+originalMetadata;       % as presented originally in the file. Each
+                        % file format has a specific type of metadata,
+                        % so no assumption is made on the type of
+                        % data (string, struct or cell are all
+                        % valid formats)
 ```
 
 ## Example usage
 
 For details regarding usage of specific classes, please check the Matlab documentation of each class in the **+imageIO** package.
 
-Here's a description on how to use the **imageIORead** function:
+### READING IMAGE DATA
 
+Here's a description on how to use the **imageIORead** function:
 
 **IMAGEIOREAD**: Main function for reading image data using imageIO library
    imageIORead provides a single interface for reading image data using
@@ -140,6 +145,13 @@ Here's a description on how to use the **imageIORead** function:
      a directory, the value is inferred by the metadata contained in the
      file and, in that case, any user provided value would be overridden.
      If not specified, assumes 0
+     
+  *separateTile*: Used only for LSM or CZI files.
+     boolean, option valid only for multitile datasets. If
+     set to true, the function will not merge all the tiles in a single
+     plane together, but rather will leave them separate. That means that
+     one or 2 more dimensions are added to the data, containing the indices
+     of the tile rows and columns. Default is false
    
    *closeFile*: Specify if the file should be closed after reading the data.
      The default is true, should be set to false if the user wants to
@@ -180,43 +192,80 @@ Here's a description on how to use the **imageIORead** function:
    
    *metadata*: structure containing all of the 
    
-   *imgPtr*: imageIO instance (actually instance of a subclass of imageIO)
-     that can be used to extract other data or access the image properties
-     and metadata
+   *originalMetadata*: When available, an object containing all the
+   metadata extracted from the file
      
 **EXAMPLES**
 
    Reading all the content from single files:
    
- ```
+ ```matlab
  tiffData = imageIORead('myTiff.tif');
-cziData = imageIORead('aCZIFile.czi');
+ cziData = imageIORead('aCZIFile.czi');
 ```
    
    Reading a Z stack from a folder
    
- ```
+ ```matlab
 tiffStack = imageIORead('folderWithImages'); % no need to specify pattern
 tiffStack = imageIORead('folderWithImages', 'Planes', 100:150); % subset
 ```
    
    Reading complex datasets from a folder
    
-```
+```matlab
 multiChTiffStack = imageIORead('folder', 'filePattern', 'filePattern_Ch_%d_Z_%04d.tif', 'dimOrder', 'CZ');
 ```
    
    Reading a subset from complex datasets from a folder
    
- ```
+ ```matlab
 multiChTiffStack = imageIORead('folder', 'filePattern', 'filePattern_Pos_%02dx%02d_Ch_%d_Z_%04d.tif', 'dimOrder', 'YXCZ', 'Channels', 2, 'TileRows', 1:2, 'TileCols', 1:3);
  ```
    
    Read from file of size 4000x3000, subset of a factor 4, only first and third channel
    
- ```
+ ```matlab
 bioReaderData = imageIORead('sample.lsm', 'Channels', [1 3], 'Cols', 1:4:4000, 'Rows', 1:4:3000);
  ```
+
+### WRITING IMAGE DATA
+
+Writing functionalities are currently limited. We write 3D + channels information image data as Tiff stacks, with an additional xml file containing the metadata, and 4D (and above) data as matlab mat file.
+
+Here's a description on how to use the **imageIOWrite** function:
+
+ **imageIOWrite** Write to disk data extracted using imageIO toolbox
+    imageIOWrite provides an interface to write on disk data which has been
+    extracted using the imageIO toolbox. The function behaves differently
+    depending on the size of the data input parameter. If the data has a
+    number of dimensions which is less than or equals to four (and one of
+    the dimensions, the one representing the channels, has size of at most
+    three), then the data will be written as a Tiff file. An additional
+    xml file will contain additional metadata information who couldn't be
+    stored in any of the Tiff tags. If the number of dimensions is bigger
+    than four, the file will be saved as a .mat object. This object will
+    contain 2 fields, one for the actual data content and the other  for the 
+    metadata extracted by the imageIO toolbox
+ 
+  **INPUT**
+  
+    *data*: mandatory, it contains the actual image data to be written
+      on disk
+    *metadata*: metadata obtained when using the imageIO Toolbox
+    *filename*: Mandatory, it's the output filename. If the filename doesn't 
+      end in *.tif, the extension will be added automatically.
+  
+  **OUTPUT**
+  
+    *success*: boolean flag, true if writing was successful, false otherwise
+ 
+  **EXAMPLE**
+  
+    ```matlab
+    [data, metadata] = imageIORead('/some/test/data/img.czi'); %get Data
+    success = imageIOWrite(data, metadata, 'myData.tif');
+    ``` 
 
 
 ## Folder containing test data
@@ -224,13 +273,13 @@ smb://storage.corp.brain.mpg.de/data/Projects/ImageIO
 
 ## Targeted image file formats
 * TIFF --> open using Tiff library
-* LSM --> Try using BioFormat and Matlab files from File Exchange
+* LSM --> open using our Matlab implementation
 * CZI --> open using our Matlab implementation
-* MSR --> Try using omex read functionalities provided by Imspector
-* OBR --> Try using omex read functionalities provided by Imspector
+* MSR --> open using omex read functionalities provided by Imspector
+* OBR --> open using omex read functionalities provided by Imspector
 * XML based single images
 * LIF
-* SIF --> Try using Andor library and Matlab files from File Exchange
+* SIF --> open using Andor library and Matlab files from File Exchange
 * Sutter TIFF files --> Using our extension to Tiff library
 * Slide Book Container (not in bioformats?)
 * HDF --> Natively supported by Matlab
@@ -241,24 +290,19 @@ smb://storage.corp.brain.mpg.de/data/Projects/ImageIO
 * Read multiple stacks (datsets with different dimension from within the same file)
 * Read Knossos (ie multiple files)
 * Read Prairie (ie multiple files)
-* Read subregions
-* Read sif on Linux or Mac
 * Deal with line averages, frame averages, line steps, pixel steps 
 * Read stacks or read images by default 
 * Check or not for wildcards (slow)
-* Store original metadata (see issue #21)
-
 
 ## Current limitations of Bioformats
 List of formats supported by bioformat:
 https://www.openmicroscopy.org/site/support/bio-formats5.1/supported-formats.html#term-ratings-legend-and-definitions
-
 BioFormat cannot cope with a bunch of datasets, both in LSM and CZI format
 
 Possible disadvantages of open bioformat:
 
 *	conversion to the OME format when opening an image (which guarantees interoperability, but also overhead)
-*	Matlab interface is quite poor at the moment, and extracting specific metadata information it’s quite frustrating.
+*	Matlab interface is quite poor at the moment, and extracting specific metadata information is quite frustrating.
 * Write is supported only for a fraction of the bioformat compatible formats.
-* BioFormat does not support series, apparently
+* BioFormat does not support series
 
