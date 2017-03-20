@@ -41,12 +41,13 @@ function [data, metadata, originalMetadata] = imageIORead( file, varargin )
 %     a directory, the value is inferred by the metadata contained in the
 %     file and, in that case, any user provided value would be overridden.
 %     If not specified, assumes 0
-%   separateTile: boolean, option valid only for multitile datasets. If
+%   separateTile: Used only for LSM or CZI files.
+%     boolean, option valid only for multitile datasets. If
 %     set to true, the function will not merge all the tiles in a single
 %     plane together, but rather will leave them separate. That means that
-%     one or 2 more dimension are added to the data, containing the indices
+%     one or 2 more dimensions are added to the data, containing the indices
 %     of the tile rows and columns. Default is false
-%   'closeFile': Specify if the file should be closed after reading the data.
+%   closeFile: Specify if the file should be closed after reading the data.
 %     The default is true, should be set to false if the user wants to
 %     perform multiple reads on the same imageIOPtr.
 %
@@ -138,6 +139,7 @@ p.addParameter('Time', 1:imgPtr.time, @(x) isvector(x) && all(x > 0) && max(x) <
 p.addParameter('Series', 1:imgPtr.series, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.series);
 p.addParameter('TileCols', 1:imgPtr.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.numTilesCol);
 p.addParameter('TileRows', 1:imgPtr.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.numTilesRow);
+p.addParameter('separateTile', false, @(x) isscalar(x) && islogical(x));
 
 p.parse(varargin{:});
 
@@ -149,10 +151,11 @@ planes = p.Results.Planes;
 timeseries = p.Results.Time;
 tileCols = p.Results.TileCols;
 tileRows = p.Results.TileRows;
+separateTile = p.Results.separateTile;
 
 % finally, read the required data 
 data = imgPtr.read('X', cols, 'Y', rows, 'C', channels, 'Z', planes, ...
-  'T', timeseries, 'TileCols', tileCols, 'TileRows', tileRows);
+  'T', timeseries, 'TileCols', tileCols, 'TileRows', tileRows, 'separateTile', separateTile);
 
 % return also the metadata, is requested
 if nargout > 1

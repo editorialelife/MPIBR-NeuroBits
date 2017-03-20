@@ -72,7 +72,7 @@ classdef (Abstract = true) ImageIO < handle
         microscopeType = '';
         
         objectiveMagnification = nan;
-        objectiveName = nan;
+        objectiveName = '';
         originalMetadata;       % as presented originally in the file. Each
                                 % file format has a specific type of metadata,
                                 % so no assumption is made on the type of
