@@ -73,6 +73,11 @@ classdef CZIReader < imageIO.ImageIO
     %   obj: class instance
     %   varargin: Name-Value arguments. Allowed parameters are 'Cols', 'Rows',
     %     'C', 'Z', 'T', 'S', 'TileRows', 'TileCols'
+    %     A special argument is 'separateTile'. When true, the function
+    %     will not merge all the tiles in a single
+    %     plane together, but rather will leave them separate. That means that
+    %     one or 2 more dimensions are added to the data, containing the indices
+    %     of the tile rows and columns. Default is false
     % OUTPUT
     %   data: image data, up to 6 dimension (in this order: XYCZTS). If only one
     %   	channel is extracted (or the input is single channel), the singleton
@@ -86,8 +91,14 @@ classdef CZIReader < imageIO.ImageIO
     %   data = myCZI.getData('TileRows', 1:6, 'TileCols, 2:4) %Reads first six rows of
     %     tiles, and column tiles from 2 to 4
     
+      p = inputParser();
+      p.KeepUnmatched = true;
+      p.addParameter('separateTile', false, @(x) isscalar(x) && islogical(x));
+      p.parse(varargin{:});
+      separateTile = p.Results.separateTile;
+    
       if isempty(varargin) % Read all the data
-        data = obj.getAllData();
+        data = obj.getAllData(separateTile);
       elseif 1 == obj.tile
         data = obj.getDataNoTiles(varargin{:});
       else
@@ -98,11 +109,10 @@ classdef CZIReader < imageIO.ImageIO
     end
   end
 
-  methods
-    data = getAllData(obj);                   % IMPLEMENTED IN SEPARATE FILE
-  end
-  
   methods (Access = protected)
+    data = getAllData(obj);                   % IMPLEMENTED IN SEPARATE FILE
+    data = getDataNoTiles(obj);               % IMPLEMENTED IN SEPARATE FILE
+    data = getTiledData(obj);                 % IMPLEMENTED IN SEPARATE FILE
     obj = readRawFileSegm(obj);               % IMPLEMENTED IN SEPARATE FILE
     obj = readRawDirSegm(obj);                % IMPLEMENTED IN SEPARATE FILE
     [data, obj] = readRawSubblockSegm(obj, varargin); % IMPLEMENTED IN SEPARATE FILE

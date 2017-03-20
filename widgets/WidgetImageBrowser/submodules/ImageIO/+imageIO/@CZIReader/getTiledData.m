@@ -124,7 +124,6 @@ for z = stacks
   idxZ = idxZ + 1;
 end
 
-
 %squeeze data, to remove singleton dimensions
 data = squeeze(data);
 end
