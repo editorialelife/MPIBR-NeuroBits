@@ -40,7 +40,7 @@ p.addParameter('T', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.
 p.addParameter('S', 1:obj.series, @(x) isvector(x) && all(x > 0) && max(x) <= obj.series);
 p.addParameter('TileCols', 1:obj.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesCol);
 p.addParameter('TileRows', 1:obj.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesRow);
-
+p.addParameter('separateTile', false, @(x) isscalar(x) && islogical(x));
 p.parse(varargin{:});
 
 rows = p.Results.Rows;
@@ -51,6 +51,8 @@ timeseries = p.Results.T;
 series = p.Results.S;
 tileCols = p.Results.TileCols;
 tileRows = p.Results.TileRows;
+tileSeparate = p.Results.tileSeparate;
+
 
 if obj.wrongMetadata % deal with messy indices
   % Probably cannot get tiled data, because:
@@ -62,11 +64,16 @@ if obj.wrongMetadata % deal with messy indices
   end
 end
 
-sizeRows = round(length(rows) * (1 + (length(tileRows) - 1) * (1 - obj.tileOverlap)));
-sizeCols = round(length(cols) * (1 + (length(tileCols) - 1) * (1 - obj.tileOverlap)));
+if tileSeparate
+  data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
+    length(timeseries), length(series), length(tileRows), length(tileCols), obj.datatype);
+else
+  sizeRows = round(length(rows) * (1 + (length(tileRows) - 1) * (1 - obj.tileOverlap)));
+  sizeCols = round(length(cols) * (1 + (length(tileCols) - 1) * (1 - obj.tileOverlap)));
 
-data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
-  length(timeseries), length(series), obj.datatype);
+  data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
+    length(timeseries), length(series), obj.datatype);
+end
 
 % get numelements in each dimension
 nZ = numel(stacks);
@@ -110,9 +117,13 @@ for z = stacks
             % this tile is required!
             tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntries(k));
             [rr, cc] = size(tmpImg(rows, cols));
-            data(pixelStartTileRow(outTileRow) : pixelStartTileRow(outTileRow) + rr - 1, ...
-              pixelStartTileCol(outTileCol) : pixelStartTileCol(outTileCol) + cc - 1, ...
-              idxCh, idxZ, idxT, idxS) = tmpImg(rows, cols);
+            if separateTiles
+              data(:, :, idxCh, idxZ, idxT, idxS, currTileRow, currTileCol) = tmpImg(rows, cols);
+            else
+              data(pixelStartTileRow(outTileRow) : pixelStartTileRow(outTileRow) + rr - 1, ...
+                pixelStartTileCol(outTileCol) : pixelStartTileCol(outTileCol) + cc - 1, ...
+                idxCh, idxZ, idxT, idxS) = tmpImg(rows, cols);
+            end
           end
         end
         idxS = idxS + 1;
@@ -123,7 +134,6 @@ for z = stacks
   end
   idxZ = idxZ + 1;
 end
-
 
 %squeeze data, to remove singleton dimensions
 data = squeeze(data);

@@ -40,7 +40,7 @@ p.addParameter('T', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.
 p.addParameter('S', 1:obj.series, @(x) isvector(x) && all(x > 0) && max(x) <= obj.series);
 p.addParameter('TileCols', 1:obj.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesCol);
 p.addParameter('TileRows', 1:obj.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesRow);
-
+p.addParameter('separateTile', false, @(x) isscalar(x) && islogical(x));
 p.parse(varargin{:});
 
 rows = p.Results.Rows;
@@ -51,12 +51,19 @@ timeseries = p.Results.T;
 series = p.Results.S;
 tileCols = p.Results.TileCols;
 tileRows = p.Results.TileRows;
+tileSeparate = p.Results.tileSeparate;
 
-sizeRows = round(length(rows) * (1 + (length(tileRows) - 1) * (1 - obj.tileOverlap)));
-sizeCols = round(length(cols) * (1 + (length(tileCols) - 1) * (1 - obj.tileOverlap)));
 
-data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
-  length(timeseries), length(series), obj.datatype);
+if tileSeparate
+  data = zeros(length(rows), length(cols), length(channels), length(stacks), ...
+    length(timeseries), length(series), length(tileRows), length(tileCols), obj.datatype);
+else
+  sizeRows = round(length(rows) * (1 + (length(tileRows) - 1) * (1 - obj.tileOverlap)));
+  sizeCols = round(length(cols) * (1 + (length(tileCols) - 1) * (1 - obj.tileOverlap)));
+
+  data = zeros(sizeRows, sizeCols, length(channels), length(stacks), ...
+    length(timeseries), length(series), obj.datatype);
+end
 
 % get numelements in each dimension
 nZ = numel(stacks);
@@ -76,19 +83,6 @@ pixelStartTileRow = 1 + round((0:length(tileRows)-1) * (1 - obj.tileOverlap) * l
 pixelStartTileCol = 1 + round((0:length(tileCols)-1) * (1 - obj.tileOverlap) * length(cols));
 initialTileRow = tileRows(1);
 initialTileCol = tileCols(1);
-
-% %% TEST
-% numSteps = obj.stacks * obj.time * obj.series * obj.numTilesRow * obj.numTilesCol;
-% for k = 1:numSteps
-%   fseek(obj.lsmPtr, obj.offsets(k), 'bof');
-%   tmpImg = typeOut(fread(obj.lsmPtr, obj.pixPerTileRow * obj.pixPerTileCol, ...
-%                          obj.datatypeInput, obj.BYTE_ORDER));
-%   tmpImg = reshape(tmpImg, obj.pixPerTileCol, obj.pixPerTileRow)';
-% %   imshow(imadjust(tmpImg))
-% 	disp(['Step: ' num2str(k) ' offset: ' num2str(obj.offsets(k))])
-% %   set(gcf, 'Position', [-1000, 309 855 778]);
-% end
-% %% END TEST
 
 for tr = tileRows
   for tc = tileCols
@@ -121,9 +115,13 @@ for tr = tileRows
 
               [rr, cc] = size(tmpImg(rows, cols));
 
+              if tileSeparate
+                data(:, :, idxCh, idxZ, idxT, idxS, outTileRow, outTileCol) = tmpImg(rows, cols);
+              else
               data(pixelStartTileRow(outTileRow) : pixelStartTileRow(outTileRow) + rr - 1, ...
                 pixelStartTileCol(outTileCol) : pixelStartTileCol(outTileCol) + cc - 1, ...
                 idxCh, idxZ, idxT, idxS) = tmpImg(rows, cols);
+              end
 
               idxCh = idxCh + 1;
             else
