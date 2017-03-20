@@ -235,7 +235,7 @@ Writing functionalities are currently limited. We write 3D + channels informatio
 
 Here's a description on how to use the **imageIOWrite** function:
 
- **imageIOWrite** Write to disk data extracted using imageIO toolbox
+**imageIOWrite** Write to disk data extracted using imageIO toolbox
     imageIOWrite provides an interface to write on disk data which has been
     extracted using the imageIO toolbox. The function behaves differently
     depending on the size of the data input parameter. If the data has a
@@ -248,24 +248,24 @@ Here's a description on how to use the **imageIOWrite** function:
     contain 2 fields, one for the actual data content and the other  for the 
     metadata extracted by the imageIO toolbox
  
-  **INPUT**
+**INPUT**
   
-    *data*: mandatory, it contains the actual image data to be written
+  *data*: mandatory, it contains the actual image data to be written
       on disk
-    *metadata*: metadata obtained when using the imageIO Toolbox
-    *filename*: Mandatory, it's the output filename. If the filename doesn't 
+  *metadata*: metadata obtained when using the imageIO Toolbox
+  *filename*: Mandatory, it's the output filename. If the filename doesn't 
       end in *.tif, the extension will be added automatically.
   
-  **OUTPUT**
+**OUTPUT**
   
-    *success*: boolean flag, true if writing was successful, false otherwise
+  *success*: boolean flag, true if writing was successful, false otherwise
  
-  **EXAMPLE**
+**EXAMPLE**
   
-    ```matlab
-    [data, metadata] = imageIORead('/some/test/data/img.czi'); %get Data
-    success = imageIOWrite(data, metadata, 'myData.tif');
-    ``` 
+  ```matlab
+  [data, metadata] = imageIORead('/some/test/data/img.czi'); %get Data
+  success = imageIOWrite(data, metadata, 'myData.tif');
+  ``` 
 
 
 ## Folder containing test data
