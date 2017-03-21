@@ -16,6 +16,8 @@ function [ data ] = getTiledData( obj, varargin )
 %   'S': Specify which series/position to extract
 %   'TileRows': Specify which row tiles to read.
 %   'TileCols': Specify which col tiles to read.
+%   'tileSeparate': specify whether to keep tiles separate or to merge them
+%                   into a single plane (default = false)
 % OUTPUT:
 %   data: image data, up to 6 dimension (in this order: XYCZTS). If only one
 %   	channel is extracted (or the input is single channel), the singleton
@@ -40,7 +42,7 @@ p.addParameter('T', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.
 p.addParameter('S', 1:obj.series, @(x) isvector(x) && all(x > 0) && max(x) <= obj.series);
 p.addParameter('TileCols', 1:obj.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesCol);
 p.addParameter('TileRows', 1:obj.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= obj.numTilesRow);
-p.addParameter('separateTile', false, @(x) isscalar(x) && islogical(x));
+p.addParameter('tileSeparate', false, @(x) isscalar(x) && islogical(x));
 p.parse(varargin{:});
 
 rows = p.Results.Rows;
@@ -117,7 +119,7 @@ for z = stacks
             % this tile is required!
             tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntries(k));
             [rr, cc] = size(tmpImg(rows, cols));
-            if separateTiles
+            if tileSeparate
               data(:, :, idxCh, idxZ, idxT, idxS, currTileRow, currTileCol) = tmpImg(rows, cols);
             else
               data(pixelStartTileRow(outTileRow) : pixelStartTileRow(outTileRow) + rr - 1, ...

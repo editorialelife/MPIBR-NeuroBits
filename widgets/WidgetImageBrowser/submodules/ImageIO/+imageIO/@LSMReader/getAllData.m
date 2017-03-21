@@ -1,8 +1,8 @@
-function [ data ] = getAllData( obj, separateTile )
+function [ data ] = getAllData( obj, tileSeparate )
 %GETALLDATA Get all the image data
 %   This method extracts all the image data from an LSMReader object
 %   INPUT:
-%   separateTile. If true, add two more dimensions that are used as indices
+%   tileSeparate. If true, add two more dimensions that are used as indices
 %     for tile position
 %
 % AUTHOR: Stefano Masneri
@@ -11,7 +11,7 @@ function [ data ] = getAllData( obj, separateTile )
 
 progBar = TextProgressBar('LSMReader --> Extracting data: ', 30);
 
-if separateTile
+if tileSeparate
   data = zeros(obj.pixPerTileRow, obj.pixPerTileCol, obj.channels, obj.stacks, ...
     obj.time, obj.series, obj.rowTilePos, obj.colTilePos, obj.datatype);
 else
@@ -44,7 +44,7 @@ for row = 1:obj.numTilesRow
               obj.datatypeInput, obj.BYTE_ORDER));
             tmpImg = reshape(tmpImg, obj.pixPerTileCol, obj.pixPerTileRow)';
             
-            if separateTile
+            if tileSeparate
               data(:, :,  idxC, idxZ, idxT, idxS, row, col) = tmpImg;
             else
               % Manage overlap

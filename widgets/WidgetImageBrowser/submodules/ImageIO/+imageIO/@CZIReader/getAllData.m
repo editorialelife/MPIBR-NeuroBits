@@ -1,8 +1,8 @@
-function [ data ] = getAllData( obj, separateTile )
+function [ data ] = getAllData( obj, tileSeparate )
 %GETALLDATA Get all the image data
 %   This method extracts all the image data from a CZIReader object
 %   INPUT:
-%   separateTile. If true, add two more dimensions that are used as indices
+%   tileSeparate. If true, add two more dimensions that are used as indices
 %     for tile position
 %
 % AUTHOR: Stefano Masneri
@@ -13,7 +13,7 @@ numDirEntries = length(obj.directoryEntries);
 
 if obj.wrongMetadata
   %initialize data
-  if separateTile
+  if tileSeparate
     data = zeros(obj.pixPerTileRow, obj.pixPerTileCol, obj.channels, obj.stacks, ...
       obj.time, obj.series, obj.rowTilePos, obj.colTilePos, obj.datatype);
   else
@@ -37,7 +37,7 @@ if obj.wrongMetadata
     else
       S = 1 + dirEntry.S;
     end
-    if separateTile
+    if tileSeparate
       tr = obj.rowIndex(dirEntries(k).YPos);
       tc = obj.colIndex(dirEntries(k).XPos);
       data(:, :, C, Z, T, S, tr, tc) = tmpImg;
@@ -50,7 +50,7 @@ if obj.wrongMetadata
   end
 else
   
-  if separateTile
+  if tileSeparate
     data = zeros(obj.pixPerTileRow, obj.pixPerTileCol, obj.channels, obj.stacks, ...
       obj.time, obj.series, obj.rowTilePos, obj.colTilePos, obj.datatype);
   else
