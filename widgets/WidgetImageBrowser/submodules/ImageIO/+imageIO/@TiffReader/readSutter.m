@@ -20,7 +20,7 @@ for s = stacks
     for ch = channels
       
       idx = sub2ind(matSize, ch, t, s);
-      progBar.update((idxCh + (idxT-1)*nCh + (idxS-1)*nCh*nT)/totEl) * 100);
+      progBar.update((idxCh + (idxT-1)*nCh + (idxS-1)*(nCh*nT)/totEl) * 100);
       img = obj.readImage(idx);
       data(:, :, idxCh, idxS, idxT) = img(rows, cols);
       
