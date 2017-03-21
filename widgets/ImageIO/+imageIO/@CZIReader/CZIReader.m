@@ -73,7 +73,7 @@ classdef CZIReader < imageIO.ImageIO
     %   obj: class instance
     %   varargin: Name-Value arguments. Allowed parameters are 'Cols', 'Rows',
     %     'C', 'Z', 'T', 'S', 'TileRows', 'TileCols'
-    %     A special argument is 'separateTile'. When true, the function
+    %     A special argument is 'tileSeparate'. When true, the function
     %     will not merge all the tiles in a single
     %     plane together, but rather will leave them separate. That means that
     %     one or 2 more dimensions are added to the data, containing the indices
@@ -93,12 +93,12 @@ classdef CZIReader < imageIO.ImageIO
     
       p = inputParser();
       p.KeepUnmatched = true;
-      p.addParameter('separateTile', false, @(x) isscalar(x) && islogical(x));
+      p.addParameter('tileSeparate', false);
       p.parse(varargin{:});
-      separateTile = p.Results.separateTile;
+      tileSeparate = p.Results.tileSeparate;
     
       if isempty(varargin) % Read all the data
-        data = obj.getAllData(separateTile);
+        data = obj.getAllData(tileSeparate);
       elseif 1 == obj.tile
         data = obj.getDataNoTiles(varargin{:});
       else
@@ -111,8 +111,8 @@ classdef CZIReader < imageIO.ImageIO
 
   methods (Access = protected)
     data = getAllData(obj);                   % IMPLEMENTED IN SEPARATE FILE
-    data = getDataNoTiles(obj);               % IMPLEMENTED IN SEPARATE FILE
-    data = getTiledData(obj);                 % IMPLEMENTED IN SEPARATE FILE
+    data = getDataNoTiles(obj, varargin);     % IMPLEMENTED IN SEPARATE FILE
+    data = getTiledData(obj, varargin);       % IMPLEMENTED IN SEPARATE FILE
     obj = readRawFileSegm(obj);               % IMPLEMENTED IN SEPARATE FILE
     obj = readRawDirSegm(obj);                % IMPLEMENTED IN SEPARATE FILE
     [data, obj] = readRawSubblockSegm(obj, varargin); % IMPLEMENTED IN SEPARATE FILE
