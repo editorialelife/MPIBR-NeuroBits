@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration file="D:\Code\GitHub\ImageIO\ImageIO.prj" location="D:\Code\GitHub\ImageIO" name="ImageIO" target="target.toolbox" target-name="Package Toolbox">
+  <configuration build-checksum="89667986" file="D:\Code\GitHub\ImageIO\ImageIO.prj" location="D:\Code\GitHub\ImageIO" name="ImageIO" target="target.toolbox" target-name="Package Toolbox">
     <param.appname>ImageIO</param.appname>
     <param.authnamewatermark>Stefano Masneri</param.authnamewatermark>
     <param.email>stefano.masneri@brain.mpg.de</param.email>
@@ -9,7 +9,7 @@
 The toolbox also provides functionalities for writing data as a Tiff stack, write the metadata in an xml file or save everything as a .mat file.
 More information are available on the github page: https://github.molgen.mpg.de/MPIBR/ImageIO/blob/master/README.md</param.description>
     <param.screenshot>C:\Users\masneris\Downloads\zebrafish-heart.jpg</param.screenshot>
-    <param.version>1.0</param.version>
+    <param.version>1.0.1</param.version>
     <param.output>${PROJECT_ROOT}\ImageIO.mltbx</param.output>
     <param.products.name />
     <param.products.id />
@@ -46,7 +46,6 @@ tests
     <param.matlabpath.excludes />
     <param.javaclasspath.excludes />
     <unset>
-      <param.version />
       <param.output />
       <param.products.name />
       <param.products.id />
