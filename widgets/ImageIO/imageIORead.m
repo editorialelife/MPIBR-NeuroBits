@@ -50,6 +50,7 @@ function [data, metadata, originalMetadata] = imageIORead( file, varargin )
 %   closeFile: Specify if the file should be closed after reading the data.
 %     The default is true, should be set to false if the user wants to
 %     perform multiple reads on the same imageIOPtr.
+%   verbose: If set to true, add some logging information. Default is false
 %
 %   The following name value parameters are used to extract only part of
 %   the data. The user can specify subset
@@ -140,6 +141,7 @@ p.addParameter('Series', 1:imgPtr.series, @(x) isvector(x) && all(x > 0) && max(
 p.addParameter('TileCols', 1:imgPtr.numTilesCol, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.numTilesCol);
 p.addParameter('TileRows', 1:imgPtr.numTilesRow, @(x) isvector(x) && all(x > 0) && max(x) <= imgPtr.numTilesRow);
 p.addParameter('tileSeparate', false, @(x) isscalar(x) && islogical(x));
+p.addParameter('verbose', false, @(x) isscalar(x) && islogical(x));
 
 p.parse(varargin{:});
 
@@ -152,6 +154,7 @@ timeseries = p.Results.Time;
 tileCols = p.Results.TileCols;
 tileRows = p.Results.TileRows;
 tileSeparate = p.Results.tileSeparate;
+verbose = p.Results.verbose;
 
 % finally, read the required data 
 data = imgPtr.read('X', cols, 'Y', rows, 'C', channels, 'Z', planes, ...
@@ -168,8 +171,10 @@ if nargout > 2
 end
 
 if closeFile
-  disp('imageIORead: You are closing the image reader. If you intend to perform multiple read operations')
-  disp('please re-run imageIORead and set the parameter ''closeFile'' to false')
+  if verbose
+    disp('imageIORead: You are closing the image reader. If you intend to perform multiple read operations')
+    disp('please re-run imageIORead and set the parameter ''closeFile'' to false')
+  end
   imgPtr.delete();
 end
 

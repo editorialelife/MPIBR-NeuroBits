@@ -121,8 +121,6 @@ classdef TiffDirReader < imageIO.ImageIO
       
       if isempty(varargin) % Read all the data
         data = obj.getAllData();
-      %elseif 1 == obj.tile
-      %  data = obj.getDataNoTiles(varargin{:});
       else
         data = obj.getTiledData(varargin{:});
       end
@@ -133,10 +131,6 @@ classdef TiffDirReader < imageIO.ImageIO
     
     function delete(obj)
     %DELETE Close object instances.
-    %Close performs the cleanup and release of the instantiated object
-      for k = 1:length(obj.tiffPtrs)
-        obj.tiffPtrs(k).close();
-      end
     end
   end
   
@@ -188,6 +182,14 @@ classdef TiffDirReader < imageIO.ImageIO
       
       %sort filenames
       obj.filenames = sort(obj.filenames);
+      
+      if isempty(obj.filenames)
+        if ~isempty(fp)
+          error('TiffDirReader: no files matching the file pattern found')
+        else
+          error('TiffDirReader: no .tiff files found in directory')
+        end
+      end
       
       
       % inspect one image
