@@ -102,12 +102,12 @@ function obj = readRawMetadataSegm( obj )
         currChan = ChanInfo;
       end
       try
-        obj.wavelengthExc{k} = str2num(currChan.ExcitationWavelength.Text);
+        obj.wavelengthExc{k} = str2double(currChan.ExcitationWavelength.Text);
       catch
         obj.wavelengthExc{k} = nan;
       end
       try
-        obj.wavelengthEm{k} = str2num(currChan.EmissionWavelength.Text);
+        obj.wavelengthEm{k} = str2double(currChan.EmissionWavelength.Text);
       catch
         obj.wavelengthEm{k} = nan;
       end

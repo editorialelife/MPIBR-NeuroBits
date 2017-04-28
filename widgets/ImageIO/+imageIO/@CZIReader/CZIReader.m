@@ -58,7 +58,7 @@ classdef CZIReader < imageIO.ImageIO
     end
     
     function delete(obj)
-    %DELETE close the file identifier  
+    %DELETE close the file identifier
       if obj.cziPtr > 0
         fclose(obj.cziPtr);
       end
@@ -110,7 +110,7 @@ classdef CZIReader < imageIO.ImageIO
   end
 
   methods (Access = protected)
-    data = getAllData(obj);                   % IMPLEMENTED IN SEPARATE FILE
+    data = getAllData(obj, tileSeparate);     % IMPLEMENTED IN SEPARATE FILE
     data = getDataNoTiles(obj, varargin);     % IMPLEMENTED IN SEPARATE FILE
     data = getTiledData(obj, varargin);       % IMPLEMENTED IN SEPARATE FILE
     obj = readRawFileSegm(obj);               % IMPLEMENTED IN SEPARATE FILE
