@@ -83,7 +83,7 @@ else
     end
     row = obj.rowIndex(dirEntry.YPos);
     col = obj.colIndex(dirEntry.XPos);
-    if separateTiles
+    if tileSeparate
       data(:, :, C, Z, T, S, row, col) = tmpImg;
     else
       % Manage overlap
