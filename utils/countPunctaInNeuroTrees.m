@@ -176,19 +176,21 @@ close all
 
                     idxNode = find(pixels == posNode, 1);
                     if isempty(idxNode)
+                    % puncta is inside the soma
 
                         % find closest on perimeter
                         idxPerim = knnsearch(pixels, posNode);
                         [prevY,prevX] = ind2sub2D(range, pixels(idxPerim));
 
-                        % calculate prevDist
-                        prevDist = calculateDistance([qryX,qryY;prevX,prevY]);
-                        nextDist = calculateDistance([qryX,qryY;neuroTree.center]);
-                        somaDist = nextDist;
+                        % calculate prevDist and nextDist for puncta in soma
+                        nextDist = calculateDistance([qryX,qryY;prevX,prevY]);
+                        prevDist = calculateDistance([qryX,qryY;neuroTree.center]);
+                        somaDist = prevDist;
 
                     else
 
                         if branchOrder == 0
+                            % puncta is outside the soma perimeter
 
                             prevDist = unitDist + calculateDistance([nodes(idxNode,:);neuroTree.center]);
                             nextDist = 0;
