@@ -28,7 +28,22 @@ cziTests = {'2Positions.czi','readFullData';...
             };
 cziTestsCount = size(cziTests, 1);
             
-%% test each file
+
+%% test imageIORead function
+testFullFile = fullfile(cziFolder, cziTests{end-1,1});
+%[data, meta] = imageIORead(testFullFile);
+
+% create ImageIO object
+cziFile = imageIO.CZIReader(testFullFile);
+
+cziData = cziFile.read();
+
+
+%figure('color','w');
+%imshow(max(data,[],3),[]);
+
+%% test each file with OO read out
+%{
 f = 10;
 for f = 1 : cziTestsCount
     
@@ -124,7 +139,7 @@ for f = 1 : cziTestsCount
     % free ImageIO object
     cziFile.delete();
 end
-
+%}
 
 %% clean path
 rmpath(genpath(path_project));
