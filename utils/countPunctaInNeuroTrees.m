@@ -6,7 +6,7 @@ close all
 
     %% --- THINGS TO CHANGE BEFORE RUN --- %%
     %% --- input parameters --- %%
-    channelPuncta = 2
+    channelPuncta = 2;
     dataPath = '/Users/lisakochen/Desktop/331/';
     minPunctaSize = 2;
     minPeakRatio = 0.18;
@@ -111,9 +111,10 @@ close all
             bry = (prj == dil) & (prj > minPeakRatio);
             
             % get weighted centroid
-            props = regionprops(bry, dil, 'WeightedCentroid');
+            props = regionprops(bry, dil, 'WeightedCentroid','MeanIntensity');
             weightedCentroids = round(cat(1, props.WeightedCentroid));    
-
+            punctaMeanIntensity = double(cat(1, props.MeanIntensity));
+            
             punctaCount = size(weightedCentroids,1);
             punctaIndex = sub2ind2D(range, weightedCentroids(:,2), weightedCentroids(:,1));
             punctaDistance = neuroTree.bdist(punctaIndex);
@@ -158,7 +159,7 @@ close all
                 fprintf(fW,'# minPeakRatio\t%.2f\n', minPeakRatio);
                 fprintf(fW,'# total puncta\t%d\n', punctaCount);
                 fprintf(fW,'# in-range puncta\t%d\n', sum(punctaResult));
-                fprintf(fW,'# punctaID\tbranchID\tbranchOrder\tdistPrev\tdistNext\tdistSoma\tdistSholl\n');
+                fprintf(fW,'# punctaID\tbranchID\tbranchOrder\tdistPrev\tdistNext\tdistSoma\tdistSholl\tpunctaIntensity\n');
                 for k = 1 : sum(punctaResult)
 
                     j = punctaResultIndex(k);
@@ -166,6 +167,7 @@ close all
                     posNode = punctaToNode(j);
                     shollDist = punctaSholl(j);
                     unitDist = punctaDistance(j);
+                    meanIsty = punctaMeanIntensity(j);
 
                     pixels = neuroTree.branch(posBranch).pixels;
                     nodes = neuroTree.branch(posBranch).sampleNodes;
@@ -207,8 +209,8 @@ close all
                     end
 
 
-                    fprintf(fW,'%d\t%d\t%d\t%.2f\t%.2f\t%.2f\t%.2f\n',...
-                            k,branchIndex,branchOrder,prevDist,nextDist,somaDist,shollDist);
+                    fprintf(fW,'%d\t%d\t%d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n',...
+                            k,branchIndex,branchOrder,prevDist,nextDist,somaDist,shollDist,meanIsty);
 
                 end
                 fclose(fW);
