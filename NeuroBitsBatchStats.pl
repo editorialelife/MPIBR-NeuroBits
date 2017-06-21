@@ -7,33 +7,38 @@ sub ParseNeuroTreeFile($$);
 sub ParsePunctaStatsFile($$);
 sub PrintCustomTable($);
 sub PolygonArea($$$);
+sub average($);
 
-my $path_name = shift;
-my %hash = ();
-
-# get list of file names
-my @neuroTreeFiles = glob("$path_name/*_neuroTree_*.txt");
-my @punctaStatsFiles = glob("$path_name/punctaStats*.txt");
-
-# loop through list
-foreach my $ntFile (@neuroTreeFiles)
+MAIN:
 {
-    # extranct name for neuroTree file
-    my $name = $ntFile =~ m/$path_name\/?(.*)\_neuroTree\_.*.txt/ ? $1 : "<unknown>";
+    my $path_name = shift;
+    my %hash = ();
     
-    # find corresponding punctaStats file
-    my $psFile = "<unknown>";
-    foreach my $psQry (@punctaStatsFiles)
+    # get list of file names
+    my @neuroTreeFiles = glob("$path_name/*_neuroTree_*.txt");
+    my @punctaStatsFiles = glob("$path_name/punctaStats*.txt");
+    
+    # loop through list
+    foreach my $ntFile (@neuroTreeFiles)
     {
-        $psFile = $psQry if(index($psQry, $name) >= 0);
+        # extranct name for neuroTree file
+        my $name = $ntFile =~ m/$path_name\/?(.*)\_neuroTree\_.*.txt/ ? $1 : "<unknown>";
+        
+        # find corresponding punctaStats file
+        my $psFile = "<unknown>";
+        foreach my $psQry (@punctaStatsFiles)
+        {
+            $psFile = $psQry if(index($psQry, $name) >= 0);
+        }
+        
+        next if($psFile eq "<unknown>");
+        
+        # process files
+        ParseNeuroTreeFile($ntFile, \%{$hash{$name}});
+        ParsePunctaStatsFile($psFile, \%{$hash{$name}});
     }
-    
-    # process files
-    ParseNeuroTreeFile($ntFile, \%{$hash{$name}});
-    ParsePunctaStatsFile($psFile, \%{$hash{$name}});
+    PrintCustomTable(\%hash);
 }
-PrintCustomTable(\%hash);
-
 
 
 ### sub-routines
@@ -114,9 +119,12 @@ sub ParsePunctaStatsFile($$)
         
         my $depth = $line[2];
         my $distance = $line[5];
+        my $puncta_intensity = defined($line[7]) ? $line[7] : 0;
         
         $hash_ref->{"puncta"}{$depth} = exists($hash_ref->{"puncta"}{$depth}) ? $hash_ref->{"puncta"}{$depth} + 1 : 1;
         push(@{$hash_ref->{"distance"}{$depth}}, $distance);
+        push(@{$hash_ref->{"pintensity"}}, $puncta_intensity);
+        
     }
     close($fh);
 }
@@ -133,6 +141,8 @@ sub PrintCustomTable($)
     print "\tRatio.Puncta.(Arbor/Soma)"; # puncta.arbor / puncta.soma
     print "\tRatio.Area.(Arbor/Soma)"; # span.arbor / area.soma
     print "\tRatio.Density.(Arbor/Soma)"; # density.arbor / density.soma
+    print "\tAvg.Puncta.Intensity"; # average puncta intensity
+    print "\tPuncta.Intensity.List"; # list of puncta intensities
     for (my $k = 1; $k < 10; $k++)
     {
         print "\tPuncta.Order.$k";
@@ -192,8 +202,13 @@ sub PrintCustomTable($)
         my $ratio_density = ($density_soma eq "NaN" || $density_arbor eq "NaN" || $density_soma == 0) ? "NaN" : ($density_arbor / $density_soma);
         my $ratio_puncta = ($puncta_soma > 0) ? ($puncta_arbor / $puncta_soma) : "NaN";
         my $ratio_area = ($area_soma > 0) ? ($span_arbor / $area_soma) : "NaN";
-        # output
         
+        # puncta intensity
+        my $puncta_intensity_avg = average($hash_ref->{$file}{"pintensity"});
+        my $puncta_intensity_list = join(";", @{$hash_ref->{$file}{"pintensity"}});
+        
+        
+        # output
         print $file_name;
         print "\t",($puncta_soma + $puncta_arbor)/($area_soma + $span_arbor); # puncta.(arbor + soma)/ (span.arbor + area.soma)
         print "\t",$puncta_soma,"\t",$area_soma,"\t",$density_soma; # puncta.soma / area.soma
@@ -201,6 +216,8 @@ sub PrintCustomTable($)
         print "\t",$ratio_puncta; # puncta.arbor / puncta.soma
         print "\t",$ratio_area; # span.arbor / area.soma
         print "\t",$ratio_density; # density.arbor / density.soma
+        print "\t",$puncta_intensity_avg; # puncta average intensity
+        print "\t",$puncta_intensity_list; # list of puncta intensities
         for (my $k = 1; $k < 10; $k++)
         {
             print "\t",$puncta_branch_list[$k - 1];
@@ -234,3 +251,15 @@ sub PolygonArea($$$)
     return abs($area * 0.5);
 }
 
+sub average($)
+{
+    my $ary_ref = $_[0];
+    
+    my $avg = 0;
+    foreach (@{$ary_ref})
+    {
+        $avg += $_;
+    }
+    
+    return $avg / scalar(@{$ary_ref});
+}
