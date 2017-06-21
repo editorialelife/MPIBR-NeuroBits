@@ -7,7 +7,7 @@ close all
     %% --- THINGS TO CHANGE BEFORE RUN --- %%
     %% --- input parameters --- %%
     channelPuncta = 2;
-    dataPath = '/Users/lisakochen/Desktop/331/';
+    dataPath = '/Users/tushevg/Desktop/329/';
     minPunctaSize = 2;
     minPeakRatio = 0.18;
     nhood = 13; % [pixels] from branch center to closest puncta
@@ -100,6 +100,9 @@ close all
             % sum projection
             prj = sum(double(img),3);
             
+            % mean projection
+            prj_avg = mean(img, 3);
+            
             % apply spatial filter
             prj = imgaussfilt(prj,0.5,'Padding','symmetric');
             
@@ -111,9 +114,10 @@ close all
             bry = (prj == dil) & (prj > minPeakRatio);
             
             % get weighted centroid
-            props = regionprops(bry, dil, 'WeightedCentroid','MeanIntensity');
+            props = regionprops(bry, dil, 'WeightedCentroid');
+            props_ity = regionprops(bry, prj_avg, 'MeanIntensity');
             weightedCentroids = round(cat(1, props.WeightedCentroid));    
-            punctaMeanIntensity = double(cat(1, props.MeanIntensity));
+            punctaMeanIntensity = double(cat(1, props_ity.MeanIntensity));
             
             punctaCount = size(weightedCentroids,1);
             punctaIndex = sub2ind2D(range, weightedCentroids(:,2), weightedCentroids(:,1));
