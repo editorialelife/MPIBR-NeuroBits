@@ -2,6 +2,7 @@
 
 use warnings;
 use strict;
+use Path::Class;
 
 sub ParseNeuroTreeFile($$);
 sub ParsePunctaStatsFile($$);
@@ -14,15 +15,22 @@ MAIN:
     my $path_name = shift;
     my %hash = ();
     
+    my $path_punctaStats = dir($path_name);
+    my $path_neuroTree = $path_punctaStats->parent;
+    
     # get list of file names
-    my @neuroTreeFiles = glob("$path_name/*_neuroTree_*.txt");
-    my @punctaStatsFiles = glob("$path_name/punctaStats*.txt");
+    my @neuroTreeFiles = glob("$path_neuroTree/*_neuroTree_*.txt");
+    my @punctaStatsFiles = glob("$path_punctaStats/punctaStats*.txt");
+    
+    print STDERR "### counting files\n";
+    print STDERR "NeuroTrees: ",scalar(@neuroTreeFiles),"\n";
+    print STDERR "PunctaStats: ",scalar(@punctaStatsFiles),"\n";
     
     # loop through list
     foreach my $ntFile (@neuroTreeFiles)
     {
         # extranct name for neuroTree file
-        my $name = $ntFile =~ m/$path_name\/?(.*)\_neuroTree\_.*.txt/ ? $1 : "<unknown>";
+        my $name = $ntFile =~ m/$path_neuroTree\/?(.*)\_neuroTree\_.*.txt/ ? $1 : "<unknown>";
         
         # find corresponding punctaStats file
         my $psFile = "<unknown>";
@@ -38,6 +46,8 @@ MAIN:
         ParsePunctaStatsFile($psFile, \%{$hash{$name}});
     }
     PrintCustomTable(\%hash);
+
+
 }
 
 
@@ -58,7 +68,7 @@ sub ParseNeuroTreeFile($$)
             # parse header
             if ($record =~ m/^file_path/)
             {
-                my $name = $record =~ m/file_name=([^\s.]*)/ ? $1 : "<unknown>";
+                my $name = $record =~ m/file_name=([^\s]*)/ ? $1 : "<unknown>";
                 
                 $hash_ref->{"name"} = $name;
             }
@@ -152,6 +162,7 @@ sub PrintCustomTable($)
         print "\tDistance.$k";
     }
     print "\n";
+
     
     # print data
     foreach my $file (keys %{$hash_ref})
@@ -227,7 +238,7 @@ sub PrintCustomTable($)
             print "\t",join(";", sort({$a <=> $b} @{$distance_branch_list[$k - 1]}));
         }
         print "\n";
-        
+
     }
     
 }

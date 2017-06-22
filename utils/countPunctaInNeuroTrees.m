@@ -7,7 +7,7 @@ close all
     %% --- THINGS TO CHANGE BEFORE RUN --- %%
     %% --- input parameters --- %%
     channelPuncta = 2;
-    dataPath = '/Users/tushevg/Desktop/329/';
+    dataPath = '/Volumes/Data/External/Developer/NeuroBits/april2017_lisa_for_georgi/329_puncta_intensity/';
     minPunctaSize = 2;
     minPeakRatio = 0.18;
     nhood = 13; % [pixels] from branch center to closest puncta
@@ -47,6 +47,10 @@ close all
         fileIndexStop = imgFileCount;
     end
     
+    % prepare output directory
+    dataPathOut = [dataPath, filesep, 'punctaStats_', regexprep(date, '\-','')];
+    mkdir(dataPathOut);
+
     
     for f = fileIndexStart : fileIndexStop
         
@@ -54,6 +58,7 @@ close all
         imgFileNow = fullfile(dataPath, imgFileNames{f});
         [~,imgFileTag] = fileparts(imgFileNow);
         fprintf('image :: %s ', imgFileTag);
+        
         
         % find neuro tree file
         idxTxtFile = strncmp(imgFileTag, txtFileNames, length(imgFileTag));
@@ -84,8 +89,8 @@ close all
         for c = 1 : length(channelPuncta)
             
             % prepare output file
-            fileOut = [dataPath,filesep,'punctaStats_',imgFileTag,sprintf('_channel%d.txt',channelPuncta(c))];
-            imgOut = [dataPath,filesep,'punctaStats_',imgFileTag,sprintf('_channel%d.png',channelPuncta(c))];
+            fileOut = [dataPathOut,filesep,'punctaStats_',imgFileTag,sprintf('_channel%d.txt',channelPuncta(c))];
+            imgOut = [dataPathOut,filesep,'punctaStats_',imgFileTag,sprintf('_channel%d.png',channelPuncta(c))];
             
             % read current image
             idxChannel = channelPuncta(c);
