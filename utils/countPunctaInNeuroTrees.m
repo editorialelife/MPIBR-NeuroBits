@@ -6,11 +6,11 @@ close all
 
     %% --- THINGS TO CHANGE BEFORE RUN --- %%
     %% --- input parameters --- %%
-    channelPuncta = 2;
     dataPath = '/Volumes/Data/External/Developer/NeuroBits/april2017_lisa_for_georgi/329_puncta_intensity/';
+    channelPuncta = 3;
     minPunctaSize = 2;
-    minPeakRatio = 0.18;
-    nhood = 13; % [pixels] from branch center to closest puncta
+    minPeakRatio = 0.20;
+    nhood = 15; % [pixels] from branch center to closest puncta
     testFileDetection = false; % %false toggle between [true | fato be odnelse] to get first image puncta
     testFileIndex = 54;
     
