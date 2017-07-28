@@ -1,8 +1,7 @@
 %function NeuroBits()
     
-    disp('Start!');
+    %disp('Start!');
     
-    %h = NeuroBitsUI();
     folderBrowser.widget();
     
 %end
