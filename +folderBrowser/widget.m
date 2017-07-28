@@ -61,7 +61,6 @@ classdef widget < handle
         
         function obj = fcnCallback_FileLoad(obj, ~, ~)
             
-            %disp('File load...');
             obj.model.fileLoad();
             
             set(obj.ui.pushButton_PrevFile, 'Enable', 'off');
@@ -71,21 +70,18 @@ classdef widget < handle
         
         function obj = fcnCallback_FileNext(obj, ~, ~)
             
-            disp('File next...');
             obj.model.fileUpdate(1);
             
         end
         
         function obj = fcnCallback_FilePrevious(obj, ~, ~)
             
-            disp('File previous...');
             obj.model.fileUpdate(-1);
             
         end
         
         function obj = fcnCallback_FolderLoad(obj, ~, ~)
             
-            disp('Folder load...');
             obj.model.folderLoad();
             
             set(obj.ui.pushButton_PrevFile, 'Enable', 'on');
@@ -94,8 +90,6 @@ classdef widget < handle
         end
         
         function obj = fcnCallback_FileUpdated(obj, ~, ~)
-            
-            %disp('File updated...');
             
             % update status
             [~, fileTag] = fileparts(obj.model.file);

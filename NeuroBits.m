@@ -2,6 +2,6 @@
     
     %disp('Start!');
     
-    folderBrowser.widget();
+    folderBrowser.widget('Extension','*.m');
     
 %end
