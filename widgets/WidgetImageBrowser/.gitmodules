@@ -1,6 +1,0 @@
-[submodule "submodules/uiGridLayout"]
-	path = submodules/uiGridLayout
-	url = https://github.molgen.mpg.de/MPIBR-WidgetToolbox/uiGridLayout.git
-[submodule "submodules/ImageIO"]
-	path = submodules/ImageIO
-	url = https://github.molgen.mpg.de/MPIBR/ImageIO.git
