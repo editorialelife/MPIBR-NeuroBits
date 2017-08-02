@@ -4,6 +4,8 @@
 % Aug 2017
 % 
 
-addpath(genpath('../'));
+[qry_path, ~, ~] = fileparts(mfilename('fullpath'));
+
+addpath(genpath([qry_path,'../']));
 
 obj = WidgetFolderBrowser();
