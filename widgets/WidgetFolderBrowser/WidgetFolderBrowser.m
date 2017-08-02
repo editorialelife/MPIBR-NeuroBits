@@ -26,11 +26,11 @@ classdef WidgetFolderBrowser < handle
             parse(parserObj, varargin{:});
             
             
-            obj.ui = WidgetFolderBrowserView(parserObj.Results.Parent);
+            obj.ui = WidgetFolderBrowserUI(parserObj.Results.Parent);
             obj.model = WidgetFolderBrowserModel(parserObj.Results.Extension);
             
             % link controler with view and model
-            if isa(obj.ui, 'WidgetFolderBrowserView')
+            if isa(obj.ui, 'WidgetFolderBrowserUI')
                 
                 addlistener(obj.ui, 'event_fileLoad', @obj.fcnCallback_FileLoad);
                 addlistener(obj.ui, 'event_fileNext', @obj.fcnCallback_FileNext);
