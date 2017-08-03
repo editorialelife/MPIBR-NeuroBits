@@ -26,23 +26,24 @@ classdef WidgetFolderBrowser < handle
             parse(parserObj, varargin{:});
             
             
+            % create MVC
             obj.ui = WidgetFolderBrowserUI(parserObj.Results.Parent);
+            if ~isa(obj.ui, 'WidgetFolderBrowserUI')
+                error('WidgetFolderBrowser: initializing UI failed!');
+            end
+            
             obj.model = WidgetFolderBrowserModel(parserObj.Results.Extension);
+            if ~isa(obj.model, 'WidgetFolderBrowserModel')
+                error('WidgetFolderBrowserModel: initailizing Model failed!');
+            end
+            
             
             % link controler with view and model
-            if isa(obj.ui, 'WidgetFolderBrowserUI')
-                
-                addlistener(obj.ui, 'event_fileLoad', @obj.fcnCallback_FileLoad);
-                addlistener(obj.ui, 'event_fileNext', @obj.fcnCallback_FileNext);
-                addlistener(obj.ui, 'event_filePrevious', @obj.fcnCallback_FilePrevious);
-                addlistener(obj.ui, 'event_folderLoad', @obj.fcnCallback_FolderLoad);
-
-            end
-            
-            if isa(obj.model, 'WidgetFolderBrowserModel')
-                
-                addlistener(obj.model, 'file', 'PostSet', @obj.fcnCallback_FileUpdated);
-            end
+            addlistener(obj.ui, 'event_fileLoad', @obj.fcnCallback_FileLoad);
+            addlistener(obj.ui, 'event_fileNext', @obj.fcnCallback_FileNext);
+            addlistener(obj.ui, 'event_filePrevious', @obj.fcnCallback_FilePrevious);
+            addlistener(obj.ui, 'event_folderLoad', @obj.fcnCallback_FolderLoad);
+            addlistener(obj.model, 'file', 'PostSet', @obj.fcnCallback_FileUpdated);
             
         end
     end
