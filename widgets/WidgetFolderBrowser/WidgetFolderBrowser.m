@@ -21,7 +21,7 @@ classdef WidgetFolderBrowser < handle
             
             % parse input
             parserObj = inputParser;
-            addParameter(parserObj, 'Parent', [], @isparent);
+            addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
             addParameter(parserObj, 'Extension', '*.*', @ischar);
             parse(parserObj, varargin{:});
             
@@ -96,17 +96,4 @@ classdef WidgetFolderBrowser < handle
         
     end
     
-end
-
-
-
-function tf = isparent(varin)
-
-    tf = false;
-    
-    if isempty(varin) || isgraphics(varin)
-        
-        tf = true;
-    
-    end
 end
