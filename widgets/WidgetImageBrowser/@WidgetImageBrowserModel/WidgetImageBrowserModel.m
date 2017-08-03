@@ -4,8 +4,6 @@ classdef WidgetImageBrowserModel < handle
         
         file
         metainfo
-        cdata
-        clim
         channel
         stack
         

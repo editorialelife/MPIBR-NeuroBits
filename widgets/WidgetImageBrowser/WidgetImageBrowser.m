@@ -12,8 +12,8 @@ classdef WidgetImageBrowser < handle
         
         function obj = WidgetImageBrowser()
             
-            obj.ui = WidgetImageBrowserUI([]);
-            obj.model = WidgetImageBrowserModel();
+            %obj.ui = WidgetImageBrowserUI([]);
+            %obj.model = WidgetImageBrowserModel();
             obj.viewer = WidgetImageBrowserViewer();
             
         end

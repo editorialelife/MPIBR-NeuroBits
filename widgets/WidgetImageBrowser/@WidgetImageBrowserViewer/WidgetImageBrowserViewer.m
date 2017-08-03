@@ -4,7 +4,8 @@ classdef WidgetImageBrowserViewer < handle
     
     properties (Access = public)
         
-        viewaxes
+        vaxes
+        vimage
         
     end
     
@@ -43,7 +44,8 @@ classdef WidgetImageBrowserViewer < handle
                 'MenuBar', 'none',...
                 'ToolBar', 'none',...
                 'NumberTitle', 'off',...
-                'Position', [1, 1, screenSize + obj.UI_GRID_PADDING, screenSize + obj.UI_GRID_PADDING]);
+                'Position', [1, 1, screenSize + obj.UI_GRID_PADDING, screenSize + obj.UI_GRID_PADDING],...
+                'CloseRequestFcn', @obj.onRequest_close);
             movegui(obj.parent, 'north');
             
             obj.layout = uiextras.HBoxFlex(...
@@ -51,7 +53,7 @@ classdef WidgetImageBrowserViewer < handle
                 'Padding', obj.UI_GRID_PADDING);
             
             
-            obj.viewaxes = axes(...
+            obj.vaxes = axes(...
                 'Parent', obj.layout,...
                 'ActivePositionProperty', 'position',...
                 'XTick', [],...
@@ -59,13 +61,22 @@ classdef WidgetImageBrowserViewer < handle
                 'XColor', 'none',...
                 'YColor', 'none');
             
+            obj.vimage = imshow(...
+                zeros(screenSize, screenSize, 'uint8'),...
+                [],...
+                'Parent', obj.vaxes,...
+                'XData', [0, 1],...
+                'YData', [0, 1]);
+            
             
         end
         
-        function obj = delete(obj)
+        function obj = onRequest_close(obj, ~, ~)
             
             notify(obj, 'event_closedViewer');
-       
+            disp('viewer close request');
+            delete(obj.parent);
+            
         end
         
     end
