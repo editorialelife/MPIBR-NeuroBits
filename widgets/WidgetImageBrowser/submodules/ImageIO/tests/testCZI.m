@@ -31,12 +31,12 @@ cziTestsCount = size(cziTests, 1);
 
 %% test imageIORead function
 testFullFile = fullfile(cziFolder, cziTests{end-1,1});
-%[data, meta] = imageIORead(testFullFile);
+[data, meta] = imageIORead(testFullFile);
 
 % create ImageIO object
-cziFile = imageIO.CZIReader(testFullFile);
+%cziFile = imageIO.CZIReader(testFullFile);
 
-cziData = cziFile.read();
+%cziData = cziFile.read();
 
 
 %figure('color','w');
