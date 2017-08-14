@@ -3,12 +3,12 @@ classdef WidgetImageBrowserUI < handle
     %   Detailed explanation goes here
     
     %% --- properties --- %%
-    properties (Access = public)
+    properties (Access = private)
         
         text_status
         
-        text_countChannel
-        text_countStack
+        text_counterChannel
+        text_counterStack
         pushButton_prevChannel
         pushButton_prevStack
         pushButton_nextChannel
@@ -31,6 +31,8 @@ classdef WidgetImageBrowserUI < handle
         panelWidget
         panelStatus
         panelTabs
+        varstepStack
+        varstepChannel
         
     end
     
@@ -40,32 +42,38 @@ classdef WidgetImageBrowserUI < handle
         UI_GRID_PADDING = 5;
         UI_GRID_SPACING = 5;
         UI_BUTTON_SIZE = [90, 26];
-        UI_POPUP_CHOOSE_PROJECTION = {'max','sum','std'};
-        UI_POPUP_CHOOSE_CLIM = {'auto', '8bit', '16bit'};
+        UI_POPUP_CHOOSE_PROJECTION = {'max','mean','std'};
+        UI_POPUP_CHOOSE_CLIM = {'auto', '8bit', '16bit', 'custom'};
+        UI_LIMITS_CHOOS_CLIM = [-1, -1;...
+                                0, 2^8-1;...
+                                0, 2^16-1;...
+                                0, 1];
         
     end
     
     %% --- events --- %%
     events
         
-        event_delete
-        event_navigate_prevChannel
-        event_navigate_prevStack
-        event_navigate_nextChannel
-        event_navigate_nextStack
-        event_request_project
-        event_request_editclim
+        event_changeChannel
+        event_changeStack
+        event_changeCLimit
+        event_changeProjection
         
     end
     
     
-    %% --- methods --- %%
+    %% --- constructor methods --- %%
     methods
         
-        function obj = WidgetImageBrowserUI(varhandle)
+        function obj = WidgetImageBrowserUI(varargin)
+            
+            parserObj = inputParser;
+            addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
+            parse(parserObj, varargin{:});
+            
             
             %%% set widget parent
-            if isempty(varhandle)
+            if isempty(parserObj.Results.Parent)
                 
                 obj.parent = figure(...
                     'Visible', 'on',...
@@ -77,9 +85,9 @@ classdef WidgetImageBrowserUI < handle
                     'Position', obj.UI_WINDOW_SIZE);
                 movegui(obj.parent, 'northwest');
                 
-            elseif isgraphics(varhandle)
+            elseif isgraphics(parserObj.Results.Parent)
                 
-                obj.parent = varhandle;
+                obj.parent = parserObj.Results.Parent;
                 
             else
                 
@@ -123,12 +131,6 @@ classdef WidgetImageBrowserUI < handle
             
         end
         
-        function obj = delete(obj)
-            
-            notify(obj, 'event_delete');
-            
-        end
-        
         function obj = uistatus(obj)
             
             obj.text_status = uicontrol(...
@@ -139,6 +141,93 @@ classdef WidgetImageBrowserUI < handle
             
         end
         
+        function obj = enable(obj, varstate)
+            
+            set(obj.pushButton_nextChannel, 'Enable', varstate);
+            set(obj.pushButton_nextStack, 'Enable', varstate);
+            set(obj.pushButton_prevChannel, 'Enable', varstate);
+            set(obj.pushButton_prevStack, 'Enable', varstate);
+            set(obj.pushButton_project, 'Enable', varstate);
+            set(obj.popup_pickProjection, 'Enable', varstate);
+            set(obj.popup_pickClim, 'Enable', varstate);
+            set(obj.checkBox_keepProjection, 'Enable', varstate);
+            
+        end
+        
+    end
+    
+    %% --- viewer interactions --- %%
+    methods
+        
+        function obj = updateStatus(obj, vartext)
+            
+            set(obj.text_status, 'String', vartext);
+            
+        end
+        
+        function obj = updateLabelChannel(obj, vartext)
+            
+            set(obj.text_counterChannel, 'String', vartext);
+            
+        end
+        
+        function obj = updateLabelStack(obj, vartext)
+            
+            set(obj.text_counterStack, 'String', vartext);
+            
+        end
+        
+        function valueProjectionType = requestProjectionType(obj)
+            
+            valueProjectionType = obj.UI_POPUP_CHOOSE_PROJECTION{obj.popup_pickProjection.Value};
+            
+        end
+        
+        function valueProjectionKeep = requestProjectionIsKeep(obj)
+            
+            valueProjectionKeep = obj.checkBox_keepProjection.Value;
+            
+        end
+        
+        
+        function valueCLimitValues = requestCLimitValues(obj)
+            
+            valueCLimitValues = obj.UI_LIMITS_CHOOS_CLIM(obj.popup_pickClim.Value,:);
+            if obj.popup_pickClim.Value == size(obj.UI_LIMITS_CHOOS_CLIM, 1)
+                
+                minValue = str2double(obj.editBox_minClim.String);
+                maxValue = str2double(obj.editBox_maxClim.String);
+                valueCLimitValues = [minValue, maxValue];
+                
+            end
+            
+        end
+        
+        function valueStepChannel = requestStepChannel(obj)
+            
+            valueStepChannel = obj.varstepChannel;
+            
+        end
+        
+        function valueStepStack = requestStepStack(obj)
+            
+            valueStepStack = obj.varstepStack;
+            
+        end
+        
+        function obj = requestEnableChannel(obj, varstate)
+            
+            set(obj.pushButton_nextChannel, 'Enable', varstate);
+            set(obj.pushButton_prevChannel, 'Enable', varstate);
+            
+        end
+        
+        function obj = requestEnableStack(obj, varstate)
+            
+            set(obj.pushButton_nextStack, 'Enable', varstate);
+            set(obj.pushButton_prevStack, 'Enable', varstate);
+            
+        end
         
     end
     
@@ -158,57 +247,112 @@ classdef WidgetImageBrowserUI < handle
         
         function obj = uicallbacks(obj)
             
-            set(obj.pushButton_prevChannel, 'Callback', @obj.onClick_pushButton_prevChannel);
-            set(obj.pushButton_nextChannel, 'Callback', @obj.onClick_pushButton_nextChannel);
-            set(obj.pushButton_prevStack, 'Callback', @obj.onClick_pushButton_prevStack);
-            set(obj.pushButton_nextStack, 'Callback', @obj.onClick_pushButton_nextStack);
+            set(obj.pushButton_prevChannel, 'Callback', @obj.onClick_prevChannel);
+            set(obj.pushButton_nextChannel, 'Callback', @obj.onClick_nextChannel);
+            set(obj.pushButton_prevStack, 'Callback', @obj.onClick_prevStack);
+            set(obj.pushButton_nextStack, 'Callback', @obj.onClick_nextStack);
             set(obj.pushButton_project, 'Callback', @obj.onRequest_project);
             set(obj.popup_pickProjection, 'Callback', @obj.onRequest_project);
-            set(obj.popup_pickClim, 'Callback', @obj.onRequest_editClim);
-            set(obj.editBox_minClim, 'Callback', @obj.onRequest_editClim);
-            set(obj.editBox_maxClim, 'Callback', @obj.onRequest_editClim);
+            set(obj.checkBox_keepProjection, 'Callback', @obj.onCheck_keepProjection);
+            set(obj.popup_pickClim, 'Callback', @obj.onPick_clim);
+            set(obj.editBox_minClim, 'Callback', @obj.onEdit_clim);
+            set(obj.editBox_maxClim, 'Callback', @obj.onEdit_clim);
             
         end
         
-        function obj = onClick_pushButton_prevChannel(obj, ~, ~)
+        
+        
+        function obj = onClick_prevChannel(obj, ~, ~)
             
-            notify(obj, 'event_navigate_prevChannel');
-            disp('prevChannel');
+            obj.varstepChannel = -1;
+            notify(obj, 'event_changeChannel');
             
         end
         
-        function obj = onClick_pushButton_nextChannel(obj, ~, ~)
+        function obj = onClick_nextChannel(obj, ~, ~)
             
-            notify(obj, 'event_navigate_nextChannel');
-            disp('nextChannel');
-            
-        end
-        
-        function obj = onClick_pushButton_prevStack(obj, ~, ~)
-            
-            notify(obj, 'event_navigate_prevStack');
-            disp('prevStack');
+            obj.varstepChannel = 1;
+            notify(obj, 'event_changeChannel');
             
         end
         
-        function obj = onClick_pushButton_nextStack(obj, ~, ~)
+        function obj = onClick_prevStack(obj, ~, ~)
             
-            notify(obj, 'event_navigate_nextStack');
-            disp('nextStack');
+            obj.varstepStack = -1;
+            notify(obj, 'event_changeStack');
+            
+        end
+        
+        function obj = onClick_nextStack(obj, ~, ~)
+            
+            obj.varstepStack = 1;
+            notify(obj, 'event_changeStack');
             
         end
         
         function obj = onRequest_project(obj, ~, ~)
             
-            notify(obj, 'event_request_project');
-            disp('project');
+            notify(obj, 'event_changeProjection');
             
         end
         
-        function obj = onRequest_editClim(obj, ~, ~)
+        function obj = onCheck_keepProjection(obj, ~, ~)
             
-            notify(obj, 'event_request_editclim');
-            disp('editClim');
+            if obj.checkBox_keepProjection.Value == 1
+                
+                set(obj.pushButton_nextStack, 'Enable', 'off');
+                set(obj.pushButton_prevStack, 'Enable', 'off');
+                
+            else
+                
+                set(obj.pushButton_nextStack, 'Enable', 'on');
+                set(obj.pushButton_prevStack, 'Enable', 'on');
+                
+            end
+            
+        end
+        
+        function obj = onPick_clim(obj, ~, ~)
+            
+            switch obj.popup_pickClim.Value
+                
+                case 4
+                    
+                    set(obj.editBox_minClim, 'Enable', 'on');
+                    set(obj.editBox_maxClim, 'Enable', 'on');
+                    
+                otherwise
+                    
+                    set(obj.editBox_minClim, 'Enable', 'off');
+                    set(obj.editBox_maxClim, 'Enable', 'off');
+                    
+            end
+            
+            notify(obj, 'event_changeCLimit');
+            
+        end
+        
+        function obj = onEdit_clim(obj, ~, ~)
+            
+            minClim = round(str2double(obj.editBox_minClim.String));
+            maxClim = round(str2double(obj.editBox_maxClim.String));
+            
+            if minClim < 0
+                
+                minClim = 0;
+                
+            end
+            
+            if maxClim <= minClim
+                
+                maxClim = minClim + 1;
+                
+            end
+            
+            set(obj.editBox_minClim, 'String', sprintf('%d', minClim));
+            set(obj.editBox_maxClim, 'String', sprintf('%d', maxClim));
+            
+            notify(obj, 'event_changeCLimit');
             
         end
         
