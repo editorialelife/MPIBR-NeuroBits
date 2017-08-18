@@ -1,0 +1,16 @@
+## ---
+## remove autosaves generate by the Matlab editor
+## ---
+
+# windows default autosave extension
+*.asv
+
+# OSX / *nix default autosave extension
+*.m~
+
+# Compiled MEX binaries (all platforms)
+*.mex*
+
+# OSX index file
+.DS_Store
+
