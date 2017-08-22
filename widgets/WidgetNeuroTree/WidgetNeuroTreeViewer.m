@@ -135,7 +135,7 @@ classdef WidgetNeuroTreeViewer < handle
             
             %%% return current move position
             obj.mouse_move = obj.click();
-            notify(obj, 'event_mouse_move');
+            notify(obj, 'event_move_mouse');
             
             %%% set hover handle
             obj.handle_hover = hittest(obj.handle_figure);
@@ -176,17 +176,17 @@ classdef WidgetNeuroTreeViewer < handle
         
         function obj = fcnCallback_pressKey(obj, ~, ~)
             
-            obj.press_key = obj.press();
+            obj.key_press = obj.press();
             
-            if (obj.press_key >= '0') && (obj.press_key <= '9')
+            if (obj.key_press >= '0') && (obj.key_press <= '9')
                 
                 notify(obj, 'event_press_digit');
                 
-            elseif uint8(obj.press_key) == 8 %(DEL)
+            elseif uint8(obj.key_press) == 8 %(DEL)
                 
                 notify(obj, 'event_press_del');
                 
-            elseif uint8(obj.press_key) == 27 %(ESC)
+            elseif uint8(obj.key_press) == 27 %(ESC)
                 
                 notify(obj, 'event_press_esc');
                 
