@@ -4,8 +4,9 @@ classdef WidgetNeuroTreeStates
     
     enumeration
         
+        NULL
+        READY
         IDLE
-        NEW
         DRAWING
         HOVER
         SELECTED

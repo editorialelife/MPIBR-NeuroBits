@@ -12,4 +12,3 @@ addpath([pwd,filesep,'..',filesep]);
 
 %% test callbacks on figure
 obj = WidgetNeuroTree();
-    

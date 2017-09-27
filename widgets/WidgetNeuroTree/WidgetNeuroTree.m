@@ -16,7 +16,7 @@ classdef WidgetNeuroTree < handle
     % Max-Planck Institute For Brain Research
     %
     
-    properties (Access = private)
+    properties (Access = public)
         
         ui
         model
@@ -32,10 +32,10 @@ classdef WidgetNeuroTree < handle
         
         function obj = WidgetNeuroTree()
             
-            % create MVC
-            obj.ui = WidgetNeuroTreeUI();
-            if ~isa(obj.ui, 'WidgetNeuroTreeUI')
-                error('WidgetNeuroTree: initializing UI failed!');
+            % create Ui
+            obj.ui = WidgetNeuroTreeUi();
+            if ~isa(obj.ui, 'WidgetNeuroTreeUi')
+                error('WidgetNeuroTree: initializing Ui failed!');
             end
             
             % create Viewer
@@ -44,7 +44,7 @@ classdef WidgetNeuroTree < handle
                 error('WidgetNeuroTree: initializing Viewer failed!');
             end
             
-            
+            % create model
             obj.model = WidgetNeuroTreeModel();
             if ~isa(obj.model, 'WidgetNeuroTreeModel')
                 error('WidgetNeuroTree: initializing Model failed!');
@@ -59,9 +59,18 @@ classdef WidgetNeuroTree < handle
         
         function obj = controller(obj)
             
-            % add UI listeners
+            % initialize state
+            % maybe move it to callback of new button
+            obj.state = WidgetNeuroTreeStates.NULL;
             
-            % add Viewer listeners
+            % add Ui callbacks
+            addlistener(obj.ui, 'event_new', @obj.fcnCallbackUi_eventNew);
+            addlistener(obj.ui, 'event_clear', @obj.fcnCallbackUi_eventClear);
+            addlistener(obj.ui, 'event_load', @obj.fcnCallbackUi_eventLoad);
+            addlistener(obj.ui, 'event_export', @obj.fcnCallbackUi_eventExport);
+            %addlistener(obj.ui, 'event_edit', @obj.fcnCallbackUi_eventEdit);
+            
+            % add Viewer callbacks
             addlistener(obj.viewer, 'event_click_down', @obj.fcnCallbackViewer_clickDown);
             addlistener(obj.viewer, 'event_click_up', @obj.fcnCallbackViewer_clickUp);
             addlistener(obj.viewer, 'event_click_double', @obj.fcnCallbackViewer_clickDouble);
@@ -71,42 +80,72 @@ classdef WidgetNeuroTree < handle
             addlistener(obj.viewer, 'event_press_esc', @obj.fcnCallbackViewer_pressEsc);
             addlistener(obj.viewer, 'event_hover_handle', @obj.fcnCallbackViewer_hoverHandle);
             
+            % add Model callbacks
             addlistener(obj.model, 'mousePointer', 'PostSet', @obj.fcnCallbackModel_updateMousePointer);
             
-            % initialize state
-            % maybe move it to callback of new button
-            obj.state = WidgetNeuroTreeStates.IDLE;
+            
             
         end
         
     end
     
-    %% --- Controller callbacks --- %%
-    methods
+    %% --- Ui callbacks --- %%
+    methods (Access = private)
         
-        %% @ event_click_down
+        %% @ event new
+        function obj = fcnCallbackUi_eventNew(obj, ~, ~)
+            
+            obj.state = WidgetNeuroTreeStates.IDLE;
+        end
+        
+        %% @ event clear
+        function obj = fcnCallbackUi_eventClear(obj, ~, ~)
+            
+            disp('CLEAR');
+            
+        end
+        
+        %% @ event load
+        function obj = fcnCallbackUi_eventLoad(obj, ~, ~)
+            
+            disp('LOAD');
+            
+        end
+        
+        %% @ event export
+        function obj = fcnCallbackUi_eventExport(obj, ~, ~)
+            
+            disp('EXPORT');
+            
+        end
+        
+    end
+    
+    %% --- Viewer callbacks --- %%
+    methods (Access = private)
+        
+        %% @ event click down
         function obj = fcnCallbackViewer_clickDown(obj, ~, ~)
             
-            if obj.state == WidgetNeuroTreeStates.DRAWING
+            switch obj.state
                 
-                obj.state = WidgetNeuroTreeStates.DRAWING;
-                obj.model.extend();
-                
-            elseif obj.state == WidgetNeuroTreeStates.HOVER
-                
-                obj.state = WidgetNeuroTreeStates.REPOSITION;
-                obj.model.pickup();
-                
-            elseif obj.state == WidgetNeuroTreeStates.SELECTED
-                
-                obj.state = WidgetNeuroTreeStates.IDLE;
-                obj.model.deselect();
-                
+                case WidgetNeuroTreeStates.DRAWING
+                    obj.state = WidgetNeuroTreeStates.DRAWING;
+                    obj.model.extend();
+                    
+                case WidgetNeuroTreeStates.HOVER
+                    obj.state = WidgetNeuroTreeStates.REPOSITION;
+                    obj.model.pickup();
+                    
+                case WidgetNeuroTreeStates.SELECTED
+                    obj.state = WidgetNeuroTreeStates.IDLE;
+                    obj.model.deselect();
+                    
             end
             
         end
         
-        %% @ event_click_up
+        %% @ event click up
         function obj = fcnCallbackViewer_clickUp(obj, ~, ~)
             
             if obj.state == WidgetNeuroTreeStates.REPOSITION
@@ -118,41 +157,41 @@ classdef WidgetNeuroTree < handle
             
         end
         
-        %% @ event_click_double
+        %% @ event click double
         function obj = fcnCallbackViewer_clickDouble(obj, ~, ~)
             
-            if obj.state == WidgetNeuroTreeStates.DRAWING
+            switch obj.state
                 
-                obj.state = WidgetNeuroTreeStates.HOVER;
-                obj.model.complete();
-                
-            elseif obj.state == WidgetNeuroTreeStates.HOVER
-                
-                obj.state = WidgetNeuroTreeStates.SELECTED;
-                obj.model.select();
-                
+                case WidgetNeuroTreeStates.DRAWING
+                    obj.state = WidgetNeuroTreeStates.HOVER;
+                    obj.model.complete();
+                    
+                case WidgetNeuroTreeStates.HOVER
+                    obj.state = WidgetNeuroTreeStates.SELECTED;
+                    obj.model.select();
+                    
             end
             
         end
         
-        %% @ event_mouse_move
+        %% @ event mouse move
         function obj = fcnCallbackViewer_mouseMove(obj, ~, ~)
             
-            if obj.state == WidgetNeuroTreeStates.DRAWING
+            switch obj.state
                 
-                obj.state = WidgetNeuroTreeStates.DRAWING;
-                obj.model.stretch();
-                
-            elseif obj.state == WidgetNeuroTreeStates.REPOSITION
-                
-                obj.state = WidgetNeuroTreeStates.REPOSITION;
-                obj.model.reposition();
-                
+                case WidgetNeuroTreeStates.DRAWING
+                    obj.state = WidgetNeuroTreeStates.DRAWING;
+                    obj.model.stretch();
+                    
+                case WidgetNeuroTreeStates.REPOSITION
+                    obj.state = WidgetNeuroTreeStates.REPOSITION;
+                    obj.model.reposition();
+                    
             end
             
         end
         
-        %% @ event_press_digit
+        %% @ event press digit
         function obj = fcnCallbackViewer_pressDigit(obj, ~, ~)
             
             if obj.state == WidgetNeuroTreeStates.IDLE
@@ -164,41 +203,41 @@ classdef WidgetNeuroTree < handle
             
         end
         
-        %% @ event_press_esc
+        %% @ event press esc
         function obj = fcnCallbackViewer_pressEsc(obj, ~, ~)
             
-            if obj.state == WidgetNeuroTreeStates.SELECTED
+            switch obj.state
                 
-                obj.state = WidgetNeuroTreeStates.IDLE;
-                obj.model.deselect();
+                case WidgetNeuroTreeStates.SELECTED
+                    obj.state = WidgetNeuroTreeStates.IDLE;
+                    obj.model.deselect();
                 
-            elseif obj.state == WidgetNeuroTreeStates.DRAWING
-                
-                obj.state = WidgetNeuroTreeStates.IDLE;
-                obj.model.complete();
+                case WidgetNeuroTreeStates.DRAWING
+                    obj.state = WidgetNeuroTreeStates.IDLE;
+                    obj.model.complete();
                 
             end
             
         end
         
-        %% @ event_press_del
+        %% @ event press del
         function obj = fcnCallbackViewer_pressDel(obj, ~, ~)
             
-            if obj.state == WidgetNeuroTreeStates.DRAWING
+            switch obj.state
                 
-                obj.state = WidgetNeuroTreeStates.DRAWING;
-                obj.model.remove();
-                
-            elseif obj.state == WidgetNeuroTreeStates.SELECTED
-                
-                obj.state = WidgetNeuroTreeStates.IDLE;
-                obj.model.erase();
-                
+                case WidgetNeuroTreeStates.DRAWING
+                    obj.state = WidgetNeuroTreeStates.DRAWING;
+                    obj.model.remove();
+
+                case WidgetNeuroTreeStates.SELECTED
+                    obj.state = WidgetNeuroTreeStates.IDLE;
+                    obj.model.erase();
+
             end
             
         end
         
-        %% @ event_hover_handle
+        %% @ event hover handle
         function obj = fcnCallbackViewer_hoverHandle(obj, ~, ~)
             
             if (obj.state == WidgetNeuroTreeStates.IDLE) || (obj.state == WidgetNeuroTreeStates.HOVER) 

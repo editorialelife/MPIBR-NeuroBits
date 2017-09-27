@@ -1,4 +1,4 @@
-classdef WidgetNeuroTreeUI < handle
+classdef WidgetNeuroTreeUi < handle
     %
     % WidgetNeuroTreeUI
     %
@@ -58,7 +58,7 @@ classdef WidgetNeuroTreeUI < handle
     %% --- constructors --- %%%
     methods
         
-        function obj = WidgetNeuroTreeUI(varargin)
+        function obj = WidgetNeuroTreeUi(varargin)
             
             parserObj = inputParser;
             addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
@@ -276,20 +276,17 @@ classdef WidgetNeuroTreeUI < handle
         function obj = onClick_pushButton(obj, hsource, ~)
             
             switch hsource
-                case obj.pushButton_new
-                    
+                
+                case obj.pushButton_new    
                     notify(obj, 'event_new');
                     
                 case obj.pushButton_clear
-                    
                     notify(obj, 'event_clear');
                     
                 case obj.pushButton_load
-                    
                     notify(obj, 'event_load');
                     
                 case obj.pushButton_export
-                    
                     notify(obj, 'event_export');
                     
             end
