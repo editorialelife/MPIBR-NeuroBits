@@ -33,7 +33,7 @@ p.addParameter('Rows', 1:obj.height, @(x) isvector(x) && all(x > 0) && max(x) <=
 p.addParameter('C', 1:obj.channels, @(x) isvector(x) && all(x > 0) && max(x) <= obj.channels);
 p.addParameter('Z', 1:obj.stacks, @(x) isvector(x) && all(x > 0) && max(x) <= obj.stacks);
 p.addParameter('T', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.time);
-p.addParameter('S', 1:obj.time, @(x) isvector(x) && all(x > 0) && max(x) <= obj.series);
+p.addParameter('S', 1:obj.series, @(x) isvector(x) && all(x > 0) && max(x) <= obj.series);
 
 p.parse(varargin{:});
 
