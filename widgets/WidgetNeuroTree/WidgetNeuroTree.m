@@ -21,10 +21,14 @@ classdef WidgetNeuroTree < handle
         ui
         model
         viewer
-        state
         
     end
     
+    properties (Access = private, SetObservable)
+        
+        state
+        
+    end
     
     
     %% --- constructors --- %%%
@@ -62,6 +66,8 @@ classdef WidgetNeuroTree < handle
             % initialize state
             % maybe move it to callback of new button
             obj.state = WidgetNeuroTreeStates.NULL;
+            addlistener(obj, 'state', 'PostSet', @obj.fcnCallback_updateState);
+            
             
             % add Ui callbacks
             addlistener(obj.ui, 'event_new', @obj.fcnCallbackUi_eventNew);
@@ -89,6 +95,17 @@ classdef WidgetNeuroTree < handle
         
     end
     
+    %% --- Controller callbacks --- %%
+    methods (Access = private)
+        
+        function obj = fcnCallback_updateState(obj, ~, ~)
+            
+            
+        end
+        
+    end
+    
+    
     %% --- Ui callbacks --- %%
     methods (Access = private)
         
@@ -101,7 +118,7 @@ classdef WidgetNeuroTree < handle
         %% @ event clear
         function obj = fcnCallbackUi_eventClear(obj, ~, ~)
             
-            disp('CLEAR');
+            obj.state = WidgetNeuroTreeState.NULL;
             
         end
         
