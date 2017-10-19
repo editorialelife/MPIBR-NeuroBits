@@ -7,13 +7,9 @@ classdef WidgetNeuroTreeViewer < handle
         click_down
         click_up
         click_double
-        mouse_move
-        key_press
-        handle_hover
-        
-    end
-    
-    properties (Access = private)
+        move_mouse
+        press_key
+        hover_handle
         
         handle_figure
         handle_axes
@@ -29,14 +25,14 @@ classdef WidgetNeuroTreeViewer < handle
     
     events
         
-        event_click_down
-        event_click_up
-        event_click_double
-        event_move_mouse
-        event_press_digit
-        event_press_del
-        event_press_esc
-        event_hover_handle
+        event_clickDown
+        event_clickUp
+        event_clickDouble
+        event_moveMouse
+        event_pressDigit
+        event_pressDel
+        event_pressEsc
+        event_hoverHandle
         
     end
     
@@ -134,16 +130,16 @@ classdef WidgetNeuroTreeViewer < handle
         function obj = fcnCallback_moveMouse(obj, ~, ~)
             
             %%% return current move position
-            obj.mouse_move = obj.click();
-            notify(obj, 'event_move_mouse');
+            obj.move_mouse = obj.click();
+            notify(obj, 'event_moveMouse');
             
             %%% set hover handle
-            obj.handle_hover = hittest(obj.handle_figure);
+            obj.hover_handle = hittest(obj.handle_figure);
             
             %%% check type of handle
-            if isgraphics(obj.handle_hover, 'line')
+            if isgraphics(obj.hover_handle, 'line')
                 
-                notify(obj, 'event_hover_handle');
+                notify(obj, 'event_hoverHandle');
                 
             end
             
@@ -156,11 +152,11 @@ classdef WidgetNeuroTreeViewer < handle
             clickSelection = get(obj.handle_figure, 'Selection');
             if strcmp(clickSelection, 'normal')
                 
-                notify(obj, 'event_click_down');
+                notify(obj, 'event_clickDown');
                 
             elseif strcmp(clickSelection, 'open')
                 
-                notify(obj, 'event_click_double');
+                notify(obj, 'event_clickDouble');
                 
             end
             
@@ -170,25 +166,25 @@ classdef WidgetNeuroTreeViewer < handle
         function obj = fcnCallback_clickUp(obj, ~, ~)
             
             obj.click_up = obj.click();
-            notify(obj, 'event_click_up');
+            notify(obj, 'event_clickUp');
             
         end
         
         function obj = fcnCallback_pressKey(obj, ~, ~)
             
-            obj.key_press = obj.press();
+            obj.press_key = obj.press();
             
-            if (obj.key_press >= '0') && (obj.key_press <= '9')
+            if (obj.press_key >= '0') && (obj.press_key <= '9')
                 
-                notify(obj, 'event_press_digit');
+                notify(obj, 'event_pressDigit');
                 
-            elseif uint8(obj.key_press) == 8 %(DEL)
+            elseif uint8(obj.press_key) == 8 %(DEL)
                 
-                notify(obj, 'event_press_del');
+                notify(obj, 'event_pressDel');
                 
-            elseif uint8(obj.key_press) == 27 %(ESC)
+            elseif uint8(obj.press_key) == 27 %(ESC)
                 
-                notify(obj, 'event_press_esc');
+                notify(obj, 'event_pressEsc');
                 
             end
             

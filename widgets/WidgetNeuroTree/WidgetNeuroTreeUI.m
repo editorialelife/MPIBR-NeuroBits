@@ -16,7 +16,7 @@ classdef WidgetNeuroTreeUi < handle
     % Max-Planck Institute For Brain Research
     %
     
-    properties (Access = private)
+    properties (Access = public)
         
         parent
         layoutWidget

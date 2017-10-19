@@ -2,12 +2,7 @@ classdef WidgetNeuroTreeBranch < handle
     %UNTITLED Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties (Access = private)
-        
-        ui_axes
-        ui_point
-        ui_line
-        ui_label
+    properties (Access = public)
         
         tag
         index
@@ -18,6 +13,15 @@ classdef WidgetNeuroTreeBranch < handle
         span
         pixels
         
+    end
+    
+    
+    properties (Access = private)
+        
+        ui_axes
+        ui_point
+        ui_line
+        ui_label
         
     end
     
@@ -71,14 +75,6 @@ classdef WidgetNeuroTreeBranch < handle
             if isempty(obj.ui_axes)
                 error('WidgetNeuroTreeBranch :: parent axes not provided!\n');
             end
-            
-            %%% create branch
-            obj.create();
-            
-        end
-        
-        function obj = create(obj)
-            % CREATE creates ui handles
             
             %%% create hidden handles
             hold(obj.ui_axes, 'on');
