@@ -33,11 +33,13 @@ classdef WidgetNeuroTreeAction < handle
             disp('WidgetNeuroTree :: create');
             
             % update indexes
-            obj.indexNode = 0;
             obj.indexBranch = length(obj.tree) + 1;
             
             % add new branch
-            obj.tree(obj.indexBranch) = WidgetNeuroTreeBranch('Axes', objviewer.handle_axes);
+            obj.tree(obj.indexBranch) = WidgetNeuroTreeBranch(...
+                                        'Axes', objviewer.handle_axes,...
+                                        'Depth', str2double(objviewer.press_key),...
+                                        'Index', obj.indexBranch);
             if ~isa(obj.tree(obj.indexBranch), 'WidgetNeuroTreeBranch')
                 error('WidgetNeuroTree: initializing new Branch failed!');
             end
@@ -52,7 +54,7 @@ classdef WidgetNeuroTreeAction < handle
             
             % add node to branch
             obj.indexNode = obj.indexNode + 1;
-            obj.tree(obj.indexBranch).addNode(objviewer.click_down);
+            obj.tree(obj.indexBranch).addNode(obj.indexNode, objviewer.click_down);
             
         end
         
@@ -62,7 +64,7 @@ classdef WidgetNeuroTreeAction < handle
             disp('WidgetNeuroTree :: stretch');
             
             % strecth line
-            %obj.tree(obj.indexBranch)
+            obj.tree(obj.indexBranch).pullLine(objviewer.move_mouse);
             
         end
         
@@ -70,6 +72,8 @@ classdef WidgetNeuroTreeAction < handle
             
             %click
             disp('WidgetNeuroTree :: complete');
+            
+            %obj.tree(obj.indexBranch).fix(obj.
             
         end
         

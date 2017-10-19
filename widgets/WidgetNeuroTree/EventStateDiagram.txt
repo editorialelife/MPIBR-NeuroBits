@@ -18,4 +18,6 @@ action_hover
 
 Constructor
 addNode
+pullLine
+fixBranch
 

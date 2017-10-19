@@ -110,6 +110,33 @@ classdef WidgetNeuroTreeBranch < handle
             
         end
         
+        function obj = addNode(obj, index, point)
+            
+            % add point to nodes
+            obj.nodes(index, :) = point;
+            
+            % update point handler data
+            obj.ui_point.XData(index) = point(1);
+            obj.ui_point.YData(index) = point(2);
+            set(obj.ui_point, 'Visible', 'on');
+            
+            % update line handler data
+            obj.ui_line.XData(index) = point(1);
+            obj.ui_line.YData(index) = point(2);
+            set(obj.ui_line, 'Visible', 'on');
+            
+        end
+        
+        function obj = pullLine(obj, point)
+            
+            % update line handler data
+            obj.ui_line.XData(end) = point(1);
+            obj.ui_line.YData(end) = point(2);
+            
+        end
+        
+        %{
+        
         function obj = remove(obj, indexNode)
             % REMOVE removes node from data and ui arrays
             
@@ -213,6 +240,7 @@ classdef WidgetNeuroTreeBranch < handle
             obj.ui_point.YData = obj.ui_point.YData + offset(2);
             
         end
+        %}
         
     end
     

@@ -20,25 +20,11 @@ classdef WidgetNeuroTree < handle
         
         ui
         viewer
-        action
-        state
+        engine
         
     end
     
-    properties (Access = private)
-        
-        STATE_NULL = 1;
-        STATE_IDLE = 2;
-        STATE_ANCHOR = 3;
-        STATE_DRAW = 4;
-        STATE_GRAB = 5;
-        STATE_HOVER = 6;
-        STATE_SELECTED = 7;
-        STATE_REPOSITION = 8;
-        sm = {'STATE_NULL','STATE_IDLE','STATE_ANCHOR','STATE_DRAW',...
-              'STATE_GRAB','STATE_HOVER','STATE_SELECTED','STATE_REPOSITION'};
-        
-    end
+    
     
     
     %% --- constructors --- %%%
@@ -59,10 +45,11 @@ classdef WidgetNeuroTree < handle
             end
             
             % create state-machine engine
-            obj.action = WidgetNeuroTreeAction();
-            if ~isa(obj.action, 'WidgetNeuroTreeAction')
-                error('WidgetNeuroTree: initializing Action failed!');
+            obj.engine = WidgetNeuroTreeEngine();
+            if ~isa(obj.engine, 'WidgetNeuroTreeEngine')
+                error('WidgetNeuroTree: initializing Engine failed!');
             end
+            
             
             % create controller
             obj.controller();
@@ -71,9 +58,6 @@ classdef WidgetNeuroTree < handle
         
         
         function obj = controller(obj)
-            
-            % initialize state
-            obj.state = obj.STATE_IDLE;
             
             % add Ui callbacks
             %{
@@ -147,16 +131,7 @@ classdef WidgetNeuroTree < handle
         %% @ event click down
         function obj = fcnCallbackViewer_clickDown(obj, ~, ~)
             
-            fprintf('event_clickDown -> %s\n',obj.sm{obj.state});
-            
-            
-            switch obj.state
-                
-                case {obj.STATE_ANCHOR, obj.STATE_DRAW}
-                    obj.state = obj.STATE_DRAW;
-                    obj.action.extend(obj.viewer);
-                    
-            end
+            obj.engine.transition(obj.engine.EVENT_CLICKDOWN, obj.viewer);
             
         end
         
@@ -164,86 +139,49 @@ classdef WidgetNeuroTree < handle
         %% @ event click up
         function obj = fcnCallbackViewer_clickUp(obj, ~, ~)
             
-            fprintf('event_clickUp -> %s\n',obj.sm{obj.state});
-            
-            
+            obj.engine.transition(obj.engine.EVENT_CLICKUP, obj.viewer);
             
         end
         
         %% @ event click double
         function obj = fcnCallbackViewer_clickDouble(obj, ~, ~)
             
-            fprintf('event_clickDouble -> %s\n',obj.sm{obj.state});
-            
-            
-            switch obj.state
-                
-                case obj.STATE_ANCHOR
-                    obj.state = obj.STATE_IDLE;
-                    obj.action.remove(obj.viewer);
-                    
-                case obj.STATE_DRAW
-                    obj.state = obj.STATE_IDLE;
-                    obj.action.complete(obj.viewer);
-                    
-            end
-                    
+            obj.engine.transition(obj.engine.EVENT_CLICKDOUBLE, obj.viewer);
             
         end
         
         %% @ event mouse move
         function obj = fcnCallbackViewer_moveMouse(obj, ~, ~)
             
-            %disp('event_moveMouse');
-            
-            switch obj.state
-                
-                case obj.STATE_DRAW
-                    obj.state = obj.STATE_DRAW;
-                    obj.action.stretch(obj.viewer);
-                    
-            end
-            
+            obj.engine.transition(obj.engine.EVENT_MOVEMOUSE, obj.viewer);
             
         end
         
         %% @ event press digit
         function obj = fcnCallbackViewer_pressDigit(obj, ~, ~)
             
-            fprintf('event_pressDigit -> %s\n',obj.sm{obj.state});
-            
-            switch obj.state
-                
-                case obj.STATE_IDLE
-                    obj.state = obj.STATE_ANCHOR;
-                    obj.action.create(obj.viewer);
-                    
-            end
+            obj.engine.transition(obj.engine.EVENT_PRESSDIGIT, obj.viewer);
             
         end
         
         %% @ event press esc
         function obj = fcnCallbackViewer_pressEsc(obj, ~, ~)
             
-            fprintf('event_pressEsc -> %s\n',obj.sm{obj.state});
-            
-            
+            obj.engine.transition(obj.engine.EVENT_PRESSESC, obj.viewer);
             
         end
         
         %% @ event press del
         function obj = fcnCallbackViewer_pressDel(obj, ~, ~)
             
-            fprintf('event_pressDel -> %s\n',obj.sm{obj.state});
-            
+            obj.engine.transition(obj.engine.EVENT_PRESSDEL, obj.viewer);
             
         end
         
         %% @ event hover handle
         function obj = fcnCallbackViewer_hoverHandle(obj, ~, ~)
             
-            fprintf('event_hoverHandle -> %s\n',obj.sm{obj.state});
-            
+            obj.engine.transition(obj.engine.EVENT_HOVERHANDLE, obj.viewer);
             
         end
         
