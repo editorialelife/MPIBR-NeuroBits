@@ -32,7 +32,9 @@ classdef WidgetNeuroTreeViewer < handle
         event_pressDigit
         event_pressDel
         event_pressEsc
-        event_hoverHandle
+        event_hoverIdle
+        event_hoverLine
+        event_hoverPoint
         
     end
     
@@ -139,7 +141,17 @@ classdef WidgetNeuroTreeViewer < handle
             %%% check type of handle
             if isgraphics(obj.hover_handle, 'line')
                 
-                notify(obj, 'event_hoverHandle');
+                % devide between line and point
+                if obj.hover_handle.LineStyle(1) == 'n' % line style property is none for point
+                    notify(obj, 'event_hoverPoint');
+                    
+                elseif obj.hover_handle.LineStyle(1) == '-' % line style property is '-' for line
+                    notify(obj, 'event_hoverLine');
+                    
+                end
+            else
+                
+                notify(obj, 'event_hoverIdle');
                 
             end
             

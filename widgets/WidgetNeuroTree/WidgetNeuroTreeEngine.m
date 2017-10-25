@@ -22,10 +22,11 @@ classdef WidgetNeuroTreeEngine < handle
         STATE_ANCHOR = 3;
         STATE_DRAW = 4;
         STATE_GRAB = 5;
-        STATE_HOVER = 6;
-        STATE_SELECTED = 7;
-        STATE_REPOSITION = 8;
-        STATE_COUNT = 9;
+        STATE_SELECTED = 6;
+        STATE_REPOSITION = 7;
+        STATE_HOVERLINE = 8;
+        STATE_HOVERPOINT = 9;
+        STATE_COUNT = 10;
         STATE_LIST = {'STATE_NULL','STATE_IDLE','STATE_ANCHOR','STATE_DRAW',...
               'STATE_GRAB','STATE_HOVER','STATE_SELECTED','STATE_REPOSITION'};
        
@@ -41,8 +42,10 @@ classdef WidgetNeuroTreeEngine < handle
         EVENT_PRESSESC = 6;
         EVENT_PRESSDEL = 7;
         EVENT_MOVEMOUSE = 8;
-        EVENT_HOVERHANDLE = 9;
-        EVENT_COUNT = 10;
+        EVENT_HOVERIDLE = 9;
+        EVENT_HOVERLINE = 10;
+        EVENT_HOVERPOINT = 11;
+        EVENT_COUNT = 12;
         EVENT_LIST = {'EVENT_NULL','EVENT_CLICKDOWN','EVENT_CLICKUP',...
                       'EVENT_CLICKDOUBLE','EVENT_PRESSDIGIT',...
                       'EVENT_PRESSESC','EVENT_PRESSDEL',...
@@ -72,6 +75,24 @@ classdef WidgetNeuroTreeEngine < handle
             obj.smtable(obj.STATE_DRAW, obj.EVENT_CLICKDOUBLE) = ...
                 {{obj.STATE_IDLE, 'arrow', @obj.actionComplete}};
             
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_HOVERLINE) = ...
+                {{obj.STATE_HOVERLINE, 'hand', []}};
+            
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_HOVERPOINT) = ...
+                {{obj.STATE_HOVERPOINT, 'circle', []}};
+            
+            obj.smtable(obj.STATE_HOVERLINE, obj.EVENT_HOVERIDLE) = ...
+                {{obj.STATE_IDLE, 'arrow', []}};
+            
+            obj.smtable(obj.STATE_HOVERPOINT, obj.EVENT_HOVERIDLE) = ...
+                {{obj.STATE_IDLE, 'arrow', []}};
+            
+            obj.smtable(obj.STATE_HOVERLINE, obj.EVENT_HOVERPOINT) = ...
+                {{obj.STATE_HOVERPOINT, 'circle', []}};
+            
+            obj.smtable(obj.STATE_HOVERPOINT, obj.EVENT_HOVERLINE) = ...
+                {{obj.STATE_HOVERLINE, 'hand', []}};
+            
             %% initialize state
             obj.state = obj.STATE_IDLE;
             
@@ -88,11 +109,13 @@ classdef WidgetNeuroTreeEngine < handle
                 
                 % set mouse pointer
                 if ~isempty(callback{2})
-                obj.mousePointer = callback{2};
+                    obj.mousePointer = callback{2};
                 end
                 
                 % evoke callback function
-                callback{3}(objviewer);
+                if ~isempty(callback{3})
+                    callback{3}(objviewer);
+                end
                 
             end
             

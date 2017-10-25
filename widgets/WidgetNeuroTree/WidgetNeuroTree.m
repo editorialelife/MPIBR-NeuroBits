@@ -77,7 +77,9 @@ classdef WidgetNeuroTree < handle
             addlistener(obj.viewer, 'event_pressDigit', @obj.fcnCallbackViewer_pressDigit);
             addlistener(obj.viewer, 'event_pressDel', @obj.fcnCallbackViewer_pressDel);
             addlistener(obj.viewer, 'event_pressEsc', @obj.fcnCallbackViewer_pressEsc);
-            addlistener(obj.viewer, 'event_hoverHandle', @obj.fcnCallbackViewer_hoverHandle);
+            addlistener(obj.viewer, 'event_hoverIdle', @obj.fcnCallbackViewer_hoverIdle);
+            addlistener(obj.viewer, 'event_hoverLine', @obj.fcnCallbackViewer_hoverLine);
+            addlistener(obj.viewer, 'event_hoverPoint', @obj.fcnCallbackViewer_hoverPoint);
             
             % add Model callbacks
             addlistener(obj.engine, 'mousePointer', 'PostSet', @obj.fcnCallbackModel_updateMousePointer);
@@ -178,10 +180,24 @@ classdef WidgetNeuroTree < handle
             
         end
         
-        %% @ event hover handle
-        function obj = fcnCallbackViewer_hoverHandle(obj, ~, ~)
+        %% @ event hover idle
+        function obj = fcnCallbackViewer_hoverIdle(obj, ~, ~)
             
-            obj.engine.transition(obj.engine.EVENT_HOVERHANDLE, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_HOVERIDLE, obj.viewer);
+            
+        end
+        
+        %% @ event hover line
+        function obj = fcnCallbackViewer_hoverLine(obj, ~, ~)
+            
+            obj.engine.transition(obj.engine.EVENT_HOVERLINE, obj.viewer);
+            
+        end
+        
+        %% @ event hover point
+        function obj = fcnCallbackViewer_hoverPoint(obj, ~, ~)
+            
+            obj.engine.transition(obj.engine.EVENT_HOVERPOINT, obj.viewer);
             
         end
         
