@@ -80,7 +80,7 @@ classdef WidgetNeuroTree < handle
             addlistener(obj.viewer, 'event_hoverHandle', @obj.fcnCallbackViewer_hoverHandle);
             
             % add Model callbacks
-            %addlistener(obj.action, 'mousePointer', 'PostSet', @obj.fcnCallbackModel_updateMousePointer);
+            addlistener(obj.engine, 'mousePointer', 'PostSet', @obj.fcnCallbackModel_updateMousePointer);
             
         end
         
@@ -188,7 +188,7 @@ classdef WidgetNeuroTree < handle
         %% @ event_postset_mouse_pointer
         function obj = fcnCallbackModel_updateMousePointer(obj, ~, ~)
             
-            %obj.viewer.changeMousePointer(obj.model.mousePointer);
+            obj.viewer.changeMousePointer(obj.engine.mousePointer);
             
         end
         

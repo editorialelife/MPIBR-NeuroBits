@@ -113,7 +113,7 @@ classdef WidgetNeuroTreeViewer < handle
         function varpoint = click(obj)
             
             varpoint = get(obj.handle_axes, 'CurrentPoint');
-            varpoint = round(varpoint(1, 1:2));
+            varpoint = varpoint(1, 1:2);
             
         end
         

@@ -12,11 +12,12 @@ classdef WidgetNeuroTreeBranch < handle
         nodes
         span
         pixels
+        iter
         
     end
     
     
-    properties (Access = private)
+    properties (Access = public)
         
         ui_axes
         ui_point
@@ -30,9 +31,10 @@ classdef WidgetNeuroTreeBranch < handle
         LINE_WIDTH = 4;
         MARKER_SIZE = 5;
         FONT_SIZE = 10;
-        DEFAULT_NODE = [0,0];
+        DEFAULT_NODE = [-1,-1];
         ALPHA_DESELECTED = 0.5;
         ALPHA_SELECTED = 1.0;
+        SCALE_INTERPOLATION = 32;
         
         COLOR_TABLE = [255, 255, 255;...  % white
                        255,   0,   0;...  % red
@@ -66,10 +68,11 @@ classdef WidgetNeuroTreeBranch < handle
             obj.tag = parserObj.Results.Tag;
             obj.index = parserObj.Results.Index;
             obj.parent = parserObj.Results.Parent;
-            obj.depth = parserObj.Results.Depth;
+            obj.depth = str2double(parserObj.Results.Depth);
             obj.nodes = obj.DEFAULT_NODE;
             obj.span = 0;
             obj.pixels = [];
+            obj.iter = 0;
             
             %%% guard check
             if isempty(obj.ui_axes)
@@ -110,28 +113,82 @@ classdef WidgetNeuroTreeBranch < handle
             
         end
         
-        function obj = addNode(obj, index, point)
+        function obj = addNode(obj, point)
             
             % add point to nodes
-            obj.nodes(index, :) = point;
+            obj.iter = obj.iter + 1;
+            obj.nodes(obj.iter, :) = point;
             
-            % update point handler data
-            obj.ui_point.XData(index) = point(1);
-            obj.ui_point.YData(index) = point(2);
+            % render line
+            obj.renderLine(point);
+            
+            % render point
+            obj.renderPoint(point);
+            
+        end
+        
+        function renderPoint(obj, point)
+            
+            obj.ui_point.XData(obj.iter) = point(1);
+            obj.ui_point.YData(obj.iter) = point(2);
             set(obj.ui_point, 'Visible', 'on');
             
-            % update line handler data
-            obj.ui_line.XData(index) = point(1);
-            obj.ui_line.YData(index) = point(2);
+        end
+        
+        
+        function obj = renderLine(obj, point)
+            
+            if obj.iter == 1
+                
+                obj.ui_line.XData = repmat(point(1), 2, 1);
+                obj.ui_line.YData = repmat(point(2), 2, 1);
+                
+            else
+                
+                if all(obj.nodes(end,:) == point)
+                    xArray = obj.nodes(:,1);
+                    yArray = obj.nodes(:,2);
+                else
+                    xArray = cat(1, obj.nodes(:,1), point(1));
+                    yArray = cat(1, obj.nodes(:,2), point(2));
+                end
+                
+                t = [0;cumsum(diff(xArray).^2 + diff(yArray).^2)];
+                ti = linspace(0,t(end),obj.SCALE_INTERPOLATION * obj.iter);
+                
+                
+                obj.ui_line.XData = pchip(t, xArray, ti);
+                obj.ui_line.YData = pchip(t, yArray, ti);
+                
+            end
             set(obj.ui_line, 'Visible', 'on');
             
         end
         
         function obj = pullLine(obj, point)
             
+            % update only last point
+            % interpolation at this step
+            % will dramatically slow down
+            % ui experience
+            
             % update line handler data
             obj.ui_line.XData(end) = point(1);
             obj.ui_line.YData(end) = point(2);
+            
+        end
+        
+        function obj = fixBranch(obj)
+            
+            % close polygon if depth is root
+            if obj.depth == 0
+                
+                obj.renderLine(obj.nodes(1,:)+eps);
+                
+            end
+            
+            %% calculate pixels
+            %% calculate linkage
             
         end
         
@@ -246,3 +303,43 @@ classdef WidgetNeuroTreeBranch < handle
     
 end
 
+
+% parser :: isIndex
+%  input :: parserValue
+% action :: check if parserValue is valid index
+function tf = isIndex(parserValue)
+
+    % default output
+    tf = true;
+    
+    % check if numeric
+    if ~isnumeric(parserValue)
+        tf = false;
+    end
+    
+    % check if whole number
+    if rem(parserValue, 1) ~= 0
+        tf = false;
+    end
+    
+end
+
+% parser :: isDepth
+%  input :: parserValue
+% action :: check if parserValue is valid depth
+function tf = isDepth(parserValue)
+
+    % default output
+    tf = true;
+    
+    % check if char
+    if ~ischar(parserValue)
+        tf = false;
+    end
+    
+    % check if in range
+    if (parserValue < '0') || (parserValue > '9')
+        tf = false;
+    end
+    
+end

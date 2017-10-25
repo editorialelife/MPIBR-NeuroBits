@@ -1,9 +1,17 @@
 classdef WidgetNeuroTreeEngine < handle
     
-    properties (Access = private)
+    properties (Access = public, SetObservable = true)
+        
+        mousePointer
+        
+    end
+    
+    properties (Access = public)
         
         state
         smtable
+        tree
+        indexBranch
         
     end
     
@@ -50,19 +58,19 @@ classdef WidgetNeuroTreeEngine < handle
             obj.smtable = cell(obj.STATE_COUNT, obj.EVENT_COUNT);
             
             obj.smtable(obj.STATE_IDLE, obj.EVENT_PRESSDIGIT) = ...
-                {{obj.STATE_ANCHOR, @obj.actionCreate}};
+                {{obj.STATE_ANCHOR, 'crosshair', @obj.actionCreate}};
             
             obj.smtable(obj.STATE_ANCHOR, obj.EVENT_CLICKDOWN) = ...
-                {{obj.STATE_DRAW, @obj.actionExtend}};
+                {{obj.STATE_DRAW, '', @obj.actionExtend}};
             
             obj.smtable(obj.STATE_DRAW, obj.EVENT_CLICKDOWN) = ...
-                {{obj.STATE_DRAW, @obj.actionExtend}};
+                {{obj.STATE_DRAW, '', @obj.actionExtend}};
             
             obj.smtable(obj.STATE_DRAW, obj.EVENT_MOVEMOUSE) = ...
-                {{obj.STATE_DRAW, @obj.acitonStretch}};
+                {{obj.STATE_DRAW, '', @obj.acitonStretch}};
             
             obj.smtable(obj.STATE_DRAW, obj.EVENT_CLICKDOUBLE) = ...
-                {{obj.STATE_IDLE, @obj.actionComplete}};
+                {{obj.STATE_IDLE, 'arrow', @obj.actionComplete}};
             
             %% initialize state
             obj.state = obj.STATE_IDLE;
@@ -75,8 +83,16 @@ classdef WidgetNeuroTreeEngine < handle
             
             if ~isempty(callback)
                 
+                % set next state
                 obj.state = callback{1};
-                callback{2}(objviewer);
+                
+                % set mouse pointer
+                if ~isempty(callback{2})
+                obj.mousePointer = callback{2};
+                end
+                
+                % evoke callback function
+                callback{3}(objviewer);
                 
             end
             
@@ -88,41 +104,79 @@ classdef WidgetNeuroTreeEngine < handle
         
         function obj = actionCreate(obj, objviewer)
             
-            fprintf('actionCreate\n');
+            % constructor for branch
+            fprintf('WidgetNeuroTree :: create branch\n');
+            
+            % update branch index
+            obj.indexBranch = length(obj.tree) + 1;
+            
+            % allocate new branch
+            newBranch = WidgetNeuroTreeBranch(...
+                        'Axes', objviewer.handle_axes,...
+                        'Depth', objviewer.press_key,...
+                        'Index', obj.indexBranch);
+            
+            if ~isa(newBranch, 'WidgetNeuroTreeBranch')
+                error('WidgetNeuroTree: initializing new Branch failed!');
+            end
+            
+            % add branch to tree
+            obj.tree = cat(1, obj.tree, newBranch);
             
         end
         
-        function obj = actionExtend(obj)
+        function obj = actionExtend(obj, objviewer)
+            
+            % constructor for branch
+            fprintf('WidgetNeuroTree :: extend branch\n');
+            
+            % add node to branch
+            obj.tree(obj.indexBranch).addNode(objviewer.click_down);
+            
         end
         
-        function obj = acitonStretch(obj)
+        function obj = acitonStretch(obj, objviewer)
+            
+            % click
+            %fprintf('WidgetNeuroTree :: stretch\n');
+            
+            % strecth line
+            obj.tree(obj.indexBranch).pullLine(objviewer.move_mouse);
+            
         end
         
-        function obj = actionComplete(obj)
+        function obj = actionComplete(obj, ~)
+            
+            % click
+            fprintf('WidgetNeuroTree :: complete\n');
+            
+            % fix branch
+            obj.tree(obj.indexBranch).fixBranch();
+            
         end
         
-        function obj = actionPickUp(obj)
+        function obj = actionPickUp(obj, objviewer)
         end
         
-        function obj = actionPutDown(obj)
+        function obj = actionPutDown(obj, objviewer)
         end
         
-        function obj = actionSelect(obj)
+        function obj = actionSelect(obj, objviewer)
         end
         
-        function obj = actionDeselect(obj)
+        function obj = actionDeselect(obj, objviewer)
         end
         
-        function obj = actionReposition(obj)
+        function obj = actionReposition(obj, objviewer)
         end
         
-        function obj = actionRemove(obj)
+        function obj = actionRemove(obj, objviewer)
         end
         
-        function obj = actionErase(obj)
+        function obj = actionErase(obj, objviewer)
         end
         
-        function obj = actionHover(obj)
+        function obj = actionHover(obj, objviewer)
         end
            
     end
