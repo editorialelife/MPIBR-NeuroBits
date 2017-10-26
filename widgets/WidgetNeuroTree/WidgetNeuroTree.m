@@ -73,6 +73,7 @@ classdef WidgetNeuroTree < handle
             addlistener(obj.viewer, 'event_clickDown', @obj.fcnCallbackViewer_clickDown);
             addlistener(obj.viewer, 'event_clickUp', @obj.fcnCallbackViewer_clickUp);
             addlistener(obj.viewer, 'event_clickDouble', @obj.fcnCallbackViewer_clickDouble);
+            addlistener(obj.viewer, 'event_clickExtend', @obj.fcnCallbackViewer_clickExtend);
             addlistener(obj.viewer, 'event_moveMouse', @obj.fcnCallbackViewer_moveMouse);
             addlistener(obj.viewer, 'event_pressDigit', @obj.fcnCallbackViewer_pressDigit);
             addlistener(obj.viewer, 'event_pressDel', @obj.fcnCallbackViewer_pressDel);
@@ -149,6 +150,13 @@ classdef WidgetNeuroTree < handle
         function obj = fcnCallbackViewer_clickDouble(obj, ~, ~)
             
             obj.engine.transition(obj.engine.EVENT_CLICKDOUBLE, obj.viewer);
+            
+        end
+        
+        %% @ event click extend
+        function obj = fcnCallbackViewer_clickExtend(obj, ~, ~)
+            
+            obj.engine.transition(obj.engine.EVENT_CLICKEXTEND, obj.viewer);
             
         end
         

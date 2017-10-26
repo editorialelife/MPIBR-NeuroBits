@@ -28,6 +28,7 @@ classdef WidgetNeuroTreeViewer < handle
         event_clickDown
         event_clickUp
         event_clickDouble
+        event_clickExtend
         event_moveMouse
         event_pressDigit
         event_pressDel
@@ -169,6 +170,10 @@ classdef WidgetNeuroTreeViewer < handle
             elseif strcmp(clickSelection, 'open')
                 
                 notify(obj, 'event_clickDouble');
+                
+            elseif strcmp(clickSelection, 'extend')
+                
+                notify(obj, 'event_clickExtend');
                 
             end
             

@@ -4,25 +4,19 @@ classdef WidgetNeuroTreeBranch < handle
     
     properties (Access = public)
         
-        tag
-        index
-        parent
-        isleaf
         depth
         nodes
-        span
-        pixels
-        iter
+        indexBranch
+        indexNode
         
     end
     
     
-    properties (Access = public)
+    properties (Access = private)
         
         ui_axes
         ui_point
         ui_line
-        ui_label
         
     end
     
@@ -57,22 +51,16 @@ classdef WidgetNeuroTreeBranch < handle
             %%% use input parser
             parserObj = inputParser;
             addParameter(parserObj, 'Axes', [], @(x) isgraphics(x, 'Axes'));
-            addParameter(parserObj, 'Tag', 0, @isnumeric);
-            addParameter(parserObj, 'Index', 0, @isIndex);
-            addParameter(parserObj, 'Parent', [], @(x) isa(x, 'WidgetNeuroTreeBranch'));
+            addParameter(parserObj, 'BranchIndex', 0, @isIndex);
             addParameter(parserObj, 'Depth', 0, @isDepth);
             parse(parserObj, varargin{:});
             
             %%% assign properties
             obj.ui_axes = parserObj.Results.Axes;
-            obj.tag = parserObj.Results.Tag;
-            obj.index = parserObj.Results.Index;
-            obj.parent = parserObj.Results.Parent;
+            obj.indexBranch = parserObj.Results.BranchIndex;
             obj.depth = str2double(parserObj.Results.Depth);
             obj.nodes = obj.DEFAULT_NODE;
-            obj.span = 0;
-            obj.pixels = [];
-            obj.iter = 0;
+            obj.indexNode = 0;
             
             %%% guard check
             if isempty(obj.ui_axes)
@@ -95,11 +83,6 @@ classdef WidgetNeuroTreeBranch < handle
                                 'Visible', 'off');
             obj.ui_line.Color(4) = obj.ALPHA_DESELECTED;
             
-            obj.ui_label = text(obj.nodes(:,1), obj.nodes(:,2), '',...
-                                'FontSize', obj.FONT_SIZE,...
-                                'Parent', obj.ui_axes,...
-                                'Visible', 'off');
-            
             hold(obj.ui_axes, 'off');
             
             % reorder uistack
@@ -107,17 +90,23 @@ classdef WidgetNeuroTreeBranch < handle
             uistack(obj.ui_point, 'top');
             
             % integrate current branch index in user data
-            set(obj.ui_point, 'UserData', obj.index);
-            set(obj.ui_line, 'UserData', obj.index);
-            set(obj.ui_label, 'UserData', obj.index);
+            set(obj.ui_point, 'UserData', obj.indexBranch);
+            set(obj.ui_line, 'UserData', obj.indexBranch);
+            
+        end
+        
+        function delete(obj)
+            
+            delete(obj.ui_point);
+            delete(obj.ui_line);
             
         end
         
         function obj = addNode(obj, point)
             
             % add point to nodes
-            obj.iter = obj.iter + 1;
-            obj.nodes(obj.iter, :) = point;
+            obj.indexNode = obj.indexNode + 1;
+            obj.nodes(obj.indexNode, :) = point;
             
             % render line
             obj.renderLine(point);
@@ -129,8 +118,8 @@ classdef WidgetNeuroTreeBranch < handle
         
         function renderPoint(obj, point)
             
-            obj.ui_point.XData(obj.iter) = point(1);
-            obj.ui_point.YData(obj.iter) = point(2);
+            obj.ui_point.XData(obj.indexNode) = point(1);
+            obj.ui_point.YData(obj.indexNode) = point(2);
             set(obj.ui_point, 'Visible', 'on');
             
         end
@@ -138,7 +127,7 @@ classdef WidgetNeuroTreeBranch < handle
         
         function obj = renderLine(obj, point)
             
-            if obj.iter == 1
+            if obj.indexNode == 1
                 
                 obj.ui_line.XData = repmat(point(1), 2, 1);
                 obj.ui_line.YData = repmat(point(2), 2, 1);
@@ -154,7 +143,7 @@ classdef WidgetNeuroTreeBranch < handle
                 end
                 
                 t = [0;cumsum(diff(xArray).^2 + diff(yArray).^2)];
-                ti = linspace(0,t(end),obj.SCALE_INTERPOLATION * obj.iter);
+                ti = linspace(0,t(end),obj.SCALE_INTERPOLATION * obj.indexNode);
                 
                 
                 obj.ui_line.XData = pchip(t, xArray, ti);
@@ -192,98 +181,25 @@ classdef WidgetNeuroTreeBranch < handle
             
         end
         
-        %{
         
-        function obj = remove(obj, indexNode)
-            % REMOVE removes node from data and ui arrays
+        function obj = select(obj, varstate)
             
-            % update nodes
-            obj.nodes(indexNode, :) = [];
-            
-            % update point
-            obj.ui_point.XData(indexNode) = [];
-            obj.ui_point.YData(indexNode) = [];
-            
-            % update line
-            obj.ui_line.XData(indexNode) = [];
-            obj.ui_line.YData(indexNode) = [];
-            
-        end
-        
-        function obj = extend(obj, indexNode, point)
-            % EXTEND append node to the branch
-            
-            % add point to nodes
-            obj.nodes(indexNode, :) = point;
-            
-            % update point handler data
-            obj.ui_point.XData(indexNode) = point(1);
-            obj.ui_point.YData(indexNode) = point(2);
-            set(obj.ui_point, 'Visible', 'on');
-            
-            % update line handler data
-            obj.ui_line.XData(indexNode) = point(1);
-            obj.ui_line.YData(indexNode) = point(2);
-            set(obj.ui_line, 'Visible', 'on');
-            
-        end
-        
-        function obj = stretch(obj)
-            % STRETCH extends branch without appending node
-            
-            % update line handler data
-            obj.ui_line.XData(indexNode) = point(1);
-            obj.ui_line.YData(indexNode) = point(2);
-            
-        end
-        
-        function obj = complete(obj)
-            % COMPLETE complete branch drawing
-            
-            % close polygon if depth is root
-            if obj.depth == 0
+            if varstate
                 
-                % update line
-                obj.ui_line.XData = cat(2, obj.ui_line.XData, obj.ui_line.XData(1));
-                obj.ui_line.YData = cat(2, obj.ui_line.YData, obj.ui_line.YData(1));
+                obj.ui_line.Color(4) = obj.ALPHA_SELECTED;
+                obj.ui_point.MarkerSize = 2 * obj.MARKER_SIZE;
+                
+            else
+                
+                obj.ui_line.Color(4) = obj.ALPHA_DESELECTED;
+                obj.ui_point.MarkerSize = obj.MARKER_SIZE;
                 
             end
             
-            % calculates branch length, pixels and neighbours
-            % ???
-            
         end
         
-        function obj = select(obj)
-            % SELECT highlight branch ui
-            
-            % change line Alpha property
-            obj.ui_line.Color(4) = obj.ALPHA_SELECTED;
-            
-            % double the size of marker size
-            obj.ui_point.MarkerSize = 2 * obj.MARKER_SIZE;
-            
-        end
         
-        function obj = deselect(obj)
-            % DESELECT remove branch ui highlight
-            
-            % change line Alpha property
-            obj.ui_line.Color(4) = obj.ALPHA_DESELECTED;
-            
-            % revert point marker size
-            obj.ui_point.MarkerSize = obj.MARKER_SIZE;
-            
-        end
-        
-        function obj = pickup(obj)
-        end
-        
-        function obj = putdown(obj)
-        end
-        
-        function obj = reposition(obj, offset)
-            %REPOSITION update branch position with given offset
+        function obj = moveBranch(obj, offset)
             
             % update nodes
             obj.nodes = bsxfun(@plus, obj.nodes, offset);
@@ -297,7 +213,47 @@ classdef WidgetNeuroTreeBranch < handle
             obj.ui_point.YData = obj.ui_point.YData + offset(2);
             
         end
-        %}
+        
+        function obj = moveNode(obj, offset, indexNode)
+            
+            % update nodes
+            obj.nodes(indexNode,:) = obj.nodes(indexNode,:) + offset;
+            
+            % update point
+            obj.ui_point.XData(indexNode) = obj.ui_point.XData(indexNode) + offset(1);
+            obj.ui_point.YData(indexNode) = obj.ui_point.YData(indexNode) + offset(2);
+            
+            % update line
+            obj.renderLine(obj.nodes(end,:));
+            
+        end
+        
+        function obj = rotateBranch(obj, theta)
+            
+            mtx = obj.nodes';
+            
+            % set center of rotation
+            center = repmat(mean(mtx,2), 1, length(mtx));
+            
+            % calculate rotation matrix
+            R = [cos(theta), -sin(theta);...
+                 sin(theta), cos(theta)];
+             
+            % do the rotation
+            mtx = R * (mtx - center) + center;
+            obj.nodes(:,1) = mtx(1,:);
+            obj.nodes(:,2) = mtx(2,:);
+            
+            
+            % update points
+            obj.ui_point.XData = obj.nodes(:,1);
+            obj.ui_point.YData = obj.nodes(:,2);
+            
+            % update line
+            obj.renderLine(obj.nodes(end,:));
+            
+        end
+        
         
     end
     

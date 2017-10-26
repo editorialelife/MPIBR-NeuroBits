@@ -12,6 +12,9 @@ classdef WidgetNeuroTreeEngine < handle
         smtable
         tree
         indexBranch
+        indexSelected
+        indexGrabbedBranch
+        indexGrabbedNode
         
     end
     
@@ -21,14 +24,15 @@ classdef WidgetNeuroTreeEngine < handle
         STATE_IDLE = 2;
         STATE_ANCHOR = 3;
         STATE_DRAW = 4;
-        STATE_GRAB = 5;
-        STATE_SELECTED = 6;
-        STATE_REPOSITION = 7;
-        STATE_HOVERLINE = 8;
-        STATE_HOVERPOINT = 9;
-        STATE_COUNT = 10;
+        STATE_OVERLINE = 5;
+        STATE_OVERPOINT = 6;
+        STATE_GRABSELECTED = 7;
+        STATE_GRABLINE = 8;
+        STATE_GRABPOINT = 9;
+        STATE_ROTATE = 10;
+        STATE_COUNT = 11;
         STATE_LIST = {'STATE_NULL','STATE_IDLE','STATE_ANCHOR','STATE_DRAW',...
-              'STATE_GRAB','STATE_HOVER','STATE_SELECTED','STATE_REPOSITION'};
+              'STATE_GRAB','STATE_OVERLINE','STATE_OVERPOINT','STATE_REPOSITION'};
        
     end
     
@@ -38,14 +42,15 @@ classdef WidgetNeuroTreeEngine < handle
         EVENT_CLICKDOWN = 2;
         EVENT_CLICKUP = 3;
         EVENT_CLICKDOUBLE = 4;
-        EVENT_PRESSDIGIT = 5;
-        EVENT_PRESSESC = 6;
-        EVENT_PRESSDEL = 7;
-        EVENT_MOVEMOUSE = 8;
-        EVENT_HOVERIDLE = 9;
-        EVENT_HOVERLINE = 10;
-        EVENT_HOVERPOINT = 11;
-        EVENT_COUNT = 12;
+        EVENT_CLICKEXTEND = 5;
+        EVENT_PRESSDIGIT = 6;
+        EVENT_PRESSESC = 7;
+        EVENT_PRESSDEL = 8;
+        EVENT_MOVEMOUSE = 9;
+        EVENT_HOVERIDLE = 10;
+        EVENT_HOVERLINE = 11;
+        EVENT_HOVERPOINT = 12;
+        EVENT_COUNT = 13;
         EVENT_LIST = {'EVENT_NULL','EVENT_CLICKDOWN','EVENT_CLICKUP',...
                       'EVENT_CLICKDOUBLE','EVENT_PRESSDIGIT',...
                       'EVENT_PRESSESC','EVENT_PRESSDEL',...
@@ -60,8 +65,12 @@ classdef WidgetNeuroTreeEngine < handle
             %% set state machine table
             obj.smtable = cell(obj.STATE_COUNT, obj.EVENT_COUNT);
             
+            %% start drawing
             obj.smtable(obj.STATE_IDLE, obj.EVENT_PRESSDIGIT) = ...
                 {{obj.STATE_ANCHOR, 'crosshair', @obj.actionCreate}};
+            
+            obj.smtable(obj.STATE_ANCHOR, obj.EVENT_PRESSESC) = ...
+                {{obj.STATE_IDLE, 'arrow', @obj.actionCancel}};
             
             obj.smtable(obj.STATE_ANCHOR, obj.EVENT_CLICKDOWN) = ...
                 {{obj.STATE_DRAW, '', @obj.actionExtend}};
@@ -75,26 +84,83 @@ classdef WidgetNeuroTreeEngine < handle
             obj.smtable(obj.STATE_DRAW, obj.EVENT_CLICKDOUBLE) = ...
                 {{obj.STATE_IDLE, 'arrow', @obj.actionComplete}};
             
+            %% hover over objects
             obj.smtable(obj.STATE_IDLE, obj.EVENT_HOVERLINE) = ...
-                {{obj.STATE_HOVERLINE, 'hand', []}};
+                {{obj.STATE_OVERLINE, 'hand', []}};
             
             obj.smtable(obj.STATE_IDLE, obj.EVENT_HOVERPOINT) = ...
-                {{obj.STATE_HOVERPOINT, 'circle', []}};
+                {{obj.STATE_OVERPOINT, 'circle', []}};
             
-            obj.smtable(obj.STATE_HOVERLINE, obj.EVENT_HOVERIDLE) = ...
+            obj.smtable(obj.STATE_OVERLINE, obj.EVENT_HOVERIDLE) = ...
                 {{obj.STATE_IDLE, 'arrow', []}};
             
-            obj.smtable(obj.STATE_HOVERPOINT, obj.EVENT_HOVERIDLE) = ...
+            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_HOVERIDLE) = ...
                 {{obj.STATE_IDLE, 'arrow', []}};
             
-            obj.smtable(obj.STATE_HOVERLINE, obj.EVENT_HOVERPOINT) = ...
-                {{obj.STATE_HOVERPOINT, 'circle', []}};
+            obj.smtable(obj.STATE_OVERLINE, obj.EVENT_HOVERPOINT) = ...
+                {{obj.STATE_OVERPOINT, 'circle', []}};
             
-            obj.smtable(obj.STATE_HOVERPOINT, obj.EVENT_HOVERLINE) = ...
-                {{obj.STATE_HOVERLINE, 'hand', []}};
+            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_HOVERLINE) = ...
+                {{obj.STATE_OVERLINE, 'hand', []}};
+            
+            %% select objects
+            obj.smtable(obj.STATE_OVERLINE, obj.EVENT_CLICKDOUBLE) = ...
+                {{obj.STATE_IDLE, '', @obj.actionSelect}};
+            
+            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_CLICKDOUBLE) = ...
+                {{obj.STATE_IDLE, '', @obj.actionSelect}};
+            
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_CLICKDOUBLE) = ...
+                {{obj.STATE_IDLE, '', @obj.actionDeselect}};
+            
+            %% move line
+            obj.smtable(obj.STATE_OVERLINE, obj.EVENT_CLICKDOWN) = ...
+                {{obj.STATE_GRABLINE, 'cross', @obj.actionPickUp}};
+            
+            obj.smtable(obj.STATE_GRABLINE, obj.EVENT_MOVEMOUSE) = ...
+                {{obj.STATE_GRABLINE, '', @obj.actionRepositionLine}};
+            
+            obj.smtable(obj.STATE_GRABLINE, obj.EVENT_CLICKUP) = ...
+                {{obj.STATE_OVERLINE, 'hand', @obj.actionPutDown}};
+            
+            %% move selected
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_CLICKDOWN) = ...
+                {{obj.STATE_GRABSELECTED, 'arrow', []}};
+            
+            obj.smtable(obj.STATE_GRABSELECTED, obj.EVENT_MOVEMOUSE) = ...
+                {{obj.STATE_GRABSELECTED, '', @obj.actionRepositionSelected}};
+            
+            obj.smtable(obj.STATE_GRABSELECTED, obj.EVENT_CLICKUP) = ...
+                {{obj.STATE_IDLE, 'arrow', []}};
+            
+            %% move point
+            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_CLICKDOWN) = ...
+                {{obj.STATE_GRABPOINT, 'cross', @obj.actionPickUp}};
+            
+            obj.smtable(obj.STATE_GRABPOINT, obj.EVENT_MOVEMOUSE) = ...
+                {{obj.STATE_GRABPOINT, '', @obj.actionRepositionPoint}};
+            
+            obj.smtable(obj.STATE_GRABPOINT, obj.EVENT_CLICKUP) = ...
+                {{obj.STATE_OVERPOINT, 'circle', @obj.actionPutDown}};
+            
+            %% remove selected
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_PRESSDEL) = ...
+                {{obj.STATE_IDLE, '', @obj.actionRemoveSelected}};
+            
+            %% rotate object
+            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_CLICKEXTEND) = ...
+                {{obj.STATE_ROTATE, 'cross', @obj.actionPickUp}};
+            
+            obj.smtable(obj.STATE_ROTATE, obj.EVENT_MOVEMOUSE) = ...
+                {{obj.STATE_ROTATE, '', @obj.actionRotateBranch}};
+            
+            obj.smtable(obj.STATE_ROTATE, obj.EVENT_CLICKUP) = ...
+                {{obj.STATE_IDLE, 'arrow', @obj.actionPutDown}};
+            
             
             %% initialize state
             obj.state = obj.STATE_IDLE;
+            
             
         end
         
@@ -121,10 +187,49 @@ classdef WidgetNeuroTreeEngine < handle
             
         end
         
+        function offset = calculateOffset(~, objviewer)
+            
+            % calculate offset
+            offset = objviewer.move_mouse - objviewer.click_down;
+            objviewer.click_down = objviewer.move_mouse;
+            
+        end
+        
+        function theta = calculateRotation(~, objviewer, center)
+            
+            % calculate the angle theta from the deltaY and deltaX values
+            % (atan2 returns radians values from [-pi, pi])
+            % 0 currently points EAST.
+            % NOTE: By preserving Y and X param order to atan2,  we are expecting 
+            % a CLOCKWISE angle direction.
+            theta = atan2(objviewer.move_mouse(2) - center(2),...
+                          objviewer.move_mouse(1) - center(1));
+                      
+            % rotate the theta angle clockwise by 90 degrees 
+            % (this makes 0 point NORTH)
+            % NOTE: adding to an angle rotates it clockwise.  
+            % subtracting would rotate it counter-clockwise
+            theta = theta + pi/2.0;          
+                      
+            % convert from radians to degrees
+            % this will give you an angle from [0->270],[-180,0]
+            %alpha = rad2deg(theta);
+            
+            % convert to positive range [0-360)
+            % since we want to prevent negative angles, adjust them now.
+            % we can assume that atan2 will not return a negative value
+            % greater than one partial rotation
+            %if alpha < 0
+            %    alpha = alpha + 360;
+            %end
+            
+        end
+        
     end
     
     methods (Access = private)
         
+        %% @ action create branch
         function obj = actionCreate(obj, objviewer)
             
             % constructor for branch
@@ -137,17 +242,18 @@ classdef WidgetNeuroTreeEngine < handle
             newBranch = WidgetNeuroTreeBranch(...
                         'Axes', objviewer.handle_axes,...
                         'Depth', objviewer.press_key,...
-                        'Index', obj.indexBranch);
+                        'BranchIndex', obj.indexBranch);
             
             if ~isa(newBranch, 'WidgetNeuroTreeBranch')
                 error('WidgetNeuroTree: initializing new Branch failed!');
             end
             
             % add branch to tree
-            obj.tree = cat(1, obj.tree, newBranch);
+            obj.tree = cat(2, obj.tree, newBranch);
             
         end
         
+        %% @ action extend branch
         function obj = actionExtend(obj, objviewer)
             
             % constructor for branch
@@ -158,6 +264,7 @@ classdef WidgetNeuroTreeEngine < handle
             
         end
         
+        %% @ action stretch branch
         function obj = acitonStretch(obj, objviewer)
             
             % click
@@ -168,6 +275,7 @@ classdef WidgetNeuroTreeEngine < handle
             
         end
         
+        %% @ action complete branch
         function obj = actionComplete(obj, ~)
             
             % click
@@ -178,29 +286,165 @@ classdef WidgetNeuroTreeEngine < handle
             
         end
         
-        function obj = actionPickUp(obj, objviewer)
-        end
         
-        function obj = actionPutDown(obj, objviewer)
-        end
-        
+        %% @ action select branch
         function obj = actionSelect(obj, objviewer)
+            
+            % click 
+            fprintf('WidgetNeuroTree :: select\n');
+            
+            % note selected index
+            % line and point UserData contains current index
+            indexToSelect = objviewer.hover_handle.UserData;
+            
+            if any(obj.indexSelected == indexToSelect)
+                
+                % deselect current
+                obj.tree(indexToSelect).select(false);
+                obj.indexSelected(obj.indexSelected == indexToSelect) = [];
+                
+            else
+                
+                % add current to selection
+                obj.indexSelected = cat(2, obj.indexSelected, indexToSelect);
+                obj.tree(obj.indexSelected(end)).select(true);
+                
+            end
+            
+            
+            
         end
         
-        function obj = actionDeselect(obj, objviewer)
+        %% @ action deselect
+        function obj = actionDeselect(obj, ~)
+            
+            % click 
+            fprintf('WidgetNeuroTree :: deselect\n');
+            
+            % highlight branch
+            for k = 1 : length(obj.indexSelected)
+                
+                obj.tree(obj.indexSelected(k)).select(false);
+                
+            end
+            obj.indexSelected = [];
+            
         end
         
-        function obj = actionReposition(obj, objviewer)
+        %% @ action pick up
+        function obj = actionPickUp(obj, objviewer)
+            
+            % retrieve current handle branch index
+            obj.indexGrabbedBranch = objviewer.hover_handle.UserData;
+            
+            % retrieve closest node relative to click
+            dist = sqrt(sum(bsxfun(@minus, [objviewer.hover_handle.XData',...
+                                            objviewer.hover_handle.YData'],...
+                                            objviewer.click_down) .^ 2, 2));
+            [~, obj.indexGrabbedNode] = min(dist);
+            
         end
         
-        function obj = actionRemove(obj, objviewer)
+        %% @ action putdown
+        function obj = actionPutDown(obj, ~)
+            
+            obj.indexGrabbedBranch = [];
+            obj.indexGrabbedNode = [];
+            
         end
         
-        function obj = actionErase(obj, objviewer)
+        %% @ action reposition point
+        function obj = actionRepositionPoint(obj, objviewer)
+            
+            % calculate displacement
+            offset = obj.calculateOffset(objviewer);
+            
+            % evoke reposition
+            obj.tree(obj.indexGrabbedBranch).moveNode(offset, obj.indexGrabbedNode);
+            
         end
         
-        function obj = actionHover(obj, objviewer)
+        %% @ action reposition line
+        function obj = actionRepositionLine(obj, objviewer)
+            
+            % calculate displacement
+            offset = obj.calculateOffset(objviewer);
+            
+            % evoke reposition
+            obj.tree(obj.indexGrabbedBranch).moveBranch(offset);
+            
         end
+        
+        %% @ action reposition selected
+        function obj = actionRepositionSelected(obj, objviewer)
+            
+            if any(obj.indexSelected)
+                
+                % calculate displacement
+                offset = obj.calculateOffset(objviewer);
+                
+                % evoke reposition
+                % highlight branch
+                for k = 1 : length(obj.indexSelected)
+
+                    obj.tree(obj.indexSelected(k)).moveBranch(offset);
+
+                end
+                
+
+            end
+            
+        end
+        
+        %% @ action cancel branch
+        function obj = actionCancel(obj, ~)
+            
+            % message
+            fprintf('WidgetNeuroTree :: cancel branch\n');
+            
+            % update branch index
+            obj.tree(obj.indexBranch).delete();
+            obj.tree(end) = [];
+            
+            % update last index
+            obj.indexBranch = length(obj.tree);
+            
+        end
+        
+        %% @ action remove selected
+        function obj = actionRemoveSelected(obj, ~)
+            
+            % message
+            fprintf('WidgetNeuroTree :: remove selected\n');
+            
+            if any(obj.indexSelected)
+                
+                for k = 1 : length(obj.indexSelected)
+                    
+                    obj.tree(obj.indexSelected(k)).delete();
+                    
+                end
+                
+                obj.indexSelected = [];
+            end
+            
+        end
+        
+        %% @ action rotate branch
+        function obj = actionRotateBranch(obj, objviewer)
+            
+            % calculate rotation angle in degrees
+            center = objviewer.click_down;
+            theta = atan2(objviewer.move_mouse(2) - objviewer.click_down(2),...
+                          objviewer.move_mouse(1) - objviewer.click_down(1)) + pi/2.0;
+            
+            
+            % evoke reposition
+            fprintf('%.4f x %.4f = %.4f\n',center(1),center(2),rad2deg(theta));
+            %obj.tree(obj.indexGrabbedBranch).rotateBranch(theta);
+            
+        end
+        
            
     end
     
