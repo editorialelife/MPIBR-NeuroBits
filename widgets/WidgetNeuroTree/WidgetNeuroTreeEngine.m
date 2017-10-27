@@ -13,8 +13,10 @@ classdef WidgetNeuroTreeEngine < handle
         tree
         indexBranch
         indexSelected
-        indexGrabbedBranch
-        indexGrabbedNode
+        grabbed_indexBranch
+        grabbed_indexNode
+        grabbed_center
+        grabbed_angle
         
     end
     
@@ -204,24 +206,6 @@ classdef WidgetNeuroTreeEngine < handle
             % a CLOCKWISE angle direction.
             theta = atan2(objviewer.move_mouse(2) - center(2),...
                           objviewer.move_mouse(1) - center(1));
-                      
-            % rotate the theta angle clockwise by 90 degrees 
-            % (this makes 0 point NORTH)
-            % NOTE: adding to an angle rotates it clockwise.  
-            % subtracting would rotate it counter-clockwise
-            theta = theta + pi/2.0;          
-                      
-            % convert from radians to degrees
-            % this will give you an angle from [0->270],[-180,0]
-            %alpha = rad2deg(theta);
-            
-            % convert to positive range [0-360)
-            % since we want to prevent negative angles, adjust them now.
-            % we can assume that atan2 will not return a negative value
-            % greater than one partial rotation
-            %if alpha < 0
-            %    alpha = alpha + 360;
-            %end
             
         end
         
@@ -335,21 +319,27 @@ classdef WidgetNeuroTreeEngine < handle
         function obj = actionPickUp(obj, objviewer)
             
             % retrieve current handle branch index
-            obj.indexGrabbedBranch = objviewer.hover_handle.UserData;
+            obj.grabbed_indexBranch = objviewer.hover_handle.UserData;
             
             % retrieve closest node relative to click
             dist = sqrt(sum(bsxfun(@minus, [objviewer.hover_handle.XData',...
                                             objviewer.hover_handle.YData'],...
                                             objviewer.click_down) .^ 2, 2));
-            [~, obj.indexGrabbedNode] = min(dist);
+            [~, obj.grabbed_indexNode] = min(dist);
+            
+            % calculate grabbed angle relative to branch center of mass
+            obj.grabbed_center = mean(obj.tree(obj.grabbed_indexBranch,:).nodes, 1);
+            obj.grabbed_angle = obj.calculateRotation(objviewer, obj.grabbed_center);
             
         end
         
         %% @ action putdown
         function obj = actionPutDown(obj, ~)
             
-            obj.indexGrabbedBranch = [];
-            obj.indexGrabbedNode = [];
+            obj.grabbed_indexBranch = [];
+            obj.grabbed_indexNode = [];
+            obj.grabbed_center = [];
+            obj.grabbed_angle = [];
             
         end
         
@@ -360,7 +350,7 @@ classdef WidgetNeuroTreeEngine < handle
             offset = obj.calculateOffset(objviewer);
             
             % evoke reposition
-            obj.tree(obj.indexGrabbedBranch).moveNode(offset, obj.indexGrabbedNode);
+            obj.tree(obj.grabbed_indexBranch).moveNode(offset, obj.grabbed_indexNode);
             
         end
         
@@ -371,7 +361,7 @@ classdef WidgetNeuroTreeEngine < handle
             offset = obj.calculateOffset(objviewer);
             
             % evoke reposition
-            obj.tree(obj.indexGrabbedBranch).moveBranch(offset);
+            obj.tree(obj.grabbed_indexBranch).moveBranch(offset);
             
         end
         
@@ -434,14 +424,13 @@ classdef WidgetNeuroTreeEngine < handle
         function obj = actionRotateBranch(obj, objviewer)
             
             % calculate rotation angle in degrees
-            center = objviewer.click_down;
-            theta = atan2(objviewer.move_mouse(2) - objviewer.click_down(2),...
-                          objviewer.move_mouse(1) - objviewer.click_down(1)) + pi/2.0;
-            
+            theta = obj.calculateRotation(objviewer,obj.grabbed_center);
             
             % evoke reposition
-            fprintf('%.4f x %.4f = %.4f\n',center(1),center(2),rad2deg(theta));
-            %obj.tree(obj.indexGrabbedBranch).rotateBranch(theta);
+            obj.tree(obj.grabbed_indexBranch).rotateBranch(theta - obj.grabbed_angle);
+            
+            % update grabbed angle
+            obj.grabbed_angle = theta;
             
         end
         
