@@ -5,12 +5,17 @@ classdef WidgetNeuroTreeBranch < handle
     properties (Access = public)
         
         depth
-        nodes
         indexBranch
         indexNode
         
     end
     
+    properties (Access = public, Dependent = true)
+        
+        span
+        nodes
+        
+    end
     
     properties (Access = private)
         
@@ -44,6 +49,7 @@ classdef WidgetNeuroTreeBranch < handle
         
     end
     
+    %% constructor / destructor
     methods
         
         function obj = WidgetNeuroTreeBranch(varargin)
@@ -59,7 +65,6 @@ classdef WidgetNeuroTreeBranch < handle
             obj.ui_axes = parserObj.Results.Axes;
             obj.indexBranch = parserObj.Results.BranchIndex;
             obj.depth = str2double(parserObj.Results.Depth);
-            obj.nodes = obj.DEFAULT_NODE;
             obj.indexNode = 0;
             
             %%% guard check
@@ -70,13 +75,13 @@ classdef WidgetNeuroTreeBranch < handle
             %%% create hidden handles
             hold(obj.ui_axes, 'on');
             
-            obj.ui_point = plot(obj.nodes(:,1), obj.nodes(:,2), '*',...
+            obj.ui_point = plot(obj.DEFAULT_NODE(:,1), obj.DEFAULT_NODE(:,2), '*',...
                                 'MarkerSize', obj.MARKER_SIZE,...
                                 'Color', obj.COLOR_TABLE(obj.depth + 1, :),...
                                 'Parent', obj.ui_axes,...
                                 'Visible', 'off');
            
-            obj.ui_line = plot(obj.nodes(:,1),obj.nodes(:,2), '-',...
+            obj.ui_line = plot(obj.DEFAULT_NODE(:,1),obj.DEFAULT_NODE(:,2), '-',...
                                 'LineWidth', obj.LINE_WIDTH,...
                                 'Color', obj.COLOR_TABLE(obj.depth + 1, :),...
                                 'Parent', obj.ui_axes,...
@@ -102,58 +107,68 @@ classdef WidgetNeuroTreeBranch < handle
             
         end
         
+    end
+    
+    %% branch manipulations
+    methods
+        
+        %% addNode
         function obj = addNode(obj, point)
             
             % add point to nodes
             obj.indexNode = obj.indexNode + 1;
-            obj.nodes(obj.indexNode, :) = point;
-            
-            % render line
-            obj.renderLine(point);
             
             % render point
-            obj.renderPoint(point);
-            
-        end
-        
-        function renderPoint(obj, point)
-            
             obj.ui_point.XData(obj.indexNode) = point(1);
             obj.ui_point.YData(obj.indexNode) = point(2);
             set(obj.ui_point, 'Visible', 'on');
             
+            % render line
+            obj.renderLine([]);
+            
         end
         
-        
+        %% renderLine
         function obj = renderLine(obj, point)
             
-            if obj.indexNode == 1
+            xArray = obj.ui_point.XData;
+            yArray = obj.ui_point.YData;
+            
+            % add new point
+            if ~isempty(point)
                 
-                obj.ui_line.XData = repmat(point(1), 2, 1);
-                obj.ui_line.YData = repmat(point(2), 2, 1);
-                
-            else
-                
-                if all(obj.nodes(end,:) == point)
-                    xArray = obj.nodes(:,1);
-                    yArray = obj.nodes(:,2);
-                else
-                    xArray = cat(1, obj.nodes(:,1), point(1));
-                    yArray = cat(1, obj.nodes(:,2), point(2));
-                end
-                
-                t = [0;cumsum(diff(xArray).^2 + diff(yArray).^2)];
-                ti = linspace(0,t(end),obj.SCALE_INTERPOLATION * obj.indexNode);
-                
-                
-                obj.ui_line.XData = pchip(t, xArray, ti);
-                obj.ui_line.YData = pchip(t, yArray, ti);
+                xArray = cat(2, xArray, point(1));
+                yArray = cat(2, yArray, point(2));
                 
             end
+            
+            % single point
+            if obj.indexNode == 1
+                
+                xArray = cat(2, xArray, xArray);
+                yArray = cat(2, yArray, yArray);
+                
+            else                
+            
+                % generate interpolation base
+                t = [0, cumsum(diff(xArray).^2 + diff(yArray).^2)];
+                ti = linspace(0,t(end),obj.SCALE_INTERPOLATION * obj.indexNode);
+             
+                % shape - preserving interpolation
+                xArray = pchip(t, xArray, ti);
+                yArray = pchip(t, yArray, ti);
+                
+            end
+            
+            % update line
+            obj.ui_line.XData = xArray;
+            obj.ui_line.YData = yArray;
+                
             set(obj.ui_line, 'Visible', 'on');
             
         end
         
+        %% pullLine
         function obj = pullLine(obj, point)
             
             % update only last point
@@ -167,21 +182,20 @@ classdef WidgetNeuroTreeBranch < handle
             
         end
         
+        %% fix
         function obj = fixBranch(obj)
             
             % close polygon if depth is root
             if obj.depth == 0
                 
-                obj.renderLine(obj.nodes(1,:)+eps);
+                obj.renderLine([obj.ui_point.XData(1),...
+                                obj.ui_point.YData(1)]);
                 
             end
             
-            %% calculate pixels
-            %% calculate linkage
-            
         end
         
-        
+        %% select/deselect branch
         function obj = select(obj, varstate)
             
             if varstate
@@ -198,62 +212,91 @@ classdef WidgetNeuroTreeBranch < handle
             
         end
         
-        
+        %% move branch
         function obj = moveBranch(obj, offset)
-            
-            % update nodes
-            obj.nodes = bsxfun(@plus, obj.nodes, offset);
-            
-            % update line
-            obj.ui_line.XData = obj.ui_line.XData + offset(1);
-            obj.ui_line.YData = obj.ui_line.YData + offset(2);
             
             % update points
             obj.ui_point.XData = obj.ui_point.XData + offset(1);
             obj.ui_point.YData = obj.ui_point.YData + offset(2);
             
+            % update line
+            obj.ui_line.XData = obj.ui_line.XData + offset(1);
+            obj.ui_line.YData = obj.ui_line.YData + offset(2);
+            
         end
         
+        %% move node
         function obj = moveNode(obj, offset, indexNode)
-            
-            % update nodes
-            obj.nodes(indexNode,:) = obj.nodes(indexNode,:) + offset;
             
             % update point
             obj.ui_point.XData(indexNode) = obj.ui_point.XData(indexNode) + offset(1);
             obj.ui_point.YData(indexNode) = obj.ui_point.YData(indexNode) + offset(2);
             
             % update line
-            obj.renderLine(obj.nodes(end,:));
+            if obj.depth == 0
+                
+                obj.renderLine([obj.ui_point.XData(1),...
+                                obj.ui_point.YData(1)]);
+                            
+            else
+                
+                obj.renderLine([]);
+                
+            end
             
         end
         
+        %% rotate branch
         function obj = rotateBranch(obj, theta)
             
-            mtx = obj.nodes';
+            arrayPoint = [obj.ui_point.XData; obj.ui_point.YData];
+            arrayLine = [obj.ui_line.XData; obj.ui_line.YData];
             
-            % set center of rotation
-            center = repmat(mean(mtx,2), 1, length(mtx));
+            % calculate center of mass
+            centerOfMass = mean(arrayPoint, 2);
             
             % calculate rotation matrix
             R = [cos(theta), -sin(theta);...
                  sin(theta), cos(theta)];
+            
+            % rotate
+            arrayPoint = R * (arrayPoint - centerOfMass) + centerOfMass;
+            arrayLine = R * (arrayLine - centerOfMass) + centerOfMass;
              
-            % do the rotation
-            mtx = R * (mtx - center) + center;
-            obj.nodes(:,1) = mtx(1,:);
-            obj.nodes(:,2) = mtx(2,:);
-            
-            
             % update points
-            obj.ui_point.XData = obj.nodes(:,1);
-            obj.ui_point.YData = obj.nodes(:,2);
+            obj.ui_point.XData = arrayPoint(1,:);
+            obj.ui_point.YData = arrayPoint(2,:);
             
             % update line
-            obj.renderLine(obj.nodes(end,:));
+            obj.ui_line.XData = arrayLine(1,:);
+            obj.ui_line.YData = arrayLine(2,:);
+            
+        end
+         
+    end
+    
+    %% branch dependen properties
+    methods
+        
+        %% return branch nodes
+        function varmtx = get.nodes(obj)
+            
+            if any(obj.ui_point.XData) && any(obj.ui_point.YData)
+                
+                varmtx = [obj.ui_point.XData; obj.ui_point.YData];
+                
+            end
             
         end
         
+        %% return span
+        function value = get.span(obj)
+            
+            arrayLine = [obj.ui_line.XData; obj.ui_line.YData];
+            dist = sqrt(sum(diff(arrayLine, [], 2) .^ 2, 1));
+            value = sum(dist);
+            
+        end
         
     end
     

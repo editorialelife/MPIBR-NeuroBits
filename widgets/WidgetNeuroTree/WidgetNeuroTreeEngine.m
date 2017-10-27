@@ -328,7 +328,7 @@ classdef WidgetNeuroTreeEngine < handle
             [~, obj.grabbed_indexNode] = min(dist);
             
             % calculate grabbed angle relative to branch center of mass
-            obj.grabbed_center = mean(obj.tree(obj.grabbed_indexBranch,:).nodes, 1);
+            obj.grabbed_center = mean(obj.tree(obj.grabbed_indexBranch).nodes(), 1);
             obj.grabbed_angle = obj.calculateRotation(objviewer, obj.grabbed_center);
             
         end
