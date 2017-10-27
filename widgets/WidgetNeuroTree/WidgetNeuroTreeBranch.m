@@ -4,6 +4,9 @@ classdef WidgetNeuroTreeBranch < handle
     
     properties (Access = public)
         
+        tag
+        parent
+        children
         depth
         indexBranch
         indexNode
@@ -14,6 +17,7 @@ classdef WidgetNeuroTreeBranch < handle
         
         span
         nodes
+        export
         
     end
     
@@ -62,6 +66,9 @@ classdef WidgetNeuroTreeBranch < handle
             parse(parserObj, varargin{:});
             
             %%% assign properties
+            obj.tag = 0;
+            obj.parent = [];
+            obj.children = [];
             obj.ui_axes = parserObj.Results.Axes;
             obj.indexBranch = parserObj.Results.BranchIndex;
             obj.depth = str2double(parserObj.Results.Depth);
@@ -298,9 +305,33 @@ classdef WidgetNeuroTreeBranch < handle
             
         end
         
+        %% return branch properties
+        function vartext = get.export(obj)
+            
+            vartext = sprintf('branch=%d\n', obj.indexBranch);
+            vartext = sprintf('%sdepth=%d\n', vartext, obj.depth);
+            vartext = sprintf('%stag=%d\n', vartext, obj.tag);
+            vartext = sprintf('%sparent=%d\n', vartext, obj.parent);
+            childrenList = sprintf('%d,', obj.children);
+            childrenList(end) = [];
+            vartext = sprintf('%schildren=%s\n', vartext, childrenList);
+            vartext = sprintf('%sspan=%.4f\n', vartext, obj.span);
+            vartext = sprintf('%snodes=%d\n', vartext, obj.indexNode);
+            xPosList = sprintf('%.2f,', obj.ui_point.XData);
+            xPosList(end) = [];
+            yPosList = sprintf('%.2f,', obj.ui_point.YData);
+            yPosList(end) = [];
+            vartext = sprintf('%sx=%s\n', vartext, xPosList);
+            vartext = sprintf('%sy=%s\n', vartext, yPosList);
+            vartext = sprintf('%s\n', vartext);
+            
+        end
+        
     end
     
 end
+
+
 
 
 % parser :: isIndex

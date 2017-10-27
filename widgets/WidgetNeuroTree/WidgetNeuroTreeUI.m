@@ -336,6 +336,18 @@ classdef WidgetNeuroTreeUi < handle
             value = obj.checkBox_autoDilation.Value;
             
         end
+        
+        
+    end
+    
+    %% --- update methods --- %%
+    methods
+        
+        function obj = changeStatus(obj, vartext)
+            
+            set(obj.text_status, 'String', vartext);
+            
+        end
     end
     
 end % class end

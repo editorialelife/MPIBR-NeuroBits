@@ -3,6 +3,7 @@ classdef WidgetNeuroTreeEngine < handle
     properties (Access = public, SetObservable = true)
         
         mousePointer
+        status
         
     end
     
@@ -33,9 +34,7 @@ classdef WidgetNeuroTreeEngine < handle
         STATE_GRABPOINT = 9;
         STATE_ROTATE = 10;
         STATE_COUNT = 11;
-        STATE_LIST = {'STATE_NULL','STATE_IDLE','STATE_ANCHOR','STATE_DRAW',...
-              'STATE_GRAB','STATE_OVERLINE','STATE_OVERPOINT','STATE_REPOSITION'};
-       
+        
     end
     
     properties (Access = public, Constant = true)
@@ -53,10 +52,6 @@ classdef WidgetNeuroTreeEngine < handle
         EVENT_HOVERLINE = 11;
         EVENT_HOVERPOINT = 12;
         EVENT_COUNT = 13;
-        EVENT_LIST = {'EVENT_NULL','EVENT_CLICKDOWN','EVENT_CLICKUP',...
-                      'EVENT_CLICKDOUBLE','EVENT_PRESSDIGIT',...
-                      'EVENT_PRESSESC','EVENT_PRESSDEL',...
-                      'EVENT_MOVEMOUSE','EVENT_HOVERHANDLE'};
         
     end
     
@@ -216,9 +211,6 @@ classdef WidgetNeuroTreeEngine < handle
         %% @ action create branch
         function obj = actionCreate(obj, objviewer)
             
-            % constructor for branch
-            fprintf('WidgetNeuroTree :: create branch\n');
-            
             % update branch index
             obj.indexBranch = length(obj.tree) + 1;
             
@@ -235,24 +227,24 @@ classdef WidgetNeuroTreeEngine < handle
             % add branch to tree
             obj.tree = cat(2, obj.tree, newBranch);
             
+            % update status
+            obj.status = 'branch created';
+            
         end
         
         %% @ action extend branch
         function obj = actionExtend(obj, objviewer)
             
-            % constructor for branch
-            fprintf('WidgetNeuroTree :: extend branch\n');
-            
             % add node to branch
             obj.tree(obj.indexBranch).addNode(objviewer.click_down);
+            
+            % update status
+            obj.status = 'branch extended';
             
         end
         
         %% @ action stretch branch
         function obj = acitonStretch(obj, objviewer)
-            
-            % click
-            %fprintf('WidgetNeuroTree :: stretch\n');
             
             % strecth line
             obj.tree(obj.indexBranch).pullLine(objviewer.move_mouse);
@@ -262,20 +254,16 @@ classdef WidgetNeuroTreeEngine < handle
         %% @ action complete branch
         function obj = actionComplete(obj, ~)
             
-            % click
-            fprintf('WidgetNeuroTree :: complete\n');
-            
             % fix branch
             obj.tree(obj.indexBranch).fixBranch();
             
+            % update status
+            obj.status = sprintf('branch completed %.4f px', obj.tree(obj.indexBranch).span());
         end
         
         
         %% @ action select branch
         function obj = actionSelect(obj, objviewer)
-            
-            % click 
-            fprintf('WidgetNeuroTree :: select\n');
             
             % note selected index
             % line and point UserData contains current index
@@ -295,15 +283,13 @@ classdef WidgetNeuroTreeEngine < handle
                 
             end
             
-            
+            % update status
+            obj.status = 'branch selected';
             
         end
         
         %% @ action deselect
         function obj = actionDeselect(obj, ~)
-            
-            % click 
-            fprintf('WidgetNeuroTree :: deselect\n');
             
             % highlight branch
             for k = 1 : length(obj.indexSelected)
@@ -312,6 +298,9 @@ classdef WidgetNeuroTreeEngine < handle
                 
             end
             obj.indexSelected = [];
+            
+            % update status
+            obj.status = 'branch deselected';
             
         end
         
@@ -331,6 +320,9 @@ classdef WidgetNeuroTreeEngine < handle
             obj.grabbed_center = mean(obj.tree(obj.grabbed_indexBranch).nodes(), 1);
             obj.grabbed_angle = obj.calculateRotation(objviewer, obj.grabbed_center);
             
+            % update status
+            obj.status = 'branch picked up';
+            
         end
         
         %% @ action putdown
@@ -341,6 +333,8 @@ classdef WidgetNeuroTreeEngine < handle
             obj.grabbed_center = [];
             obj.grabbed_angle = [];
             
+            % update status
+            obj.status = 'branch released';
         end
         
         %% @ action reposition point
@@ -389,9 +383,6 @@ classdef WidgetNeuroTreeEngine < handle
         %% @ action cancel branch
         function obj = actionCancel(obj, ~)
             
-            % message
-            fprintf('WidgetNeuroTree :: cancel branch\n');
-            
             % update branch index
             obj.tree(obj.indexBranch).delete();
             obj.tree(end) = [];
@@ -399,13 +390,13 @@ classdef WidgetNeuroTreeEngine < handle
             % update last index
             obj.indexBranch = length(obj.tree);
             
+            % update status
+            obj.status = 'branch canceled';
+            
         end
         
         %% @ action remove selected
         function obj = actionRemoveSelected(obj, ~)
-            
-            % message
-            fprintf('WidgetNeuroTree :: remove selected\n');
             
             if any(obj.indexSelected)
                 
@@ -418,6 +409,8 @@ classdef WidgetNeuroTreeEngine < handle
                 obj.indexSelected = [];
             end
             
+            % update status
+            obj.status = 'branch removed selected';
         end
         
         %% @ action rotate branch
