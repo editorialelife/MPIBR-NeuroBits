@@ -1,4 +1,4 @@
-classdef WidgetFolderBrowserUI < handle
+classdef WidgetFolderBrowserUi < handle
 %
 % requires:
 %   GUI Layout Toolbox
@@ -49,7 +49,7 @@ classdef WidgetFolderBrowserUI < handle
     
     methods
         
-        function obj = WidgetFolderBrowserUI(varhandle)
+        function obj = WidgetFolderBrowserUi(varhandle)
             
             
             

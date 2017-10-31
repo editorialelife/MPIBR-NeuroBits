@@ -4,8 +4,15 @@
 % Aug 2017
 % 
 
-[qry_path, ~, ~] = fileparts(mfilename('fullpath'));
+clc
+clear variables
+close all
 
-addpath(genpath([qry_path,'../']));
 
+addpath([pwd, filesep, '..', filesep]);
+
+%% evoke widget
 obj = WidgetFolderBrowser();
+if ~isa(obj, 'WidgetFolderBrowser')
+    error('WidgetFolderBrowser :: test failed!');
+end

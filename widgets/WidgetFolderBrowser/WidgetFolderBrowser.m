@@ -27,14 +27,14 @@ classdef WidgetFolderBrowser < handle
             
             
             % create MVC
-            obj.ui = WidgetFolderBrowserUI(parserObj.Results.Parent);
-            if ~isa(obj.ui, 'WidgetFolderBrowserUI')
-                error('WidgetFolderBrowser: initializing UI failed!');
+            obj.ui = WidgetFolderBrowserUi(parserObj.Results.Parent);
+            if ~isa(obj.ui, 'WidgetFolderBrowserUi')
+                error('WidgetFolderBrowser: initializing ui failed!');
             end
             
             obj.model = WidgetFolderBrowserModel(parserObj.Results.Extension);
             if ~isa(obj.model, 'WidgetFolderBrowserModel')
-                error('WidgetFolderBrowserModel: initailizing Model failed!');
+                error('WidgetFolderBrowserModel: initailizing model failed!');
             end
             
             
