@@ -204,6 +204,29 @@ classdef WidgetNeuroTreeEngine < handle
             
         end
         
+        function exportTree(obj, fileName)
+            
+            % loop the tree
+            vartxt = '';
+            for t = 1 : length(obj.tree)
+                if isvalid(obj.tree(t))
+                    vartxt = sprintf('%s%s',vartxt,obj.tree(t).export);
+                end
+            end
+            
+            % write to file
+            if ~isempty(vartxt)
+                fw = fopen(fileName, 'w');
+                fprintf(fw,'%s',vartxt);
+                fclose(fw);
+                
+                obj.status = 'export request :: done';
+            else
+                obj.status = 'export request :: empty tree';
+            end
+            
+        end
+        
     end
     
     methods (Access = private)

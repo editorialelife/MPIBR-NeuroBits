@@ -18,6 +18,7 @@ classdef WidgetNeuroTree < handle
     
     properties (Access = public)
         
+        fileName
         ui
         viewer
         engine
@@ -60,14 +61,11 @@ classdef WidgetNeuroTree < handle
         function obj = controller(obj)
             
             % add Ui callbacks
-            %{
-            addlistener(obj.ui, 'event_new', @obj.fcnCallbackUi_eventNew);
+            addlistener(obj.ui, 'event_mask', @obj.fcnCallbackUi_eventMask);
             addlistener(obj.ui, 'event_clear', @obj.fcnCallbackUi_eventClear);
             addlistener(obj.ui, 'event_load', @obj.fcnCallbackUi_eventLoad);
             addlistener(obj.ui, 'event_export', @obj.fcnCallbackUi_eventExport);
             addlistener(obj.ui, 'event_edit', @obj.fcnCallbackUi_eventEdit);
-            %}
-            
             
             % add Viewer callbacks
             addlistener(obj.viewer, 'event_clickDown', @obj.fcnCallbackViewer_clickDown);
@@ -85,6 +83,7 @@ classdef WidgetNeuroTree < handle
             % add Model callbacks
             addlistener(obj.engine, 'mousePointer', 'PostSet', @obj.fcnCallbackEngine_updateMousePointer);
             addlistener(obj.engine, 'status', 'PostSet', @obj.fcnCallbackEngine_updateStatus);
+            
         end
         
         
@@ -94,39 +93,53 @@ classdef WidgetNeuroTree < handle
     
     
     %% --- Ui callbacks --- %%
-    %{
     methods (Access = private)
         
         %% @ event new
-        function obj = fcnCallbackUi_eventNew(obj, ~, ~)
+        function obj = fcnCallbackUi_eventMask(obj, ~, ~)
             
-            disp('NEW');
+            disp('WidgetNeuroTree::UiEvent::Mask');
             
         end
         
         %% @ event clear
         function obj = fcnCallbackUi_eventClear(obj, ~, ~)
             
-            disp('CLEAR');
+            disp('WidgetNeuroTree::UiEvent::Clear');
             
         end
         
         %% @ event load
         function obj = fcnCallbackUi_eventLoad(obj, ~, ~)
             
-            disp('LOAD');
+            disp('WidgetNeuroTree::UiEvent::Load');
             
         end
         
         %% @ event export
         function obj = fcnCallbackUi_eventExport(obj, ~, ~)
             
-            disp('EXPORT');
+            if isempty(obj.fileName)
+                obj.fileName = ['testWidgetNeuroTreeExport_',...
+                                datestr(now, 'yyyymmdd'),...
+                                '.txt'];
+            end
+            
+            obj.engine.exportTree(obj.fileName);
+            
+            disp('WidgetNeuroTree::UiEvent::Export');
+            
+        end
+        
+        %% @ event edit
+        function obj = fcnCallbackUi_eventEdit(obj, ~, ~)
+            
+            disp('WidgetNeuroTree::UiEvent::Edit');
             
         end
         
     end
-    %}
+    
     
     %% --- Viewer callbacks --- %%
     methods (Access = private)
