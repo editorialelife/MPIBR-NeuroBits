@@ -65,15 +65,11 @@ classdef WidgetImageBrowserUi < handle
     %% --- constructor methods --- %%
     methods
         
-        function obj = WidgetImageBrowserUi(varargin)
-            
-            parserObj = inputParser;
-            addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
-            parse(parserObj, varargin{:});
+        function obj = WidgetImageBrowserUi(ui_parent)
             
             
             %%% set widget parent
-            if isempty(parserObj.Results.Parent)
+            if isempty(ui_parent)
                 
                 obj.parent = figure(...
                     'Visible', 'on',...
@@ -85,9 +81,9 @@ classdef WidgetImageBrowserUi < handle
                     'Position', obj.UI_WINDOW_SIZE);
                 movegui(obj.parent, 'northwest');
                 
-            elseif isgraphics(parserObj.Results.Parent)
+            elseif isgraphics(ui_parent)
                 
-                obj.parent = parserObj.Results.Parent;
+                obj.parent = ui_parent;
                 
             else
                 

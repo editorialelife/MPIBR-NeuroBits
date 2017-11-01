@@ -12,12 +12,18 @@ classdef WidgetImageBrowser < handle
     %% --- constructor/controller --- %%
     methods
         
-        function obj = WidgetImageBrowser()
+        function obj = WidgetImageBrowser(varargin)
+            
+            % parse input
+            parserObj = inputParser;
+            addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
+            parse(parserObj, varargin{:});
+            
             
             % create MVC
-            obj.ui = WidgetImageBrowserUI();
-            if ~isa(obj.ui, 'WidgetImageBrowserUI')
-                error('WidgetImageBrowser: initializing UI failed!');
+            obj.ui = WidgetImageBrowserUi(parserObj.Results.Parent);
+            if ~isa(obj.ui, 'WidgetImageBrowserUi')
+                error('WidgetImageBrowser: initializing Ui failed!');
             end
             
             obj.viewer = WidgetImageBrowserViewer();
