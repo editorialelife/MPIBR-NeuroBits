@@ -3,6 +3,9 @@ classdef NeuroBits < handle
     properties (Access = private)
         
         ui_parent
+        ui_layout
+        
+        widget_FolderBrowser
         
     end
     
@@ -10,7 +13,9 @@ classdef NeuroBits < handle
         
         SCALE_HEIGHT = 0.9;
         SCALE_WIDTH = 0.2;
-        PATH_WIDGETS = [pwd, filesep, 'widgets'];
+        PATH_WIDGETS = 'widgets';
+        UI_GRID_PADDING = 5;
+        UI_GRID_SPACING = 5;
         
     end
     
@@ -32,20 +37,43 @@ classdef NeuroBits < handle
                 'MenuBar', 'none',...
                 'ToolBar', 'none',...
                 'Position', figureSize,...
-                'NumberTitle', 'off');
+                'NumberTitle', 'off',...
+                'CloseRequestFcn', @obj.fcnCallback_closeRequest);
             movegui(obj.ui_parent, 'northwest');
             
-            %% add widgets
-            addpath(genpath(obj.PATH_WIDGETS));
+            %% create layout
+            obj.ui_layout = uix.VBox(...
+                'Parent', obj.ui_parent,...
+                'Spacing', obj.UI_GRID_SPACING);
             
-            %% 
+            %% add widgets path
+            addpath(genpath([pwd, filesep, obj.PATH_WIDGETS]));
+            
+            %% initialize widgets
+            obj.widget_FolderBrowser = WidgetFolderBrowser('Parent', obj.ui_layout,...
+                                                           'Extension', '*.tif');
+            if ~isa(obj.widget_FolderBrowser, 'WidgetFolderBrowser')
+                error('NeruoBits :: failed to initialize WidgetFolderBrowser');
+            end
+            
             
         end
         
         %% destructor
         function delete(obj)
             
-            rmpath(genpath(obj.PATH_WIDGETS));
+            rmpath(genpath([pwd, filesep, obj.PATH_WIDGETS]));
+            
+        end
+        
+        %% request close
+        function obj = fcnCallback_closeRequest(obj, ~, ~)
+            
+            if isgraphics(obj.ui_parent, 'figure')
+                delete(obj.ui_parent);
+            end
+            
+            obj.delete();
             
         end
         
