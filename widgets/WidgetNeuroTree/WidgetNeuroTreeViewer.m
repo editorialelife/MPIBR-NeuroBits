@@ -41,17 +41,10 @@ classdef WidgetNeuroTreeViewer < handle
     
     methods
         
-        function obj = WidgetNeuroTreeViewer(varargin)
-            
-            %%% parse figure parent
-            parserObj = inputParser;
-            addParameter(parserObj, 'Parent', [], ...
-                @(varhandle) isgraphics(varhandle, 'figure'));
-            parse(parserObj, varargin{:});
+        function obj = WidgetNeuroTreeViewer(varhandle)
             
             %%% assign figure
-            obj.handle_figure = parserObj.Results.Parent;
-            if isempty(obj.handle_figure)
+            if isempty(varhandle)
                 
                 screenSize = get(0, 'ScreenSize');
                 screenSize = floor(0.8 * min(screenSize(3:4)));
@@ -87,6 +80,7 @@ classdef WidgetNeuroTreeViewer < handle
                 
             else
                 
+                obj.handle_figure = varhandle;
                 handle_list = findall(obj.handle_figure);
                 obj.handle_axes = handle_list(isgraphics(handle_list, 'axes'));
                 obj.handle_image = handle_list(isgraphics(handle_list, 'image'));

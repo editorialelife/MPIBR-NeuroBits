@@ -36,6 +36,7 @@ classdef WidgetNeuroTree < handle
             % parse input
             parserObj = inputParser;
             addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
+            addParameter(parserObj, 'Viewer', [], @(varin) (isempty(varin) || isgraphics(varin, 'figure')));
             parse(parserObj, varargin{:});
             
             % create Ui
@@ -45,7 +46,7 @@ classdef WidgetNeuroTree < handle
             end
             
             % create Viewer
-            obj.viewer = WidgetNeuroTreeViewer();
+            obj.viewer = WidgetNeuroTreeViewer(parserObj.Results.Viewer);
             if ~isa(obj.viewer, 'WidgetNeuroTreeViewer')
                 error('WidgetNeuroTree: initializing Viewer failed!');
             end
