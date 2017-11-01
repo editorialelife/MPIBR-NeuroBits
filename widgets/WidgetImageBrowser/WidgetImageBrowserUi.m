@@ -1,4 +1,4 @@
-classdef WidgetImageBrowserUI < handle
+classdef WidgetImageBrowserUi < handle
     %UNTITLED Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -65,7 +65,7 @@ classdef WidgetImageBrowserUI < handle
     %% --- constructor methods --- %%
     methods
         
-        function obj = WidgetImageBrowserUI(varargin)
+        function obj = WidgetImageBrowserUi(varargin)
             
             parserObj = inputParser;
             addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
@@ -77,7 +77,7 @@ classdef WidgetImageBrowserUI < handle
                 
                 obj.parent = figure(...
                     'Visible', 'on',...
-                    'Tag', 'hWidgetImageBrowserUI',...
+                    'Tag', 'hWidgetImageBrowserUi',...
                     'Name', 'ImageBrowser',...
                     'MenuBar', 'none',...
                     'ToolBar', 'none',...
@@ -91,7 +91,7 @@ classdef WidgetImageBrowserUI < handle
                 
             else
                 
-                error('WidgetImageBrowser:UI: invalid handle for parent');
+                error('WidgetImageBrowser:Ui: invalid handle for parent');
                 
             end
             
