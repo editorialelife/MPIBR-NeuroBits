@@ -31,10 +31,15 @@ classdef WidgetNeuroTree < handle
     %% --- constructors --- %%%
     methods
         
-        function obj = WidgetNeuroTree()
+        function obj = WidgetNeuroTree(varargin)
+            
+            % parse input
+            parserObj = inputParser;
+            addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
+            parse(parserObj, varargin{:});
             
             % create Ui
-            obj.ui = WidgetNeuroTreeUi();
+            obj.ui = WidgetNeuroTreeUi(parserObj.Results.Parent);
             if ~isa(obj.ui, 'WidgetNeuroTreeUi')
                 error('WidgetNeuroTree: initializing Ui failed!');
             end

@@ -58,19 +58,14 @@ classdef WidgetNeuroTreeUi < handle
     %% --- constructors --- %%%
     methods
         
-        function obj = WidgetNeuroTreeUi(varargin)
-            
-            parserObj = inputParser;
-            addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
-            parse(parserObj, varargin{:});
-            
+        function obj = WidgetNeuroTreeUi(varhandle)
             
             %%% set widget parent
-            if isempty(parserObj.Results.Parent)
+            if isempty(varhandle)
                 
                 obj.parent = figure(...
                     'Visible', 'on',...
-                    'Tag', 'hWidgetImageBrowserUI',...
+                    'Tag', 'hWidgetNeuroTreeUi',...
                     'Name', 'DrawNeuroTree',...
                     'MenuBar', 'none',...
                     'ToolBar', 'none',...
@@ -78,13 +73,13 @@ classdef WidgetNeuroTreeUi < handle
                     'Position', obj.UI_WINDOW_SIZE);
                 movegui(obj.parent, 'northwest');
                 
-            elseif isgraphics(parserObj.Results.Parent)
+            elseif isgraphics(varhandle)
                 
-                obj.parent = parserObj.Results.Parent;
+                obj.parent = varhandle;
                 
             else
                 
-                error('WidgetImageBrowser:UI: invalid handle for parent');
+                error('WidgetNeuroTreeUi: invalid handle for parent');
                 
             end
             
@@ -92,7 +87,7 @@ classdef WidgetNeuroTreeUi < handle
             obj.panelWidget = uix.Panel(...
                 'Parent', obj.parent,...
                 'Padding', obj.UI_GRID_PADDING,...
-                'Title', 'ImageBrowser');
+                'Title', 'NeuroTree');
             
             obj.layoutWidget = uix.VBoxFlex(...
                 'Parent', obj.panelWidget,...
