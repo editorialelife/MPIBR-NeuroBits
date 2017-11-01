@@ -4,6 +4,7 @@ classdef WidgetImageBrowserViewer < handle
     
     properties (Access = public)
         
+        parent
         vaxes
         vimage
         
@@ -12,7 +13,6 @@ classdef WidgetImageBrowserViewer < handle
     
     properties (Access = private)
         
-        parent
         layout
         
     end
