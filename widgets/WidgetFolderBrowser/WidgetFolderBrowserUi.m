@@ -49,12 +49,12 @@ classdef WidgetFolderBrowserUi < handle
     
     methods
         
-        function obj = WidgetFolderBrowserUi(varhandle)
+        function obj = WidgetFolderBrowserUi(ui_parent)
             
             
             
             % render parent
-            if isempty(varhandle)
+            if isempty(ui_parent)
                 
                 obj.parent = figure(...
                     'Visible', 'on',...
@@ -66,9 +66,9 @@ classdef WidgetFolderBrowserUi < handle
                     'Position', obj.UIWINDOW_SIZE);
                 movegui(obj.parent, 'northwest');
                     
-            elseif isgraphics(varhandle)
+            elseif isgraphics(ui_parent)
                 
-                obj.parent = parserObj.Results.Parent;
+                obj.parent = ui_parent;
                 
             else
                 
@@ -89,7 +89,7 @@ classdef WidgetFolderBrowserUi < handle
                 'Padding', obj.UIGRID_PADDING,...
                 'Title', 'FolderBrowser');
             
-            obj.layout = uix.VBoxFlex(...
+            obj.layout = uix.VBox(...
                 'Parent', obj.panel,...
                 'Padding', obj.UIGRID_PADDING);
             
