@@ -6,6 +6,7 @@ classdef NeuroBits < handle
         ui_layout
         
         widget_FolderBrowser
+        widget_ImageBrowser
         
     end
     
@@ -49,11 +50,17 @@ classdef NeuroBits < handle
             %% add widgets path
             addpath(genpath([pwd, filesep, obj.PATH_WIDGETS]));
             
-            %% initialize widgets
+            %% initialize FolderBrowser
             obj.widget_FolderBrowser = WidgetFolderBrowser('Parent', obj.ui_layout,...
                                                            'Extension', '*.tif');
             if ~isa(obj.widget_FolderBrowser, 'WidgetFolderBrowser')
                 error('NeruoBits :: failed to initialize WidgetFolderBrowser');
+            end
+            
+            %% initialize ImageBrowser
+            obj.widget_ImageBrowser = WidgetImageBrowser('Parent', obj.ui_layout);
+            if ~isa(obj.widget_ImageBrowser, 'WidgetImageBrowser')
+                error('NeruoBits :: failed to initialize WidgetImageBrowser');
             end
             
             

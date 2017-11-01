@@ -1,3 +1,6 @@
 [submodule "widgets/WidgetFolderBrowser"]
 	path = widgets/WidgetFolderBrowser
 	url = https://github.molgen.mpg.de/MPIBR-WidgetToolbox/WidgetFolderBrowser.git
+[submodule "widgets/WidgetImageBrowser"]
+	path = widgets/WidgetImageBrowser
+	url = https://github.molgen.mpg.de/MPIBR-WidgetToolbox/WidgetImageBrowser.git
