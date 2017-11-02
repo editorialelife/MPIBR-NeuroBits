@@ -9,7 +9,7 @@ classdef WidgetFolderBrowserUi < handle
 % Max-Planck Institute For Brain Research
 %
     
-    properties
+    properties (Access = private)
         
         parent
         panel
@@ -49,12 +49,12 @@ classdef WidgetFolderBrowserUi < handle
     
     methods
         
-        function obj = WidgetFolderBrowserUi(ui_parent)
+        function obj = WidgetFolderBrowserUi(varhandle)
             
             
             
             % render parent
-            if isempty(ui_parent)
+            if isempty(varhandle)
                 
                 obj.parent = figure(...
                     'Visible', 'on',...
@@ -66,13 +66,13 @@ classdef WidgetFolderBrowserUi < handle
                     'Position', obj.UIWINDOW_SIZE);
                 movegui(obj.parent, 'northwest');
                     
-            elseif isgraphics(ui_parent)
+            elseif isgraphics(varhandle)
                 
-                obj.parent = ui_parent;
+                obj.parent = varhandle;
                 
             else
                 
-                error('uirender::invalid input variable for file constructor');
+                error('WidgetFolderBrowserUi::invalid input variable for file constructor');
                 
             end
             
@@ -80,6 +80,24 @@ classdef WidgetFolderBrowserUi < handle
             obj.render();
             
         end
+        
+        function obj = updateFileName(obj, vartext)
+            
+            set(obj.text_FileName, 'String', vartext);
+            
+        end
+        
+        function obj = updateFileCounter(obj, varcount, varsize)
+            
+            set(obj.text_FileCounter, 'String', ...
+                sprintf('%d / %d', varcount, varsize));
+            
+        end
+        
+        
+    end
+    
+    methods (Access = private)
         
         function obj = render(obj)
             
@@ -149,12 +167,16 @@ classdef WidgetFolderBrowserUi < handle
         
         function obj = onClick_pushButton_LoadFile(obj, ~, ~)
             
+            set(obj.pushButton_PrevFile, 'Enable', 'off');
+            set(obj.pushButton_NextFile, 'Enable', 'off');
             notify(obj, 'event_fileLoad');
             
         end
         
         function obj = onClick_pushButton_LoadFolder(obj, ~, ~)
             
+            set(obj.pushButton_PrevFile, 'Enable', 'on');
+            set(obj.pushButton_NextFile, 'Enable', 'on');
             notify(obj, 'event_folderLoad');
             
         end
@@ -172,7 +194,6 @@ classdef WidgetFolderBrowserUi < handle
             notify(obj, 'event_fileNext');
             
         end
-        
         
     end
     

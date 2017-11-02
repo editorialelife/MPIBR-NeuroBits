@@ -8,10 +8,23 @@ classdef WidgetFolderBrowser < handle
 % sciclist@brain.mpg.de
 % Max-Planck Institute For Brain Research
 %
-    properties
+
+    properties (Dependent)
+        
+        file
+        
+    end
+    
+    properties (Access = private)
         
         ui
         model
+        
+    end
+    
+    events
+        
+        event_file
         
     end
     
@@ -21,77 +34,78 @@ classdef WidgetFolderBrowser < handle
             
             % parse input
             parserObj = inputParser;
-            addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
+            addParameter(parserObj, 'Parent', [], @(varhandle) (isempty(varhandle) || isgraphics(varhandle)));
             addParameter(parserObj, 'Extension', '*.*', @ischar);
             parse(parserObj, varargin{:});
             
-            
-            % create MVC
+            % ui component
             obj.ui = WidgetFolderBrowserUi(parserObj.Results.Parent);
             if ~isa(obj.ui, 'WidgetFolderBrowserUi')
                 error('WidgetFolderBrowser: initializing ui failed!');
             end
             
+            % model component
             obj.model = WidgetFolderBrowserModel(parserObj.Results.Extension);
             if ~isa(obj.model, 'WidgetFolderBrowserModel')
                 error('WidgetFolderBrowserModel: initailizing model failed!');
             end
             
             
-            % link controler with view and model
-            addlistener(obj.ui, 'event_fileLoad', @obj.fcnCallback_FileLoad);
-            addlistener(obj.ui, 'event_fileNext', @obj.fcnCallback_FileNext);
-            addlistener(obj.ui, 'event_filePrevious', @obj.fcnCallback_FilePrevious);
-            addlistener(obj.ui, 'event_folderLoad', @obj.fcnCallback_FolderLoad);
-            addlistener(obj.model, 'file', 'PostSet', @obj.fcnCallback_FileUpdated);
+            % link ui events
+            addlistener(obj.ui, 'event_fileLoad', @obj.fcnCallback_fileLoad);
+            addlistener(obj.ui, 'event_fileNext', @obj.fcnCallback_fileNext);
+            addlistener(obj.ui, 'event_filePrevious', @obj.fcnCallback_filePrevious);
+            addlistener(obj.ui, 'event_folderLoad', @obj.fcnCallback_folderLoad);
+            
+            % link model events
+            addlistener(obj.model, 'file', 'PostSet', @obj.fcnCallback_fileUpdated);
             
         end
     end
     
     methods
         
-        %%% --- callback functions --- %%%
-        
-        function obj = fcnCallback_FileLoad(obj, ~, ~)
+        %% @ ui event_fileLoad
+        function obj = fcnCallback_fileLoad(obj, ~, ~)
             
             obj.model.fileLoad();
             
-            set(obj.ui.pushButton_PrevFile, 'Enable', 'off');
-            set(obj.ui.pushButton_NextFile, 'Enable', 'off');
-            
         end
         
-        function obj = fcnCallback_FileNext(obj, ~, ~)
+        %% @ ui event_fileNext
+        function obj = fcnCallback_fileNext(obj, ~, ~)
             
             obj.model.fileUpdate(1);
             
         end
         
-        function obj = fcnCallback_FilePrevious(obj, ~, ~)
+        %% @ ui event_filePrevious
+        function obj = fcnCallback_filePrevious(obj, ~, ~)
             
             obj.model.fileUpdate(-1);
             
         end
         
-        function obj = fcnCallback_FolderLoad(obj, ~, ~)
+        %% @ ui event_folderLoad
+        function obj = fcnCallback_folderLoad(obj, ~, ~)
             
             obj.model.folderLoad();
             
-            set(obj.ui.pushButton_PrevFile, 'Enable', 'on');
-            set(obj.ui.pushButton_NextFile, 'Enable', 'on');
+        end
+        
+        %% @ model event_fileUpdate
+        function obj = fcnCallback_fileUpdated(obj, ~, ~)
+            
+            obj.ui.updateFileName(obj.model.fileTag);
+            obj.ui.updateFileCounter(obj.model.index, obj.model.listSize);
+            notify(obj, 'event_file');
             
         end
         
-        function obj = fcnCallback_FileUpdated(obj, ~, ~)
+        %% @ request file
+        function varfile = get.file(obj)
             
-            % update status
-            [~, fileTag] = fileparts(obj.model.file);
-            %fprintf('file: %s\n', obj.model.file);
-            
-            set(obj.ui.text_FileName, 'String', fileTag);
-            set(obj.ui.text_FileCounter, 'String', ...
-                sprintf('%d / %d', obj.model.index, obj.model.listSize));
-            
+            varfile = obj.model.file;
             
         end
         

@@ -26,6 +26,7 @@ classdef WidgetFolderBrowserModel < handle
     properties (Dependent)
         
         listSize
+        fileTag
         
     end
     
@@ -117,6 +118,12 @@ classdef WidgetFolderBrowserModel < handle
         function value = get.listSize(obj)
             
             value = length(obj.list);
+            
+        end
+        
+        function vartag = get.fileTag(obj)
+            
+            [~, vartag] = fileparts(obj.file);
             
         end
     end
