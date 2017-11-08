@@ -37,17 +37,21 @@ classdef WidgetImageBrowser < handle
             end
             
             % create controller
-            obj.controller();
-            
-        end
-        
-        function obj = controller(obj)
-            
+            addlistener(obj.ui, 'event_closeRequest', @obj.fcnCallback_closeRequest);
             addlistener(obj.ui, 'event_changeStack', @obj.fcnCallback_changeStack);
             addlistener(obj.ui, 'event_changeChannel', @obj.fcnCallback_changeChannel);
             addlistener(obj.ui, 'event_changeCLimit', @obj.fcnCallback_changeCLimit);
             addlistener(obj.ui, 'event_changeProjection', @obj.fcnCallback_changeProjection);
             addlistener(obj.model, 'cdata', 'PostSet', @obj.fcnCallback_changeCData);
+            addlistener(obj.viewer, 'event_closeRequest', @obj.fcnCallback_closeRequest);
+            
+        end
+        
+        function delete(obj)
+            
+            delete(obj.viewer);
+            delete(obj.ui);
+            delete(obj.model);
             
         end
         
@@ -99,7 +103,6 @@ classdef WidgetImageBrowser < handle
     methods
         
         
-        
         function obj = fcnCallback_changeCData(obj, ~, ~)
             
             obj.viewer.updatePreview(obj.model.cdata);
@@ -137,6 +140,13 @@ classdef WidgetImageBrowser < handle
         function obj = fcnCallback_changeProjection(obj, ~, ~)
             
             obj.model.updateProjection(obj.ui.requestProjectionType());
+            
+        end
+        
+        
+        function obj = fcnCallback_closeRequest(obj, ~, ~)
+            
+            delete(obj);
             
         end
         

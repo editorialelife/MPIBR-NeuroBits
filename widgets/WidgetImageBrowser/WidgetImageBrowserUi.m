@@ -54,6 +54,7 @@ classdef WidgetImageBrowserUi < handle
     %% --- events --- %%
     events
         
+        event_closeRequest
         event_changeChannel
         event_changeStack
         event_changeCLimit
@@ -78,7 +79,8 @@ classdef WidgetImageBrowserUi < handle
                     'MenuBar', 'none',...
                     'ToolBar', 'none',...
                     'NumberTitle', 'off',...
-                    'Position', obj.UI_WINDOW_SIZE);
+                    'Position', obj.UI_WINDOW_SIZE,...
+                    'CloseRequestFcn', @obj.onClick_closeRequest);
                 movegui(obj.parent, 'northwest');
                 
             elseif isgraphics(ui_parent)
@@ -126,6 +128,13 @@ classdef WidgetImageBrowserUi < handle
             obj.uicallbacks();
             
         end
+        
+        function delete(obj)
+            
+            delete(obj.parent);
+            
+        end
+        
         
         function obj = uistatus(obj)
             
@@ -493,6 +502,12 @@ classdef WidgetImageBrowserUi < handle
             set(obj.editBox_maxClim, 'String', sprintf('%d', maxClim));
             
             notify(obj, 'event_changeCLimit');
+            
+        end
+        
+        function obj = onClick_closeRequest(obj, ~, ~)
+            
+            notify(obj, 'event_closeRequest');
             
         end
         

@@ -23,6 +23,11 @@ classdef WidgetImageBrowserViewer < handle
         
     end
     
+    events
+        
+        event_closeRequest
+        
+    end
     
     methods
         
@@ -39,7 +44,10 @@ classdef WidgetImageBrowserViewer < handle
                 'MenuBar', 'none',...
                 'ToolBar', 'none',...
                 'NumberTitle', 'off',...
-                'Position', [1, 1, screenSize + obj.UI_GRID_PADDING, screenSize + obj.UI_GRID_PADDING]);
+                'Position', [1, 1,...
+                             screenSize + obj.UI_GRID_PADDING,...
+                             screenSize + obj.UI_GRID_PADDING],...
+                'CloseRequestFcn', @obj.onClick_closeRequest);
             movegui(obj.parent, 'north');
             
             obj.layout = uiextras.HBoxFlex(...
@@ -65,6 +73,13 @@ classdef WidgetImageBrowserViewer < handle
             
         end
         
+        function delete(obj)
+            
+            delete(obj.parent);
+            
+        end
+        
+        
         function obj = updateCLimit(obj, varclim)
             
             if all(varclim < 0)
@@ -81,6 +96,12 @@ classdef WidgetImageBrowserViewer < handle
         function obj = updatePreview(obj, img)
             
             obj.vimage.CData = img;
+            
+        end
+        
+        function obj = onClick_closeRequest(obj, ~, ~)
+            
+            notify(obj, 'event_closeRequest');
             
         end
         
