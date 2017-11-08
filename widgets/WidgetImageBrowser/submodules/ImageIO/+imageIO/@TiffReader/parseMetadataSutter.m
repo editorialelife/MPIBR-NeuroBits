@@ -1,10 +1,10 @@
-function [ obj ] = readSutterMetadata( obj, imageDesc )
-%READSUTTERMETADATA Extract metadata ofr SutterMOM Tiff files
+function [ obj ] = parseMetadataSutter( obj, imageDescription )
+%PARSEMETADATASUTTER Extract metadata for SutterMOM Tiff files
 %   Parse the ImageDescription Tiff tag and extract the relevant
 %   information. 
 %   INPUT
 %     obj: current TiffReader object
-%     imageDesc: string containing the ImageDescription tag content 
+%     imageDescription: string containing the ImageDescription tag content 
 %   OUTPUT
 %     obj: the updated TiffReader object
 %
@@ -13,7 +13,7 @@ function [ obj ] = readSutterMetadata( obj, imageDesc )
 %   SEE ALSO: imageIO.TiffReader, imageIO.TiffReader.readMetadata
 
 % first, convert the string into a dictionary
-tmp = strsplit(imageDesc, {'\f','\n','\r','\t','\v'},'CollapseDelimiters', true);
+tmp = strsplit(imageDescription, {'\f','\n','\r','\t','\v'},'CollapseDelimiters', true);
 tmp2 = cellfun(@(x) strsplit(x, '='), tmp, 'UniformOutput', false);
 metadata = containers.Map;
 for k = 1:length(tmp2)

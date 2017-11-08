@@ -32,9 +32,12 @@ classdef TiffReader < imageIO.ImageIO
                                 % used only if 'isImageJFmt' is true. Can be either 'l'
                                 % or 'b'
     offsetToImg;                % offset to first image in the stack. Used only if isImageJFmt is true
+    stripByteCounts;            % number of bytes to reads per strip. Used only if isImageJFmt is true
+    
   end
   
   methods
+      
     function obj = TiffReader(filename)
     %TIFFREADER Constructor of the class
     %The constructor calls the constructor of the superclass, and then
@@ -59,7 +62,7 @@ classdef TiffReader < imageIO.ImageIO
         else %'II'
           obj.endianness = 'l';
         end
-        fseek(obj.filePtr, obj.offsetToImg, 'bof');
+        %fseek(obj.filePtr, obj.offsetToImg, 'bof');
       end
     end
     
@@ -95,10 +98,10 @@ classdef TiffReader < imageIO.ImageIO
             
       if obj.isImageJFmt
         data = readTifImageJ(obj, cols, rows, channels, stacks);
-
         
       elseif obj.isSutterMOM1 || obj.isSutterMOM2
         data = readSutter(obj, cols, rows, channels, stacks, timeseries );
+        
       else % normal tif
         data = zeros(length(rows), length(cols), length(channels), ...
           length(stacks), obj.datatype);
@@ -166,16 +169,27 @@ classdef TiffReader < imageIO.ImageIO
   end
   
   methods (Access = protected)
+      
     function obj = readMetadata(obj)
+        
       %First get usual info with imfinfo
       try
+          
         imgInfo = imfinfo(obj.fileFullPath);
+        
         % Dimensions
-        obj.stacks = length(imgInfo);
-        obj.height = imgInfo(1).Height;
         obj.width = imgInfo(1).Width;
-        obj.channels = length(imgInfo(1).BitsPerSample);
+        obj.height = imgInfo(1).Height;
+        obj.channels = imgInfo(1).SamplesPerPixel;
+        iconIndex = cat(1, imgInfo.NewSubFileType);
+        obj.stacks = sum(~iconIndex);
         obj.time = 1;
+        obj.bps = imgInfo(1).BitsPerSample(1);
+        obj.resolutionUnit = imgInfo(1).ResolutionUnit;
+        obj.compression = imgInfo(1).Compression;
+        stripOffset = cat(1,imgInfo(iconIndex == 0).StripOffsets);
+        obj.offsetToImg = stripOffset(1);
+        
         % Standard TIFF does not have multitiled images
         obj.tile = 1;
         obj.numTilesRow = 1;
@@ -185,18 +199,19 @@ classdef TiffReader < imageIO.ImageIO
         obj.pixPerTileRow = obj.height;
         obj.pixPerTileCol = obj.width;
         obj.tileOverlap = 0;
+        
         % Other info available in imfinfo
         obj.XResolution = imgInfo(1).XResolution;
         obj.YResolution = imgInfo(1).YResolution;
         obj.colormap = imgInfo(1).Colormap;
+        
       catch ME
         error('TiffReader.TiffReader: Cannot read metadata. %s', ME.message)
       end
+      
       % now use the Tiff pointer
-      obj.bps = obj.tiffPtr.getTag('BitsPerSample');
-      obj.resolutionUnit = obj.tiffPtr.getTag('ResolutionUnit');
-      obj.compression = obj.tiffPtr.Compression;
       obj.tagNames = obj.tiffPtr.getTagNames;
+      
       % retrieve datatype
       sampleFormat = obj.tiffPtr.getTag('SampleFormat');
       switch sampleFormat
@@ -216,34 +231,41 @@ classdef TiffReader < imageIO.ImageIO
         warning('TiffReader.readMetadata: unsupported sample format')
       end
       
-      % check for custom multitiff formats -_-'
+      % check custom multitiff formats -_-'
       try
-        imageDesc = obj.tiffPtr.getTag('ImageDescription');
-      catch
-        imageDesc = '';
-      end
-      %check if it's imageJ specific format
-      if length(imageDesc) > 7 && strcmpi('ImageJ', imageDesc(1:6))
-        % look for number of images
-        obj.isImageJFmt = true;
-        k = strfind(imageDesc, 'images=');
-        m = strfind(imageDesc, sprintf('\n'));
-        m = m(m>k);
-        if ~isempty(k)
-          obj.stacks = str2double(imageDesc(k(1)+7 : m(1)));
+          
+        imageDescription = obj.tiffPtr.getTag('ImageDescription');
+        
+        % check between formats
+        if strncmpi('ImageJ', imageDescription, 6)
+            obj.isImageJFmt = true;
+            obj.parseMetadataImageJ(imageDescription);
+
+        elseif any(strfind('MOMconfig', imageDescription))
+            obj.isSutterMOM1 = true;
+            obj.pareMetadataSutter(imageDescription);
+
+        elseif any(strfind('scanimage.SI.', imageDescription))
+            obj.isSutterMOM2 = true;
+            obj.parseMetadataSutter(imageDescription);
+
         end
-        off = obj.tiffPtr.getTag('StripOffsets');
-        obj.offsetToImg = off(1);
-      %check if it's sutterMOM specific format
-      elseif length(imageDesc) > 1000 && ~isempty(strfind(imageDesc, 'MOMconfig'))
-        obj.isSutterMOM1 = true;
-        obj = obj.readSutterMetadata(imageDesc);
-      elseif length(imageDesc) > 1000 && ~isempty(strfind(imageDesc, 'scanimage.SI.'))
-        obj.isSutterMOM2 = true;
-        obj = obj.readSutterMetadata(imageDesc);
+        
+        
+      catch
+          
+        % could not retrieve ImageDescription tag
+        warning('TiffReader::readMetadata:: Tiff.Tag.ImageDescription is missing!');
+        
       end
       
     end
+    
+    %% decleare external methods
+    obj = parseMetadataImageJ(obj, imageDescription);
+    obj = parseMetadataSutter(obj, imageDescription);
+    
+    
   end
   
 end
