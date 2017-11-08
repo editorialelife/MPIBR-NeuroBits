@@ -1,12 +1,17 @@
 classdef NeuroBits < handle
     
+    properties (Access = public)
+        
+        widget_FolderBrowser
+        widget_ImageBrowser
+        widget_NeuroTree
+        
+    end
+    
     properties (Access = private)
         
         ui_parent
         ui_layout
-        
-        widget_FolderBrowser
-        widget_ImageBrowser
         
     end
     
@@ -63,6 +68,13 @@ classdef NeuroBits < handle
                 error('NeruoBits :: failed to initialize WidgetImageBrowser');
             end
             
+            %% initialize NeuroTree
+            obj.widget_NeuroTree = WidgetNeuroTree('Parent', obj.ui_layout,...
+                                                   'Viewer', obj.widget_ImageBrowser.viewer.parent);
+            if ~isa(obj.widget_NeuroTree, 'WidgetNeuroTree')
+                error('NeruoBits :: failed to initialize WidgetNeuroTree');
+            end
+            %}
             
         end
         
