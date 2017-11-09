@@ -129,7 +129,7 @@ classdef WidgetNeuroTree < handle
         function obj = fcnCallbackUi_eventExport(obj, ~, ~)
             
             disp('WidgetNeuroTree::UiEvent::Export');
-            obj.engine.transition(obj.engine.EVENT_CLEAR, obj.filename);
+            obj.engine.transition(obj.engine.EVENT_EXPORT, {obj.viewer, obj.filename});
             
         end
         

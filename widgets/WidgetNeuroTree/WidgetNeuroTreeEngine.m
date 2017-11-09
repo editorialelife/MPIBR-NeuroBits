@@ -468,7 +468,11 @@ classdef WidgetNeuroTreeEngine < handle
            
         
         %% @ action export tree
-        function obj = actionExportTree(obj, filename)
+        function obj = actionExportTree(obj, eventdata)
+            
+            % recast eventdata
+            objviewer = eventdata{1};
+            filename = eventdata{2};
             
             % loop the tree
             vartxt = '';
@@ -481,18 +485,19 @@ classdef WidgetNeuroTreeEngine < handle
             % write to file
             if ~isempty(vartxt)
                 
-                disp(vartxt);
                 
                 if isempty(filename)
                     filename = ['testWidgetNeuroTreeExport_',...
-                                    datestr(now, 'yyyymmdd'),...
-                                    '.txt'];
+                                    datestr(now, 'yyyymmdd')];
                 end
                 
-                
-                fw = fopen(filename, 'w');
+                % export text
+                fw = fopen([filename,'.txt'], 'w');
                 fprintf(fw,'%s',vartxt);
                 fclose(fw);
+                
+                % export image
+                print(objviewer.handle_figure, '-dpng','-r300',[filename,'.png']);
                 
                 obj.status = 'export request :: done';
                 
