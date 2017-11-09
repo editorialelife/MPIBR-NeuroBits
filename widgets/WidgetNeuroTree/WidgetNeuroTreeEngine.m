@@ -39,19 +39,21 @@ classdef WidgetNeuroTreeEngine < handle
     
     properties (Access = public, Constant = true)
         
-        EVENT_NULL = 1;
-        EVENT_CLICKDOWN = 2;
-        EVENT_CLICKUP = 3;
-        EVENT_CLICKDOUBLE = 4;
-        EVENT_CLICKEXTEND = 5;
-        EVENT_PRESSDIGIT = 6;
-        EVENT_PRESSESC = 7;
-        EVENT_PRESSDEL = 8;
-        EVENT_MOVEMOUSE = 9;
-        EVENT_HOVERIDLE = 10;
-        EVENT_HOVERLINE = 11;
-        EVENT_HOVERPOINT = 12;
-        EVENT_COUNT = 13;
+        EVENT_CLICKDOWN = 1;
+        EVENT_CLICKUP = 2;
+        EVENT_CLICKDOUBLE = 3;
+        EVENT_CLICKEXTEND = 4;
+        EVENT_PRESSDIGIT = 5;
+        EVENT_PRESSESC = 6;
+        EVENT_PRESSDEL = 7;
+        EVENT_MOVEMOUSE = 8;
+        EVENT_HOVERIDLE = 9;
+        EVENT_HOVERLINE = 10;
+        EVENT_HOVERPOINT = 11;
+        EVENT_SEGMENT = 12;
+        EVENT_CLEAR = 13;
+        EVENT_EXPORT = 14;
+        EVENT_COUNT = 15;
         
     end
     
@@ -142,7 +144,7 @@ classdef WidgetNeuroTreeEngine < handle
             
             %% remove selected
             obj.smtable(obj.STATE_IDLE, obj.EVENT_PRESSDEL) = ...
-                {{obj.STATE_IDLE, '', @obj.actionRemoveSelected}};
+                {{obj.STATE_IDLE, 'arrow', @obj.actionRemoveSelected}};
             
             %% rotate object
             obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_CLICKEXTEND) = ...
@@ -155,13 +157,25 @@ classdef WidgetNeuroTreeEngine < handle
                 {{obj.STATE_IDLE, 'arrow', @obj.actionPutDown}};
             
             
+            %% activate engin
+            obj.smtable(obj.STATE_NULL, obj.EVENT_SEGMENT) = ...
+                {{obj.STATE_IDLE, 'arrow', []}};
+            
+            %% deactivate engine
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_CLEAR) = ...
+                {{obj.STATE_NULL, 'arrow', @obj.actionClearTree}};
+            
+            %% export tree
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_EXPORT) = ...
+                {{obj.STATE_NULL, 'arrow', @obj.actionExportTree}};
+            
             %% initialize state
-            obj.state = obj.STATE_IDLE;
+            obj.state = obj.STATE_NULL;
             
             
         end
         
-        function obj = transition(obj, event_fired, objviewer)
+        function obj = transition(obj, event_fired, eventdata)
             
             callback = obj.smtable{obj.state, event_fired};
             
@@ -177,7 +191,7 @@ classdef WidgetNeuroTreeEngine < handle
                 
                 % evoke callback function
                 if ~isempty(callback{3})
-                    callback{3}(objviewer);
+                    callback{3}(eventdata);
                 end
                 
             end
@@ -204,28 +218,9 @@ classdef WidgetNeuroTreeEngine < handle
             
         end
         
-        function exportTree(obj, fileName)
-            
-            % loop the tree
-            vartxt = '';
-            for t = 1 : length(obj.tree)
-                if isvalid(obj.tree(t))
-                    vartxt = sprintf('%s%s',vartxt,obj.tree(t).export);
-                end
-            end
-            
-            % write to file
-            if ~isempty(vartxt)
-                fw = fopen(fileName, 'w');
-                fprintf(fw,'%s',vartxt);
-                fclose(fw);
-                
-                obj.status = 'export request :: done';
-            else
-                obj.status = 'export request :: empty tree';
-            end
-            
-        end
+        
+        
+        
         
     end
     
@@ -450,7 +445,64 @@ classdef WidgetNeuroTreeEngine < handle
             
         end
         
+        %% @ action clear tree
+        function obj = actionClearTree(obj, ~)
+            
+            % delete branches
+            for t = 1 : length(obj.tree)
+                
+                if isvalid(obj.tree(t))
+                    
+                    obj.tree(t).delete();
+                    
+                end
+                
+            end
+            
+            % deallocate tree
+            obj.tree = [];
+            
+            obj.status = 'segment tree';
+            
+        end
            
+        
+        %% @ action export tree
+        function obj = actionExportTree(obj, filename)
+            
+            % loop the tree
+            vartxt = '';
+            for t = 1 : length(obj.tree)
+                if isvalid(obj.tree(t))
+                    vartxt = sprintf('%s%s',vartxt,obj.tree(t).export);
+                end
+            end
+            
+            % write to file
+            if ~isempty(vartxt)
+                
+                disp(vartxt);
+                
+                if isempty(filename)
+                    filename = ['testWidgetNeuroTreeExport_',...
+                                    datestr(now, 'yyyymmdd'),...
+                                    '.txt'];
+                end
+                
+                
+                fw = fopen(filename, 'w');
+                fprintf(fw,'%s',vartxt);
+                fclose(fw);
+                
+                obj.status = 'export request :: done';
+                
+            else
+                
+                obj.status = 'export request :: empty tree';
+                
+            end
+            
+        end
     end
     
     

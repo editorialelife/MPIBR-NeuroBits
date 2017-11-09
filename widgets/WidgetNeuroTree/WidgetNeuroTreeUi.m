@@ -25,10 +25,12 @@ classdef WidgetNeuroTreeUi < handle
         panelTabs
         
         text_status
-        pushButton_mask
-        pushButton_load
+        
+        pushButton_segment
         pushButton_clear
+        pushButton_load
         pushButton_export
+        pushButton_mask
         editBox_dilation
         editBox_nhood
         checkBox_autoDilation
@@ -47,10 +49,11 @@ classdef WidgetNeuroTreeUi < handle
     
     events
         
-        event_mask
+        event_segment
         event_clear
         event_load
         event_export
+        event_mask
         event_edit
         
     end
@@ -147,10 +150,10 @@ classdef WidgetNeuroTreeUi < handle
                 'Spacing', obj.UI_GRID_SPACING,...
                 'ButtonSize', obj.UI_BUTTON_SIZE);
             
-            obj.pushButton_mask = uicontrol(...
+            obj.pushButton_segment = uicontrol(...
                 'Parent', buttonGroup_create,...
                 'Style', 'pushbutton',...
-                'String', 'mask',...
+                'String', 'segment',...
                 'Enable', 'on');
 
             obj.pushButton_clear = uicontrol(...
@@ -188,11 +191,13 @@ classdef WidgetNeuroTreeUi < handle
             layoutEdit = uix.VBoxFlex(...
                 'Parent', tabEdit);
             
+            
             uiGroup_auto = uix.HButtonBox(...
                 'Parent', layoutEdit,...
                 'Padding', obj.UI_GRID_PADDING,...
                 'Spacing', obj.UI_GRID_SPACING,...
                 'ButtonSize', obj.UI_BUTTON_SIZE);
+            
             
             obj.checkBox_autoDilation = uicontrol(...
                 'Parent', uiGroup_auto,...
@@ -201,8 +206,12 @@ classdef WidgetNeuroTreeUi < handle
                 'Value' , 0,...
                 'Enable', 'on');
             
-            uix.Empty('Parent', uiGroup_auto);
-            uix.Empty('Parent', uiGroup_auto);
+            obj.pushButton_mask = uicontrol(...
+                'Parent', uiGroup_auto,...
+                'Style', 'pushbutton',...
+                'String', 'mask',...
+                'Enable', 'on');
+            
             
             
             uiGroup_dilation = uix.HButtonBox(...
@@ -210,6 +219,8 @@ classdef WidgetNeuroTreeUi < handle
                 'Padding', obj.UI_GRID_PADDING,...
                 'Spacing', obj.UI_GRID_SPACING,...
                 'ButtonSize', obj.UI_BUTTON_SIZE);
+            
+            uix.Empty('Parent', uiGroup_dilation);
             
             uicontrol(...
                 'Parent', uiGroup_dilation,...
@@ -226,12 +237,13 @@ classdef WidgetNeuroTreeUi < handle
             uix.Empty('Parent', uiGroup_dilation);
             
             
-            
             uiGroup_nhood = uix.HButtonBox(...
                 'Parent', layoutEdit,...
                 'Padding', obj.UI_GRID_PADDING,...
                 'Spacing', obj.UI_GRID_SPACING,...
                 'ButtonSize', obj.UI_BUTTON_SIZE);
+            
+            uix.Empty('Parent', uiGroup_nhood);
             
             uicontrol(...
                 'Parent', uiGroup_nhood,...
@@ -258,7 +270,7 @@ classdef WidgetNeuroTreeUi < handle
         
         function obj = uicallbacks(obj)
             
-            set(obj.pushButton_mask, 'Callback', @obj.onClick_pushButton);
+            set(obj.pushButton_segment, 'Callback', @obj.onClick_pushButton);
             set(obj.pushButton_clear, 'Callback', @obj.onClick_pushButton);
             set(obj.pushButton_load, 'Callback', @obj.onClick_pushButton);
             set(obj.pushButton_export, 'Callback', @obj.onClick_pushButton);
@@ -272,8 +284,8 @@ classdef WidgetNeuroTreeUi < handle
             
             switch hsource
                 
-                case obj.pushButton_mask    
-                    notify(obj, 'event_mask');
+                case obj.pushButton_segment    
+                    notify(obj, 'event_segment');
                     
                 case obj.pushButton_clear
                     notify(obj, 'event_clear');
@@ -283,6 +295,9 @@ classdef WidgetNeuroTreeUi < handle
                     
                 case obj.pushButton_export
                     notify(obj, 'event_export');
+                    
+                case obj.pushButton_mask
+                    notify(obj, 'event_mask');
                     
             end
             

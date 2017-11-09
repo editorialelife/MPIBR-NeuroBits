@@ -87,20 +87,16 @@ classdef WidgetNeuroTreeViewer < handle
                 
             end
             
-            %%% initialize callbacks
-            obj.uicallbacks();
+            
+            %%% activate callbacks
+            set(obj.handle_figure,...
+                    'WindowButtonMotionFcn', @obj.fcnCallback_moveMouse,...
+                    'WindowButtonDownFcn', @obj.fcnCallback_clickDown,...
+                    'WindowButtonUpFcn', @obj.fcnCallback_clickUp,...
+                    'WindowKeyPressFcn', @obj.fcnCallback_pressKey);
             
         end
         
-        function obj = uicallbacks(obj)
-            
-            set(obj.handle_figure,...
-                'WindowButtonMotionFcn', @obj.fcnCallback_moveMouse,...
-                'WindowButtonDownFcn', @obj.fcnCallback_clickDown,...
-                'WindowButtonUpFcn', @obj.fcnCallback_clickUp,...
-                'WindowKeyPressFcn', @obj.fcnCallback_pressKey);
-            
-        end
         
     end
     
