@@ -74,7 +74,9 @@ classdef NeuroBits < handle
             if ~isa(obj.widget_NeuroTree, 'WidgetNeuroTree')
                 error('NeruoBits :: failed to initialize WidgetNeuroTree');
             end
-            %}
+            
+            %% add controller
+            addlistener(obj.widget_FolderBrowser, 'file', 'PostSet', @obj.fcnCallback_requestFile);
             
         end
         
@@ -93,6 +95,13 @@ classdef NeuroBits < handle
             end
             
             obj.delete();
+            
+        end
+        
+        %% request file
+        function obj = fcnCallback_requestFile(obj, ~, ~)
+            
+            obj.widget_ImageBrowser.read(obj.widget_FolderBrowser.file);
             
         end
         
