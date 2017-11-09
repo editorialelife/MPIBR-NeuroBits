@@ -17,16 +17,11 @@ classdef WidgetFolderBrowserModel < handle
         
     end
     
-    properties (SetObservable)
-        
-        file
-        
-    end
-    
     properties (Dependent)
         
         listSize
         fileTag
+        file
         
     end
     
@@ -46,7 +41,6 @@ classdef WidgetFolderBrowserModel < handle
                 obj.path = pathName(1:end-1); % uigetfile retunrns pathName with filesep
                 obj.list = {[pathName, fileName]};
                 obj.index = 1;
-                obj.file = obj.list{obj.index};
                 
             end
             
@@ -79,7 +73,6 @@ classdef WidgetFolderBrowserModel < handle
                 obj.path = pathName;
                 obj.list = cellfun(@(x) {[pathName, filesep, x]},{folderInfo.name}');
                 obj.index = 1;
-                obj.file = obj.list{obj.index};
                 
             end
             
@@ -110,9 +103,6 @@ classdef WidgetFolderBrowserModel < handle
             
             end
             
-            % update filename
-            obj.file = obj.list{obj.index};
-            
         end
         
         function value = get.listSize(obj)
@@ -126,5 +116,12 @@ classdef WidgetFolderBrowserModel < handle
             [~, vartag] = fileparts(obj.file);
             
         end
+        
+        function varchar = get.file(obj)
+            
+            varchar = obj.list{obj.index};
+            
+        end
+        
     end
 end

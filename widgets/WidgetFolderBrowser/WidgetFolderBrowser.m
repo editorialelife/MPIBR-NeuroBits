@@ -9,7 +9,7 @@ classdef WidgetFolderBrowser < handle
 % Max-Planck Institute For Brain Research
 %
 
-    properties (Dependent)
+    properties (SetObservable = true)
         
         file
         
@@ -22,11 +22,6 @@ classdef WidgetFolderBrowser < handle
         
     end
     
-    events
-        
-        event_file
-        
-    end
     
     methods
         
@@ -50,15 +45,11 @@ classdef WidgetFolderBrowser < handle
                 error('WidgetFolderBrowserModel: initailizing model failed!');
             end
             
-            
             % link ui events
             addlistener(obj.ui, 'event_fileLoad', @obj.fcnCallback_fileLoad);
             addlistener(obj.ui, 'event_fileNext', @obj.fcnCallback_fileNext);
             addlistener(obj.ui, 'event_filePrevious', @obj.fcnCallback_filePrevious);
             addlistener(obj.ui, 'event_folderLoad', @obj.fcnCallback_folderLoad);
-            
-            % link model events
-            addlistener(obj.model, 'file', 'PostSet', @obj.fcnCallback_fileUpdated);
             
         end
     end
@@ -69,6 +60,7 @@ classdef WidgetFolderBrowser < handle
         function obj = fcnCallback_fileLoad(obj, ~, ~)
             
             obj.model.fileLoad();
+            obj.requestNewFile();
             
         end
         
@@ -76,6 +68,7 @@ classdef WidgetFolderBrowser < handle
         function obj = fcnCallback_fileNext(obj, ~, ~)
             
             obj.model.fileUpdate(1);
+            obj.requestNewFile();
             
         end
         
@@ -83,6 +76,7 @@ classdef WidgetFolderBrowser < handle
         function obj = fcnCallback_filePrevious(obj, ~, ~)
             
             obj.model.fileUpdate(-1);
+            obj.requestNewFile();
             
         end
         
@@ -90,22 +84,16 @@ classdef WidgetFolderBrowser < handle
         function obj = fcnCallback_folderLoad(obj, ~, ~)
             
             obj.model.folderLoad();
+            obj.requestNewFile();
             
         end
         
-        %% @ model event_fileUpdate
-        function obj = fcnCallback_fileUpdated(obj, ~, ~)
+        %% @ request newfile
+        function obj = requestNewFile(obj)
             
             obj.ui.updateFileName(obj.model.fileTag);
             obj.ui.updateFileCounter(obj.model.index, obj.model.listSize);
-            notify(obj, 'event_file');
-            
-        end
-        
-        %% @ request file
-        function varfile = get.file(obj)
-            
-            varfile = obj.model.file;
+            obj.file = obj.model.file();
             
         end
         
