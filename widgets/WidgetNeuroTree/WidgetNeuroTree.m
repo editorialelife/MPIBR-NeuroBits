@@ -18,14 +18,19 @@ classdef WidgetNeuroTree < handle
     
     properties (Access = public)
         
-        filename
+        filePath
+        fileName
         ui
         viewer
         engine
         
     end
     
-    
+    events
+        
+        event_treeExport
+        
+    end
     
     
     %% --- constructors --- %%%
@@ -122,6 +127,7 @@ classdef WidgetNeuroTree < handle
         function obj = fcnCallbackUi_eventLoad(obj, ~, ~)
             
             disp('WidgetNeuroTree::UiEvent::Load');
+            obj.engine.transition(obj.engine.EVENT_LOAD, obj.viewer);
             
         end
         
@@ -129,7 +135,10 @@ classdef WidgetNeuroTree < handle
         function obj = fcnCallbackUi_eventExport(obj, ~, ~)
             
             disp('WidgetNeuroTree::UiEvent::Export');
-            obj.engine.transition(obj.engine.EVENT_EXPORT, {obj.viewer, obj.filename});
+            notify(obj,'event_treeExport');
+            obj.engine.transition(obj.engine.EVENT_EXPORT, {'Viewer', obj.viewer,...
+                                                            'Path', obj.filePath....
+                                                            'Name', obj.fileName});
             
         end
         

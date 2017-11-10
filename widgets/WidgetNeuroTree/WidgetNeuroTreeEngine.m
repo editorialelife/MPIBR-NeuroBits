@@ -53,7 +53,8 @@ classdef WidgetNeuroTreeEngine < handle
         EVENT_SEGMENT = 12;
         EVENT_CLEAR = 13;
         EVENT_EXPORT = 14;
-        EVENT_COUNT = 15;
+        EVENT_LOAD = 15;
+        EVENT_COUNT = 16;
         
     end
     
@@ -168,6 +169,10 @@ classdef WidgetNeuroTreeEngine < handle
             %% export tree
             obj.smtable(obj.STATE_IDLE, obj.EVENT_EXPORT) = ...
                 {{obj.STATE_NULL, 'arrow', @obj.actionExportTree}};
+            
+            %% load tree
+            obj.smtable(obj.STATE_NULL, obj.EVENT_LOAD) = ...
+                {{obj.STATE_NULL, 'arrow', @obj.actionLoadTree}};
             
             %% initialize state
             obj.state = obj.STATE_NULL;
@@ -471,14 +476,20 @@ classdef WidgetNeuroTreeEngine < handle
         function obj = actionExportTree(obj, eventdata)
             
             % recast eventdata
-            objviewer = eventdata{1};
-            filename = eventdata{2};
+            parserObj = inputParser;
+            addParameter(parserObj, 'Viewer',[], @(varobj) isa(varobj, 'WidgetNeuroTreeViewer'));
+            addParameter(parserObj, 'Path', pwd, @(varchar) ischar(varchar) && exist(varchar,'dir') == 7);
+            addParameter(parserObj, 'Name', 'testTree', @(varchar) ischar(varchar));
+            parse(parserObj, eventdata{:});
+            objviewer = parserObj.Results.Viewer;
+            filePath = parserObj.Results.Path;
+            fileName = parserObj.Results.Name;
             
             % loop the tree
             vartxt = '';
-            for t = 1 : length(obj.tree)
-                if isvalid(obj.tree(t))
-                    vartxt = sprintf('%s%s',vartxt,obj.tree(t).export);
+            for b = 1 : length(obj.tree)
+                if isvalid(obj.tree(b))
+                    vartxt = sprintf('%s%s',vartxt,obj.tree(b).export);
                 end
             end
             
@@ -486,18 +497,37 @@ classdef WidgetNeuroTreeEngine < handle
             if ~isempty(vartxt)
                 
                 
-                if isempty(filename)
-                    filename = ['testWidgetNeuroTreeExport_',...
-                                    datestr(now, 'yyyymmdd')];
+                % create output file
+                fileOut = [filePath,...
+                           filesep,...
+                           fileName,...
+                           '_neuroTree_',...
+                           datestr(now,'ddmmmyyyy')];
+                       
+                % check if file exists
+                if exist([fileOut,'.txt'], 'file') == 2
+                    choice = questdlg('Overwrite NeuroTree file?','NeuroTree:Export','Yes','No','Yes');
+                    if strcmp(choice, 'No')
+                        fileOut = [obj.path,...
+                                   filesep,...
+                                   obj.name,...
+                                   '_neuroTree_',...
+                                   datestr(now,'HHMMSS-ddmmmyyyy')];
+                    end
                 end
                 
                 % export text
-                fw = fopen([filename,'.txt'], 'w');
-                fprintf(fw,'%s',vartxt);
-                fclose(fw);
+                fpWrite = fopen([fileOut,'.txt'], 'w');
+                fprintf(fpWrite, 'file_path=%s\n', filePath);
+                fprintf(fpWrite, 'file_name=%s\n', fileName);
+                %fprintf(fpWrite, 'dilation[px]=%d\n', dilation);
+                %fprintf(fpWrite, 'nhood[px]=%d\n', nhood);
+                fprintf(fpWrite, '\n');
+                fprintf(fpWrite,'%s',vartxt);
+                fclose(fpWrite);
                 
                 % export image
-                print(objviewer.handle_figure, '-dpng','-r300',[filename,'.png']);
+                print(objviewer.handle_figure, '-dpng','-r300',[fileOut,'.png']);
                 
                 obj.status = 'export request :: done';
                 
@@ -508,6 +538,66 @@ classdef WidgetNeuroTreeEngine < handle
             end
             
         end
+        
+        
+        %% @ action load tree
+        function obj = actionLoadTree(obj, objviewer)
+            
+            %LOAD load tree file
+            % choose file to load
+            [fileName, filePath] = uigetfile({'*_neuroTree_*.txt', 'WidgetNeuroTree files'},'Pick a file');
+            
+            % open file to read
+            fpRead = fopen([filePath, fileName], 'r');
+            txt = textscan(fpRead, '%s', 'delimiter', '\n');
+            fclose(fpRead);
+            txt = txt{:};
+            
+            % read dilation
+            %queryTxt = 'dilation[px]=';
+            %idxTxtDilation = strncmp(queryTxt, txt, length(queryTxt));
+            %obj.dilation = sscanf(txt{idxTxtDilation},'dilation[px]=%d');
+            
+            % read nhood
+            %queryTxt = 'nhood[px]=';
+            %idxTxtNhood = strncmp(queryTxt, txt, length(queryTxt));
+            %obj.nhood = sscanf(txt{idxTxtNhood},'nhood[px]=%d');
+            
+            % read branch info
+            idxTxtBranch = strncmp('branch', txt, 6);
+            idxTxtBranch = cumsum(idxTxtBranch);
+            branchCount = max(idxTxtBranch);
+            
+            for b = 1 : branchCount
+                
+                if sum(idxTxtBranch == b) == 10
+                    
+                    % allocate new branch
+                    newBranch = WidgetNeuroTreeBranch(...
+                        'Axes', objviewer.handle_axes,...
+                        'Depth', '0',...
+                        'BranchIndex', obj.indexBranch);
+            
+                    if ~isa(newBranch, 'WidgetNeuroTreeBranch')
+                        error('WidgetNeuroTree: initializing new Branch failed!');
+                    end
+            
+                    % add branch to tree
+                    obj.tree = cat(2, obj.tree, newBranch);
+                    obj.tree(b).load(txt(idxTxtBranch == b));
+                    
+                else
+                    warning('NeuroTreeBranch:load','incomplete branch data.');
+                end
+                
+            end
+            
+            % update user message
+            obj.status = sprintf('load request :: tree with %d branches',branchCount);
+            
+        end
+        
+        
     end
     
     
