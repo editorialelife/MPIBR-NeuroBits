@@ -20,6 +20,11 @@ classdef WidgetNeuroTree < handle
         
         filePath
         fileName
+        
+    end
+    
+    properties (Access = public)
+        
         ui
         viewer
         engine
@@ -45,13 +50,13 @@ classdef WidgetNeuroTree < handle
             parse(parserObj, varargin{:});
             
             % create Ui
-            obj.ui = WidgetNeuroTreeUi(parserObj.Results.Parent);
+            obj.ui = WidgetNeuroTreeUi('Parent', parserObj.Results.Parent);
             if ~isa(obj.ui, 'WidgetNeuroTreeUi')
                 error('WidgetNeuroTree: initializing Ui failed!');
             end
             
             % create Viewer
-            obj.viewer = WidgetNeuroTreeViewer(parserObj.Results.Viewer);
+            obj.viewer = WidgetNeuroTreeViewer('Parent', parserObj.Results.Viewer);
             if ~isa(obj.viewer, 'WidgetNeuroTreeViewer')
                 error('WidgetNeuroTree: initializing Viewer failed!');
             end
@@ -72,12 +77,18 @@ classdef WidgetNeuroTree < handle
         function obj = controller(obj)
             
             % add Ui callbacks
-            addlistener(obj.ui, 'event_segment', @obj.fcnCallbackUi_eventSegment);
+            addlistener(obj.ui, 'event_new', @obj.fcnCallbackUi_eventNew);
             addlistener(obj.ui, 'event_clear', @obj.fcnCallbackUi_eventClear);
             addlistener(obj.ui, 'event_load', @obj.fcnCallbackUi_eventLoad);
             addlistener(obj.ui, 'event_export', @obj.fcnCallbackUi_eventExport);
-            addlistener(obj.ui, 'event_edit', @obj.fcnCallbackUi_eventEdit);
-            addlistener(obj.ui, 'event_mask', @obj.fcnCallbackUi_eventMask);
+            addlistener(obj.ui, 'event_tabSegment', @obj.fcnCallbackUi_eventSegment);
+            addlistener(obj.ui, 'event_tabMask', @obj.fcnCallbackUi_eventMask);
+            addlistener(obj.ui, 'thresholdIntensity', 'PostSet', @obj.fcnCallbackUi_eventMask);
+            addlistener(obj.ui, 'thresholdNhood', 'PostSet', @obj.fcnCallbackUi_eventMask);
+            addlistener(obj.ui, 'viewMask', 'PostSet', @obj.fcnCallbackUi_eventView);
+            addlistener(obj.ui, 'viewTree', 'PostSet', @obj.fcnCallbackUi_eventView);
+            
+            
             
             % add Viewer callbacks
             addlistener(obj.viewer, 'event_clickDown', @obj.fcnCallbackViewer_clickDown);
@@ -108,9 +119,9 @@ classdef WidgetNeuroTree < handle
     methods (Access = private)
         
         %% @ event segment
-        function obj = fcnCallbackUi_eventSegment(obj, ~, ~)
+        function obj = fcnCallbackUi_eventNew(obj, ~, ~)
             
-            disp('WidgetNeuroTree::UiEvent::Segment');
+            disp('WidgetNeuroTree::UiEvent::New');
             obj.engine.transition(obj.engine.EVENT_SEGMENT, obj.viewer);
             
         end
@@ -142,10 +153,11 @@ classdef WidgetNeuroTree < handle
             
         end
         
-        %% @ event edit
-        function obj = fcnCallbackUi_eventEdit(obj, ~, ~)
+        %% @ event tab segment
+        function obj = fcnCallbackUi_eventSegment(obj, ~, ~)
             
-            disp('WidgetNeuroTree::UiEvent::Edit');
+            disp('WidgetNeuroTree::UiEvent::Segment');
+            obj.engine.transition(obj.engine.EVENT_SEGMENT, []);
             
         end
         
@@ -153,6 +165,15 @@ classdef WidgetNeuroTree < handle
         function obj = fcnCallbackUi_eventMask(obj, ~, ~)
             
             disp('WidgetNeuroTree::UiEvent::Mask');
+            obj.engine.transition(obj.engine.EVENT_MASK, obj.viewer);
+            
+        end
+        
+        %% @ event view
+        function obj = fcnCallbackUi_eventView(obj, ~, ~)
+            
+            disp('WidgetNeuroTree::UiEvent::Mask');
+            obj.engine.transition(obj.engine.EVENT_VIEW, obj.viewer);
             
         end
         

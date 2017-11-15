@@ -279,6 +279,48 @@ classdef WidgetNeuroTreeBranch < handle
             obj.ui_line.YData = arrayLine(2,:);
             
         end
+        
+        
+        %% load branch 
+        function obj = load(obj, vartxt)
+            
+            % parse text
+            obj.indexBranch = sscanf(vartxt{1}, 'branch=%d');
+            obj.depth = sscanf(vartxt{2}, 'depth=%d');
+            obj.tag = sscanf(vartxt{3}, 'tag=%d');
+            obj.parent = sscanf(vartxt{4}, 'parent=%d');
+            obj.children = str2double(regexp(vartxt{5},'\d*','match'));
+            %obj.span = sscanf(vartxt{6}, 'span=%f');
+            nodeCount = sscanf(vartxt{7}, 'nodes=%d');
+            xData = str2double(regexp(vartxt{8}, '\d+\.?\d*', 'match'));
+            yData = str2double(regexp(vartxt{9}, '\d+\.?\d*', 'match'));
+            
+            if (nodeCount ~= length(xData)) || (length(xData) ~= length(yData))
+                error('WidgetNeuroTreeBranch::LoadBranch:: inconsistent nodes count!');
+            end
+            
+            % integrate current branch index in user data
+            set(obj.ui_point, 'UserData', obj.indexBranch);
+            set(obj.ui_line, 'UserData', obj.indexBranch);
+            
+            % set color
+            set(obj.ui_point, 'Color', obj.COLOR_TABLE(obj.depth + 1, :));
+            set(obj.ui_line, 'Color', obj.COLOR_TABLE(obj.depth + 1, :));
+            obj.ui_line.Color(4) = obj.ALPHA_DESELECTED;
+            
+            % set nodes
+            for n = 1 : nodeCount
+          
+                obj.addNode([xData(n),yData(n)]);
+                
+            end
+            obj.fixBranch();
+            
+            % reorder uistack
+            % points need to be on top of line to retrieve node
+            uistack(obj.ui_point, 'top');
+            
+        end
          
     end
     
@@ -324,50 +366,6 @@ classdef WidgetNeuroTreeBranch < handle
             vartext = sprintf('%sx=%s\n', vartext, xPosList);
             vartext = sprintf('%sy=%s\n', vartext, yPosList);
             vartext = sprintf('%s\n', vartext);
-            
-        end
-        
-        %% load branch 
-        function obj = load(obj, vartxt)
-            
-            % parse text
-            obj.indexBranch = sscanf(vartxt{1}, 'branch=%d');
-            obj.depth = sscanf(vartxt{2}, 'depth=%d');
-            obj.tag = sscanf(vartxt{3}, 'tag=%d');
-            obj.parent = sscanf(vartxt{4}, 'parent=%d');
-            obj.children = str2double(regexp(vartxt{5},'\d*','match'));
-            %obj.span = sscanf(vartxt{6}, 'span=%f');
-            nodeCount = sscanf(vartxt{7}, 'nodes=%d');
-            xData = str2double(regexp(vartxt{8}, '\d+\.?\d*', 'match'));
-            yData = str2double(regexp(vartxt{9}, '\d+\.?\d*', 'match'));
-            
-            if (nodeCount ~= length(xData)) || (length(xData) ~= length(yData))
-                error('WidgetNeuroTreeBranch::LoadBranch:: inconsistent nodes count!');
-            end
-            
-            % integrate current branch index in user data
-            set(obj.ui_point, 'UserData', obj.indexBranch);
-            set(obj.ui_line, 'UserData', obj.indexBranch);
-            
-            % set color
-            set(obj.ui_point, 'Color', obj.COLOR_TABLE(obj.depth + 1, :));
-            set(obj.ui_line, 'Color', obj.COLOR_TABLE(obj.depth + 1, :));
-            obj.ui_line.Color(4) = obj.ALPHA_DESELECTED;
-            
-            % set nodes
-            for n = 1 : nodeCount
-          
-                obj.addNode([xData(n),yData(n)]);
-                
-            end
-            obj.fixBranch();
-            
-            % reorder uistack
-            % points need to be on top of line to retrieve node
-            uistack(obj.ui_point, 'top');
-            
-            
-            
             
         end
         

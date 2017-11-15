@@ -54,7 +54,8 @@ classdef WidgetNeuroTreeEngine < handle
         EVENT_CLEAR = 13;
         EVENT_EXPORT = 14;
         EVENT_LOAD = 15;
-        EVENT_COUNT = 16;
+        EVENT_MASK = 16;
+        EVENT_COUNT = 17;
         
     end
     
@@ -173,6 +174,10 @@ classdef WidgetNeuroTreeEngine < handle
             %% load tree
             obj.smtable(obj.STATE_NULL, obj.EVENT_LOAD) = ...
                 {{obj.STATE_NULL, 'arrow', @obj.actionLoadTree}};
+            
+            %% create mask
+            obj.smtable(obj.STATE_NULL, obj.EVENT_MASK) = ...
+                {{obj.STATE_NULL, 'arrow', @obj.actionCreateMask}};
             
             %% initialize state
             obj.state = obj.STATE_NULL;
@@ -484,6 +489,7 @@ classdef WidgetNeuroTreeEngine < handle
             objviewer = parserObj.Results.Viewer;
             filePath = parserObj.Results.Path;
             fileName = parserObj.Results.Name;
+            imgsize = objviewer.size();
             
             % loop the tree
             vartxt = '';
@@ -522,6 +528,8 @@ classdef WidgetNeuroTreeEngine < handle
                 fprintf(fpWrite, 'file_name=%s\n', fileName);
                 %fprintf(fpWrite, 'dilation[px]=%d\n', dilation);
                 %fprintf(fpWrite, 'nhood[px]=%d\n', nhood);
+                fprintf(fpWrite, 'width[px]=%d\n',imgsize(2));
+                fprintf(fpWrite, 'height[px]%d\n',imgsize(1));
                 fprintf(fpWrite, '\n');
                 fprintf(fpWrite,'%s',vartxt);
                 fclose(fpWrite);
@@ -594,6 +602,56 @@ classdef WidgetNeuroTreeEngine < handle
             
             % update user message
             obj.status = sprintf('load request :: tree with %d branches',branchCount);
+            
+        end
+        
+        
+        %% @ action create mask
+        function obj = actionCreateMask(obj, objviewer)
+            
+            % get image dimensions
+            imgsize = objviewer.size();
+            disp(imgsize);
+            % accumulate mask
+            mask = zeros(prod(imgsize),1);
+            for b = 1 : length(obj.tree)
+                
+                % retrieve nodes
+                nodes = obj.tree(b).nodes;
+                if obj.tree(b).depth == 0
+                    nodes = cat(1,nodes,nodes(1,:));
+                end
+                
+                % calculate cumulative pixel distance along line
+                dNodes = sqrt(sum(diff(nodes, [], 1).^2, 2));
+                csNodes = cat(1, 0, cumsum(dNodes));
+                
+                % resample nodes at sub-pixel intervals
+                sampleCsNodes = linspace(0, csNodes(end), ceil(csNodes(end)/0.5));
+                sampleNodes = interp1(csNodes, nodes, sampleCsNodes,'pchip');
+                sampleNodes = round(sampleNodes);
+                
+                % filter outside borders
+                idxFilter = any(sampleNodes < 1, 2) | ...
+                            (sampleNodes(:,1) > imgsize(2)) | ...
+                            (sampleNodes(:,2) > imgsize(1));
+                sampleNodes(idxFilter,:) = [];
+                
+                disp(sampleNodes);
+                
+                % get pixels
+                %pixels = sub2ind(imgsize, sampleNodes(:,2), sampleNodes(:,1));
+                
+                % fill mask with branch id
+                %mask(pixels) = obj.tree(b).indexBranch;
+                
+            end
+            
+            %mask = reshape(mask, imgsize(1), imgsize(2));
+            
+            %figure('color','w');
+            %imagesc(mask);
+            
             
         end
         

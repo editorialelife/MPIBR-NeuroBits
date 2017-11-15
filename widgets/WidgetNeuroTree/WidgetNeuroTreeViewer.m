@@ -17,6 +17,13 @@ classdef WidgetNeuroTreeViewer < handle
         
     end
     
+    properties (Access = public, Dependent = true)
+        
+        size
+        
+    end
+    
+    
     properties (Access = private, Constant = true, Hidden = true)
         
         VIEWER_AXES_PADDING = 5
@@ -41,7 +48,13 @@ classdef WidgetNeuroTreeViewer < handle
     
     methods
         
-        function obj = WidgetNeuroTreeViewer(varhandle)
+        function obj = WidgetNeuroTreeViewer(varargin)
+            
+            %%% parse input
+            parserObj = inputParser;
+            addParameter(parserObj, 'Parent', [], @(varin) isgraphics(varin));
+            parse(parserObj, varargin{:});
+            varhandle = parserObj.Results.Parent;
             
             %%% assign figure
             if isempty(varhandle)
@@ -209,5 +222,18 @@ classdef WidgetNeuroTreeViewer < handle
         end
     end
     
+    %% --- dependent properties --- %%
+    methods
+        
+        function varsize = get.size(obj)
+            
+            xscale = get(obj.handle_axes, 'XLim');
+            yscale = get(obj.handle_axes, 'YLim');
+            
+            varsize = [max(yscale), max(xscale)];
+            
+        end
+        
+    end
 end
 
