@@ -5,6 +5,7 @@
 % 
     
 
+
 %{
 clc
 clear variables
@@ -122,7 +123,7 @@ set(gca,'Box','on',...
     
     
 
-%{
+%
 function WidgetNeuroTreeTest()
 
     clc
@@ -189,11 +190,13 @@ function WidgetNeuroTreeTest()
         [filePath, fileName] = fileparts(fileQuery);
         obj.filePath = filePath;
         obj.fileName = fileName;
-
+        
     end
 
+    events(obj)
+
     %% test mask
-    tree = obj.engine.tree;
+    %tree = obj.engine.tree;
 
 
 end

@@ -1,23 +1,26 @@
 classdef WidgetNeuroTreeEngine < handle
     
-    properties (Access = public, SetObservable = true)
-        
-        mousePointer
-        status
-        
-    end
+    
     
     properties (Access = public)
         
         state
         smtable
         tree
+        mask
         indexBranch
         indexSelected
         grabbed_indexBranch
         grabbed_indexNode
         grabbed_center
         grabbed_angle
+        
+    end
+    
+    properties (Access = public, SetObservable = true)
+        
+        mousePointer
+        status
         
     end
     
@@ -39,26 +42,31 @@ classdef WidgetNeuroTreeEngine < handle
     
     properties (Access = public, Constant = true)
         
-        EVENT_CLICKDOWN = 1;
-        EVENT_CLICKUP = 2;
-        EVENT_CLICKDOUBLE = 3;
-        EVENT_CLICKEXTEND = 4;
-        EVENT_PRESSDIGIT = 5;
-        EVENT_PRESSESC = 6;
-        EVENT_PRESSDEL = 7;
-        EVENT_MOVEMOUSE = 8;
-        EVENT_HOVERIDLE = 9;
-        EVENT_HOVERLINE = 10;
-        EVENT_HOVERPOINT = 11;
-        EVENT_SEGMENT = 12;
-        EVENT_CLEAR = 13;
-        EVENT_EXPORT = 14;
-        EVENT_LOAD = 15;
-        EVENT_MASK = 16;
-        EVENT_COUNT = 17;
+        EVENT_VIEWER_CLICKDOWN = 1;
+        EVENT_VIEWER_CLICKUP = 2;
+        EVENT_VIEWER_CLICKDOUBLE = 3;
+        EVENT_VIEWER_CLICKEXTEND = 4;
+        EVENT_VIEWER_PRESSDIGIT = 5;
+        EVENT_VIEWER_PRESSESC = 6;
+        EVENT_VIEWER_PRESSDEL = 7;
+        EVENT_VIEWER_MOVEMOUSE = 8;
+        EVENT_VIEWER_HOVERIDLE = 9;
+        EVENT_VIEWER_HOVERLINE = 10;
+        EVENT_VIEWER_HOVERPOINT = 11;
+        
+        EVENT_UI_DRAW = 12;
+        EVENT_UI_CLEAR = 13;
+        EVENT_UI_EXPORT = 14;
+        EVENT_UI_LOAD = 15;
+        EVENT_UI_SEGMENT = 16;
+        EVENT_UI_MASK = 17;
+        EVENT_UI_VIEW = 18;
+        
+        EVENT_COUNT = 19;
         
     end
     
+    %% --- constructors --- %%
     methods
         
         function obj = WidgetNeuroTreeEngine()
@@ -67,116 +75,119 @@ classdef WidgetNeuroTreeEngine < handle
             obj.smtable = cell(obj.STATE_COUNT, obj.EVENT_COUNT);
             
             %% start drawing
-            obj.smtable(obj.STATE_IDLE, obj.EVENT_PRESSDIGIT) = ...
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_VIEWER_PRESSDIGIT) = ...
                 {{obj.STATE_ANCHOR, 'crosshair', @obj.actionCreate}};
             
-            obj.smtable(obj.STATE_ANCHOR, obj.EVENT_PRESSESC) = ...
+            obj.smtable(obj.STATE_ANCHOR, obj.EVENT_VIEWER_PRESSESC) = ...
                 {{obj.STATE_IDLE, 'arrow', @obj.actionCancel}};
             
-            obj.smtable(obj.STATE_ANCHOR, obj.EVENT_CLICKDOWN) = ...
+            obj.smtable(obj.STATE_ANCHOR, obj.EVENT_VIEWER_CLICKDOWN) = ...
                 {{obj.STATE_DRAW, '', @obj.actionExtend}};
             
-            obj.smtable(obj.STATE_DRAW, obj.EVENT_CLICKDOWN) = ...
+            obj.smtable(obj.STATE_DRAW, obj.EVENT_VIEWER_CLICKDOWN) = ...
                 {{obj.STATE_DRAW, '', @obj.actionExtend}};
             
-            obj.smtable(obj.STATE_DRAW, obj.EVENT_MOVEMOUSE) = ...
+            obj.smtable(obj.STATE_DRAW, obj.EVENT_VIEWER_MOVEMOUSE) = ...
                 {{obj.STATE_DRAW, '', @obj.acitonStretch}};
             
-            obj.smtable(obj.STATE_DRAW, obj.EVENT_CLICKDOUBLE) = ...
+            obj.smtable(obj.STATE_DRAW, obj.EVENT_VIEWER_CLICKDOUBLE) = ...
                 {{obj.STATE_IDLE, 'arrow', @obj.actionComplete}};
             
             %% hover over objects
-            obj.smtable(obj.STATE_IDLE, obj.EVENT_HOVERLINE) = ...
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_VIEWER_HOVERLINE) = ...
                 {{obj.STATE_OVERLINE, 'hand', []}};
             
-            obj.smtable(obj.STATE_IDLE, obj.EVENT_HOVERPOINT) = ...
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_VIEWER_HOVERPOINT) = ...
                 {{obj.STATE_OVERPOINT, 'circle', []}};
             
-            obj.smtable(obj.STATE_OVERLINE, obj.EVENT_HOVERIDLE) = ...
+            obj.smtable(obj.STATE_OVERLINE, obj.EVENT_VIEWER_HOVERIDLE) = ...
                 {{obj.STATE_IDLE, 'arrow', []}};
             
-            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_HOVERIDLE) = ...
+            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_VIEWER_HOVERIDLE) = ...
                 {{obj.STATE_IDLE, 'arrow', []}};
             
-            obj.smtable(obj.STATE_OVERLINE, obj.EVENT_HOVERPOINT) = ...
+            obj.smtable(obj.STATE_OVERLINE, obj.EVENT_VIEWER_HOVERPOINT) = ...
                 {{obj.STATE_OVERPOINT, 'circle', []}};
             
-            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_HOVERLINE) = ...
+            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_VIEWER_HOVERLINE) = ...
                 {{obj.STATE_OVERLINE, 'hand', []}};
             
             %% select objects
-            obj.smtable(obj.STATE_OVERLINE, obj.EVENT_CLICKDOUBLE) = ...
+            obj.smtable(obj.STATE_OVERLINE, obj.EVENT_VIEWER_CLICKDOUBLE) = ...
                 {{obj.STATE_IDLE, '', @obj.actionSelect}};
             
-            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_CLICKDOUBLE) = ...
+            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_VIEWER_CLICKDOUBLE) = ...
                 {{obj.STATE_IDLE, '', @obj.actionSelect}};
             
-            obj.smtable(obj.STATE_IDLE, obj.EVENT_CLICKDOUBLE) = ...
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_VIEWER_CLICKDOUBLE) = ...
                 {{obj.STATE_IDLE, '', @obj.actionDeselect}};
             
             %% move line
-            obj.smtable(obj.STATE_OVERLINE, obj.EVENT_CLICKDOWN) = ...
+            obj.smtable(obj.STATE_OVERLINE, obj.EVENT_VIEWER_CLICKDOWN) = ...
                 {{obj.STATE_GRABLINE, 'cross', @obj.actionPickUp}};
             
-            obj.smtable(obj.STATE_GRABLINE, obj.EVENT_MOVEMOUSE) = ...
+            obj.smtable(obj.STATE_GRABLINE, obj.EVENT_VIEWER_MOVEMOUSE) = ...
                 {{obj.STATE_GRABLINE, '', @obj.actionRepositionLine}};
             
-            obj.smtable(obj.STATE_GRABLINE, obj.EVENT_CLICKUP) = ...
+            obj.smtable(obj.STATE_GRABLINE, obj.EVENT_VIEWER_CLICKUP) = ...
                 {{obj.STATE_OVERLINE, 'hand', @obj.actionPutDown}};
             
             %% move selected
-            obj.smtable(obj.STATE_IDLE, obj.EVENT_CLICKDOWN) = ...
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_VIEWER_CLICKDOWN) = ...
                 {{obj.STATE_GRABSELECTED, 'arrow', []}};
             
-            obj.smtable(obj.STATE_GRABSELECTED, obj.EVENT_MOVEMOUSE) = ...
+            obj.smtable(obj.STATE_GRABSELECTED, obj.EVENT_VIEWER_MOVEMOUSE) = ...
                 {{obj.STATE_GRABSELECTED, '', @obj.actionRepositionSelected}};
             
-            obj.smtable(obj.STATE_GRABSELECTED, obj.EVENT_CLICKUP) = ...
+            obj.smtable(obj.STATE_GRABSELECTED, obj.EVENT_VIEWER_CLICKUP) = ...
                 {{obj.STATE_IDLE, 'arrow', []}};
             
             %% move point
-            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_CLICKDOWN) = ...
+            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_VIEWER_CLICKDOWN) = ...
                 {{obj.STATE_GRABPOINT, 'cross', @obj.actionPickUp}};
             
-            obj.smtable(obj.STATE_GRABPOINT, obj.EVENT_MOVEMOUSE) = ...
+            obj.smtable(obj.STATE_GRABPOINT, obj.EVENT_VIEWER_MOVEMOUSE) = ...
                 {{obj.STATE_GRABPOINT, '', @obj.actionRepositionPoint}};
             
-            obj.smtable(obj.STATE_GRABPOINT, obj.EVENT_CLICKUP) = ...
+            obj.smtable(obj.STATE_GRABPOINT, obj.EVENT_VIEWER_CLICKUP) = ...
                 {{obj.STATE_OVERPOINT, 'circle', @obj.actionPutDown}};
             
             %% remove selected
-            obj.smtable(obj.STATE_IDLE, obj.EVENT_PRESSDEL) = ...
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_VIEWER_PRESSDEL) = ...
                 {{obj.STATE_IDLE, 'arrow', @obj.actionRemoveSelected}};
             
             %% rotate object
-            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_CLICKEXTEND) = ...
+            obj.smtable(obj.STATE_OVERPOINT, obj.EVENT_VIEWER_CLICKEXTEND) = ...
                 {{obj.STATE_ROTATE, 'cross', @obj.actionPickUp}};
             
-            obj.smtable(obj.STATE_ROTATE, obj.EVENT_MOVEMOUSE) = ...
+            obj.smtable(obj.STATE_ROTATE, obj.EVENT_VIEWER_MOVEMOUSE) = ...
                 {{obj.STATE_ROTATE, '', @obj.actionRotateBranch}};
             
-            obj.smtable(obj.STATE_ROTATE, obj.EVENT_CLICKUP) = ...
+            obj.smtable(obj.STATE_ROTATE, obj.EVENT_VIEWER_CLICKUP) = ...
                 {{obj.STATE_IDLE, 'arrow', @obj.actionPutDown}};
             
             
-            %% activate engin
-            obj.smtable(obj.STATE_NULL, obj.EVENT_SEGMENT) = ...
+            %% activate engine
+            obj.smtable(obj.STATE_NULL, obj.EVENT_UI_DRAW) = ...
                 {{obj.STATE_IDLE, 'arrow', []}};
             
             %% deactivate engine
-            obj.smtable(obj.STATE_IDLE, obj.EVENT_CLEAR) = ...
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_UI_CLEAR) = ...
+                {{obj.STATE_NULL, 'arrow', @obj.actionClearTree}};
+            
+            obj.smtable(obj.STATE_NULL, obj.EVENT_UI_CLEAR) = ...
                 {{obj.STATE_NULL, 'arrow', @obj.actionClearTree}};
             
             %% export tree
-            obj.smtable(obj.STATE_IDLE, obj.EVENT_EXPORT) = ...
+            obj.smtable(obj.STATE_IDLE, obj.EVENT_UI_EXPORT) = ...
                 {{obj.STATE_NULL, 'arrow', @obj.actionExportTree}};
             
             %% load tree
-            obj.smtable(obj.STATE_NULL, obj.EVENT_LOAD) = ...
+            obj.smtable(obj.STATE_NULL, obj.EVENT_UI_LOAD) = ...
                 {{obj.STATE_NULL, 'arrow', @obj.actionLoadTree}};
             
             %% create mask
-            obj.smtable(obj.STATE_NULL, obj.EVENT_MASK) = ...
+            obj.smtable(obj.STATE_NULL, obj.EVENT_UI_MASK) = ...
                 {{obj.STATE_NULL, 'arrow', @obj.actionCreateMask}};
             
             %% initialize state
@@ -185,9 +196,9 @@ classdef WidgetNeuroTreeEngine < handle
             
         end
         
-        function obj = transition(obj, event_fired, eventdata)
+        function obj = transition(obj, eventFired, eventData)
             
-            callback = obj.smtable{obj.state, event_fired};
+            callback = obj.smtable{obj.state, eventFired};
             
             if ~isempty(callback)
                 
@@ -201,39 +212,18 @@ classdef WidgetNeuroTreeEngine < handle
                 
                 % evoke callback function
                 if ~isempty(callback{3})
-                    callback{3}(eventdata);
+                    callback{3}(eventData);
                 end
                 
             end
             
         end
         
-        function offset = calculateOffset(~, objviewer)
-            
-            % calculate offset
-            offset = objviewer.move_mouse - objviewer.click_down;
-            objviewer.click_down = objviewer.move_mouse;
-            
-        end
-        
-        function theta = calculateRotation(~, objviewer, center)
-            
-            % calculate the angle theta from the deltaY and deltaX values
-            % (atan2 returns radians values from [-pi, pi])
-            % 0 currently points EAST.
-            % NOTE: By preserving Y and X param order to atan2,  we are expecting 
-            % a CLOCKWISE angle direction.
-            theta = atan2(objviewer.move_mouse(2) - center(2),...
-                          objviewer.move_mouse(1) - center(1));
-            
-        end
-        
-        
-        
-        
-        
     end
     
+    
+    
+    %% --- Actions --- %%
     methods (Access = private)
         
         %% @ action create branch
@@ -529,7 +519,7 @@ classdef WidgetNeuroTreeEngine < handle
                 %fprintf(fpWrite, 'dilation[px]=%d\n', dilation);
                 %fprintf(fpWrite, 'nhood[px]=%d\n', nhood);
                 fprintf(fpWrite, 'width[px]=%d\n',imgsize(2));
-                fprintf(fpWrite, 'height[px]%d\n',imgsize(1));
+                fprintf(fpWrite, 'height[px]=%d\n',imgsize(1));
                 fprintf(fpWrite, '\n');
                 fprintf(fpWrite,'%s',vartxt);
                 fclose(fpWrite);
@@ -613,7 +603,7 @@ classdef WidgetNeuroTreeEngine < handle
             imgsize = objviewer.size();
             disp(imgsize);
             % accumulate mask
-            mask = zeros(prod(imgsize),1);
+            %mask = zeros(prod(imgsize),1);
             for b = 1 : length(obj.tree)
                 
                 % retrieve nodes
@@ -655,6 +645,31 @@ classdef WidgetNeuroTreeEngine < handle
             
         end
         
+        
+    end
+    
+    %% --- Static Methods --- %%
+    methods (Access = private, Static = true)
+        
+        function offset = calculateOffset(objviewer)
+            
+            % calculate offset
+            offset = objviewer.move_mouse - objviewer.click_down;
+            objviewer.click_down = objviewer.move_mouse;
+            
+        end
+        
+        function theta = calculateRotation(objviewer, center)
+            
+            % calculate the angle theta from the deltaY and deltaX values
+            % (atan2 returns radians values from [-pi, pi])
+            % 0 currently points EAST.
+            % NOTE: By preserving Y and X param order to atan2,  we are expecting 
+            % a CLOCKWISE angle direction.
+            theta = atan2(objviewer.move_mouse(2) - center(2),...
+                          objviewer.move_mouse(1) - center(1));
+            
+        end
         
     end
     

@@ -67,17 +67,15 @@ classdef WidgetNeuroTree < handle
                 error('WidgetNeuroTree: initializing Engine failed!');
             end
             
-            
             % create controller
             obj.controller();
             
         end
         
-        
         function obj = controller(obj)
             
             % add Ui callbacks
-            addlistener(obj.ui, 'event_new', @obj.fcnCallbackUi_eventNew);
+            addlistener(obj.ui, 'event_draw', @obj.fcnCallbackUi_eventDraw);
             addlistener(obj.ui, 'event_clear', @obj.fcnCallbackUi_eventClear);
             addlistener(obj.ui, 'event_load', @obj.fcnCallbackUi_eventLoad);
             addlistener(obj.ui, 'event_export', @obj.fcnCallbackUi_eventExport);
@@ -87,8 +85,6 @@ classdef WidgetNeuroTree < handle
             addlistener(obj.ui, 'thresholdNhood', 'PostSet', @obj.fcnCallbackUi_eventMask);
             addlistener(obj.ui, 'viewMask', 'PostSet', @obj.fcnCallbackUi_eventView);
             addlistener(obj.ui, 'viewTree', 'PostSet', @obj.fcnCallbackUi_eventView);
-            
-            
             
             % add Viewer callbacks
             addlistener(obj.viewer, 'event_clickDown', @obj.fcnCallbackViewer_clickDown);
@@ -103,14 +99,11 @@ classdef WidgetNeuroTree < handle
             addlistener(obj.viewer, 'event_hoverLine', @obj.fcnCallbackViewer_hoverLine);
             addlistener(obj.viewer, 'event_hoverPoint', @obj.fcnCallbackViewer_hoverPoint);
             
-            % add Model callbacks
+            % add Engine callbacks
             addlistener(obj.engine, 'mousePointer', 'PostSet', @obj.fcnCallbackEngine_updateMousePointer);
             addlistener(obj.engine, 'status', 'PostSet', @obj.fcnCallbackEngine_updateStatus);
             
         end
-        
-        
-        
         
     end
     
@@ -118,62 +111,63 @@ classdef WidgetNeuroTree < handle
     %% --- Ui callbacks --- %%
     methods (Access = private)
         
-        %% @ event segment
-        function obj = fcnCallbackUi_eventNew(obj, ~, ~)
+        %% @ event ui pushbutton New
+        function obj = fcnCallbackUi_eventDraw(obj, ~, ~)
             
-            disp('WidgetNeuroTree::UiEvent::New');
-            obj.engine.transition(obj.engine.EVENT_SEGMENT, obj.viewer);
+            disp('WidgetNeuroTree::UiEvent::Draw');
+            obj.engine.transition(obj.engine.EVENT_UI_DRAW, obj.viewer);
             
         end
         
-        %% @ event clear
+        %% @ event ui pushbutton Clear
         function obj = fcnCallbackUi_eventClear(obj, ~, ~)
             
             disp('WidgetNeuroTree::UiEvent::Clear');
-            obj.engine.transition(obj.engine.EVENT_CLEAR, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_UI_CLEAR, obj.viewer);
             
         end
         
-        %% @ event load
+        %% @ event ui pushbutton Load
         function obj = fcnCallbackUi_eventLoad(obj, ~, ~)
             
             disp('WidgetNeuroTree::UiEvent::Load');
-            obj.engine.transition(obj.engine.EVENT_LOAD, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_UI_LOAD, obj.viewer);
             
         end
         
-        %% @ event export
+        %% @ event ui pushbutton Export
         function obj = fcnCallbackUi_eventExport(obj, ~, ~)
             
             disp('WidgetNeuroTree::UiEvent::Export');
+            
             notify(obj,'event_treeExport');
-            obj.engine.transition(obj.engine.EVENT_EXPORT, {'Viewer', obj.viewer,...
+            obj.engine.transition(obj.engine.EVENT_UI_EXPORT, {'Viewer', obj.viewer,...
                                                             'Path', obj.filePath....
                                                             'Name', obj.fileName});
             
         end
         
-        %% @ event tab segment
+        %% @ event ui click Tab Segment
         function obj = fcnCallbackUi_eventSegment(obj, ~, ~)
             
             disp('WidgetNeuroTree::UiEvent::Segment');
-            obj.engine.transition(obj.engine.EVENT_SEGMENT, []);
+            %obj.engine.transition(obj.engine.EVENT_UI_SEGMENT, []);
             
         end
         
-        %% @ event mask
+        %% @ event ui click Tab Mask / edit Thresholds
         function obj = fcnCallbackUi_eventMask(obj, ~, ~)
             
             disp('WidgetNeuroTree::UiEvent::Mask');
-            obj.engine.transition(obj.engine.EVENT_MASK, obj.viewer);
+            %obj.engine.transition(obj.engine.EVENT_UI_MASK, obj.viewer);
             
         end
         
-        %% @ event view
+        %% @ event ui checkbox Views
         function obj = fcnCallbackUi_eventView(obj, ~, ~)
             
-            disp('WidgetNeuroTree::UiEvent::Mask');
-            obj.engine.transition(obj.engine.EVENT_VIEW, obj.viewer);
+            disp('WidgetNeuroTree::UiEvent::View');
+            %obj.engine.transition(obj.engine.EVENT_UI_VIEW, obj.viewer);
             
         end
         
@@ -186,80 +180,84 @@ classdef WidgetNeuroTree < handle
         %% @ event click down
         function obj = fcnCallbackViewer_clickDown(obj, ~, ~)
             
-            obj.engine.transition(obj.engine.EVENT_CLICKDOWN, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_VIEWER_CLICKDOWN, obj.viewer);
             
         end
-        
         
         %% @ event click up
         function obj = fcnCallbackViewer_clickUp(obj, ~, ~)
             
-            obj.engine.transition(obj.engine.EVENT_CLICKUP, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_VIEWER_CLICKUP, obj.viewer);
             
         end
         
         %% @ event click double
         function obj = fcnCallbackViewer_clickDouble(obj, ~, ~)
             
-            obj.engine.transition(obj.engine.EVENT_CLICKDOUBLE, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_VIEWER_CLICKDOUBLE, obj.viewer);
             
         end
         
         %% @ event click extend
         function obj = fcnCallbackViewer_clickExtend(obj, ~, ~)
             
-            obj.engine.transition(obj.engine.EVENT_CLICKEXTEND, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_VIEWER_CLICKEXTEND, obj.viewer);
             
         end
         
         %% @ event mouse move
         function obj = fcnCallbackViewer_moveMouse(obj, ~, ~)
             
-            obj.engine.transition(obj.engine.EVENT_MOVEMOUSE, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_VIEWER_MOVEMOUSE, obj.viewer);
             
         end
         
         %% @ event press digit
         function obj = fcnCallbackViewer_pressDigit(obj, ~, ~)
             
-            obj.engine.transition(obj.engine.EVENT_PRESSDIGIT, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_VIEWER_PRESSDIGIT, obj.viewer);
             
         end
         
         %% @ event press esc
         function obj = fcnCallbackViewer_pressEsc(obj, ~, ~)
             
-            obj.engine.transition(obj.engine.EVENT_PRESSESC, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_VIEWER_PRESSESC, obj.viewer);
             
         end
         
         %% @ event press del
         function obj = fcnCallbackViewer_pressDel(obj, ~, ~)
             
-            obj.engine.transition(obj.engine.EVENT_PRESSDEL, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_VIEWER_PRESSDEL, obj.viewer);
             
         end
         
         %% @ event hover idle
         function obj = fcnCallbackViewer_hoverIdle(obj, ~, ~)
             
-            obj.engine.transition(obj.engine.EVENT_HOVERIDLE, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_VIEWER_HOVERIDLE, obj.viewer);
             
         end
         
         %% @ event hover line
         function obj = fcnCallbackViewer_hoverLine(obj, ~, ~)
             
-            obj.engine.transition(obj.engine.EVENT_HOVERLINE, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_VIEWER_HOVERLINE, obj.viewer);
             
         end
         
         %% @ event hover point
         function obj = fcnCallbackViewer_hoverPoint(obj, ~, ~)
             
-            obj.engine.transition(obj.engine.EVENT_HOVERPOINT, obj.viewer);
+            obj.engine.transition(obj.engine.EVENT_VIEWER_HOVERPOINT, obj.viewer);
             
         end
+        
+    end
+    
+    %% --- Engine callbacks --- %%
+    methods
         
         %% @ event postset mouse pointer
         function obj = fcnCallbackEngine_updateMousePointer(obj, ~, ~)
@@ -274,7 +272,6 @@ classdef WidgetNeuroTree < handle
             obj.ui.changeStatus(obj.engine.status);
             
         end
-        
         
     end
     

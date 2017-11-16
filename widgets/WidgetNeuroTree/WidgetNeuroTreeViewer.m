@@ -52,7 +52,7 @@ classdef WidgetNeuroTreeViewer < handle
             
             %%% parse input
             parserObj = inputParser;
-            addParameter(parserObj, 'Parent', [], @(varin) isgraphics(varin));
+            addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
             parse(parserObj, varargin{:});
             varhandle = parserObj.Results.Parent;
             

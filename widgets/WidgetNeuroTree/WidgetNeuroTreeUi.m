@@ -32,7 +32,7 @@ classdef WidgetNeuroTreeUi < handle
         
         text_status
         
-        pushButton_new
+        pushButton_draw
         pushButton_clear
         pushButton_load
         pushButton_export
@@ -62,7 +62,7 @@ classdef WidgetNeuroTreeUi < handle
     
     events
         
-        event_new
+        event_draw
         event_clear
         event_load
         event_export
@@ -167,10 +167,10 @@ classdef WidgetNeuroTreeUi < handle
                 'Spacing', obj.UI_GRID_SPACING,...
                 'ButtonSize', obj.UI_BUTTON_SIZE);
             
-            obj.pushButton_new = uicontrol(...
+            obj.pushButton_draw = uicontrol(...
                 'Parent', buttonGroup_create,...
                 'Style', 'pushbutton',...
-                'String', 'new',...
+                'String', 'draw',...
                 'Enable', 'on');
 
             obj.pushButton_clear = uicontrol(...
@@ -306,7 +306,7 @@ classdef WidgetNeuroTreeUi < handle
         
         function obj = uiCallbacks(obj)
             
-            set(obj.pushButton_new, 'Callback', @obj.onClick_pushButton);
+            set(obj.pushButton_draw, 'Callback', @obj.onClick_pushButton);
             set(obj.pushButton_clear, 'Callback', @obj.onClick_pushButton);
             set(obj.pushButton_load, 'Callback', @obj.onClick_pushButton);
             set(obj.pushButton_export, 'Callback', @obj.onClick_pushButton);
@@ -328,8 +328,8 @@ classdef WidgetNeuroTreeUi < handle
             
             switch hsource
                 
-                case obj.pushButton_new    
-                    notify(obj, 'event_new');
+                case obj.pushButton_draw    
+                    notify(obj, 'event_draw');
                     
                 case obj.pushButton_clear
                     notify(obj, 'event_clear');
