@@ -77,7 +77,7 @@ classdef NeuroBits < handle
             
             %% add controller
             addlistener(obj.widget_FolderBrowser, 'file', 'PostSet', @obj.fcnCallback_requestFile);
-            
+            addlistener(obj.widget_NeuroTree, 'event_treeExport', @obj.fcnCallback_requestTreeExport);
         end
         
         %% destructor
@@ -102,6 +102,15 @@ classdef NeuroBits < handle
         function obj = fcnCallback_requestFile(obj, ~, ~)
             
             obj.widget_ImageBrowser.read(obj.widget_FolderBrowser.file);
+            
+        end
+        
+        %% request tree export
+        function obj = fcnCallback_requestTreeExport(obj, ~, ~)
+            
+            [filePath, fileName] = fileparts(obj.widget_FolderBrowser.file);
+            obj.widget_NeuroTree.filePath = filePath;
+            obj.widget_NeuroTree.fileName = fileName;
             
         end
         
