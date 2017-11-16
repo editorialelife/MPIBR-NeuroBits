@@ -20,10 +20,12 @@ classdef WidgetNeuroTree < handle
         
         filePath
         fileName
+        imageWidth
+        imageHeight
         
     end
     
-    properties (Access = public)
+    properties (Access = private)
         
         ui
         viewer
@@ -142,8 +144,10 @@ classdef WidgetNeuroTree < handle
             
             notify(obj,'event_treeExport');
             obj.engine.transition(obj.engine.EVENT_UI_EXPORT, {'Viewer', obj.viewer,...
-                                                            'Path', obj.filePath....
-                                                            'Name', obj.fileName});
+                                                            'Path', obj.filePath,...
+                                                            'Name', obj.fileName,...
+                                                            'Width', obj.imageWidth,...
+                                                            'Height', obj.imageHeight});
             
         end
         

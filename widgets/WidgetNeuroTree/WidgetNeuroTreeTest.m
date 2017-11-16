@@ -193,8 +193,7 @@ function WidgetNeuroTreeTest()
         
     end
 
-    events(obj)
-
+    
     %% test mask
     %tree = obj.engine.tree;
 
