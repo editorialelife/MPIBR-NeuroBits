@@ -78,7 +78,7 @@ classdef WidgetNeuroTreeUi < handle
             
             %%% parse input
             parserObj = inputParser;
-            addParameter(parserObj, 'Parent', [], @(varin) isgraphics(varin));
+            addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
             parse(parserObj, varargin{:});
             varhandle = parserObj.Results.Parent;
             
@@ -439,8 +439,5 @@ classdef WidgetNeuroTreeUi < handle
             
         end
     end
-    
-    
-    
     
 end % class end
