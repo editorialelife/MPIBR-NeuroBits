@@ -96,6 +96,8 @@ classdef WidgetImageBrowserViewer < handle
         function obj = updatePreview(obj, img)
             
             obj.vimage.CData = img;
+            obj.vaxes.XLim = [1,size(img,2)];
+            obj.vaxes.YLim = [1,size(img,1)];
             
         end
         
