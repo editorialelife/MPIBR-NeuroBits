@@ -98,8 +98,6 @@ classdef WidgetNeuroTreeViewer < handle
                 handle_list = findall(obj.handle_figure);
                 obj.handle_axes = handle_list(isgraphics(handle_list, 'axes'));
                 obj.handle_image = handle_list(isgraphics(handle_list, 'image'));
-                set(obj.handle_axes, 'XLim', [1, obj.imageWidth]);
-                set(obj.handle_axes, 'YLim', [1, obj.imageHeight]);
                 
             end
             
