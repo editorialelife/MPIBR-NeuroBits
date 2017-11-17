@@ -1,0 +1,110 @@
+<deployment-project plugin="plugin.toolbox" plugin-version="1.0">
+  <configuration file="/Users/tushevg/Developer/Projects/MPIBR-Projects/NeuroBits/NeuroBits.prj" location="/Users/tushevg/Developer/Projects/MPIBR-Projects/NeuroBits" name="NeuroBits" target="target.toolbox" target-name="Package Toolbox">
+    <param.appname>NeuroBits</param.appname>
+    <param.authnamewatermark>Georgi Tushev</param.authnamewatermark>
+    <param.email>scic@brain.mpg.de</param.email>
+    <param.company>MPI Brain</param.company>
+    <param.summary>user-guided neuronal segmentation</param.summary>
+    <param.description />
+    <param.screenshot>/Users/tushevg/Desktop/imgdb/BatchProcessed/160517_UTRProject_Colocalization-CDS-UTR_Calm3_Channel2UTR_Channel3CDS_Dish01-OME_TIFF-Export-01_s2.ome_maxProjection_neuroTree_17Nov2017.png</param.screenshot>
+    <param.version>1.0</param.version>
+    <param.output>${PROJECT_ROOT}/NeuroBits.mltbx</param.output>
+    <param.products.name />
+    <param.products.id />
+    <param.products.version />
+    <param.platforms />
+    <param.guid>814464a1-b7ae-498b-8670-bdeacb3a334a</param.guid>
+    <param.exclude.filters />
+    <param.examples />
+    <param.demosxml />
+    <param.apps />
+    <param.docs />
+    <param.matlabpath.excludes />
+    <param.javaclasspath.excludes />
+    <unset>
+      <param.description />
+      <param.version />
+      <param.output />
+      <param.products.name />
+      <param.products.id />
+      <param.products.version />
+      <param.platforms />
+      <param.exclude.filters />
+      <param.examples />
+      <param.demosxml />
+      <param.apps />
+      <param.docs />
+      <param.matlabpath.excludes />
+      <param.javaclasspath.excludes />
+    </unset>
+    <fileset.rootdir>
+      <file>/Users/tushevg/Developer/Projects/MPIBR-Projects/NeuroBits</file>
+    </fileset.rootdir>
+    <fileset.rootfiles>
+      <file>${PROJECT_ROOT}/.DS_Store</file>
+      <file>${PROJECT_ROOT}/.git</file>
+      <file>${PROJECT_ROOT}/.gitignore</file>
+      <file>${PROJECT_ROOT}/.gitmodules</file>
+      <file>${PROJECT_ROOT}/LICENSE</file>
+      <file>${PROJECT_ROOT}/NeuroBits.m</file>
+      <file>${PROJECT_ROOT}/NeuroBitsTest.m</file>
+      <file>${PROJECT_ROOT}/README.md</file>
+      <file>${PROJECT_ROOT}/widgets</file>
+    </fileset.rootfiles>
+    <fileset.depfun.included>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uiextras/HBoxFlex.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uiextras/VBoxFlex.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/+mixin/Container.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/+mixin/Flex.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/+mixin/Panel.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/Box.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/ButtonBox.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/ChildEvent.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/ChildObserver.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/Container.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/Divider.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/Empty.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/FigureData.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/FigureObserver.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/HBox.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/HBoxFlex.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/HButtonBox.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/Node.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/Panel.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/PointerManager.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/SelectionData.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/TabPanel.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/VBox.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/VBoxFlex.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/calcPixelSizes.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/loadIcon.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/setPosition.m</file>
+      <file>/Users/tushevg/Documents/MATLAB/Add-Ons/Toolboxes/GUI Layout Toolbox/code/layout/+uix/tracking.m</file>
+    </fileset.depfun.included>
+    <fileset.depfun.excluded />
+    <fileset.package />
+    <build-deliverables>
+      <file location="/Users/tushevg/Developer/Projects/MPIBR-Projects/NeuroBits" name="NeuroBits.mltbx" optional="false">/Users/tushevg/Developer/Projects/MPIBR-Projects/NeuroBits/NeuroBits.mltbx</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>/Applications/MATLAB_R2016b.app</root>
+      <toolboxes />
+    </matlab>
+    <platform>
+      <unix>true</unix>
+      <mac>true</mac>
+      <windows>false</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>10.10.5</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>maci64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>
