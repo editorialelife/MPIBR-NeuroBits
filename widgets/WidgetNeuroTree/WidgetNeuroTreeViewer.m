@@ -19,7 +19,8 @@ classdef WidgetNeuroTreeViewer < handle
     
     properties (Access = public, Dependent = true)
         
-        size
+        imageWidth
+        imageHeight
         
     end
     
@@ -97,6 +98,8 @@ classdef WidgetNeuroTreeViewer < handle
                 handle_list = findall(obj.handle_figure);
                 obj.handle_axes = handle_list(isgraphics(handle_list, 'axes'));
                 obj.handle_image = handle_list(isgraphics(handle_list, 'image'));
+                set(obj.handle_axes, 'XLim', [1, obj.imageWidth]);
+                set(obj.handle_axes, 'YLim', [1, obj.imageHeight]);
                 
             end
             
@@ -225,12 +228,15 @@ classdef WidgetNeuroTreeViewer < handle
     %% --- dependent properties --- %%
     methods
         
-        function varsize = get.size(obj)
+        function varsize = get.imageWidth(obj)
             
-            xscale = get(obj.handle_axes, 'XLim');
-            yscale = get(obj.handle_axes, 'YLim');
+            varsize = size(obj.handle_image.CData, 2);
             
-            varsize = [max(yscale), max(xscale)];
+        end
+        
+        function varsize = get.imageHeight(obj)
+            
+            varsize = size(obj.handle_image.CData, 1);
             
         end
         

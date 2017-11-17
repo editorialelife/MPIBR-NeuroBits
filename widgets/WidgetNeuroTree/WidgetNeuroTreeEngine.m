@@ -475,24 +475,10 @@ classdef WidgetNeuroTreeEngine < handle
             addParameter(parserObj, 'Viewer',[], @(varobj) isa(varobj, 'WidgetNeuroTreeViewer'));
             addParameter(parserObj, 'Path', pwd, @(varchar) ischar(varchar) && exist(varchar,'dir') == 7);
             addParameter(parserObj, 'Name', 'testTree', @(varchar) ischar(varchar));
-            addParameter(parserObj, 'Width', [], @isnumeric);
-            addParameter(parserObj, 'Height', [], @isnumeric);
             parse(parserObj, eventdata{:});
             objviewer = parserObj.Results.Viewer;
             filePath = parserObj.Results.Path;
             fileName = parserObj.Results.Name;
-            imageWidth = parserObj.Results.Width;
-            imageHeight = parserObj.Results.Height;
-            
-            imgsize = objviewer.size();
-            
-            if isempty(imageWidth)
-                imageWidth = imgsize(2);
-            end
-            
-            if isempty(imageHeight)
-                imageHeight = imgsize(1);
-            end
             
             % loop the tree
             vartxt = '';
@@ -531,8 +517,8 @@ classdef WidgetNeuroTreeEngine < handle
                 fprintf(fpWrite, 'file_name=%s\n', fileName);
                 %fprintf(fpWrite, 'dilation[px]=%d\n', dilation);
                 %fprintf(fpWrite, 'nhood[px]=%d\n', nhood);
-                fprintf(fpWrite, 'width[px]=%d\n',round(imageWidth));
-                fprintf(fpWrite, 'height[px]=%d\n',round(imageHeight));
+                fprintf(fpWrite, 'width[px]=%d\n',objviewer.imageWidth);
+                fprintf(fpWrite, 'height[px]=%d\n',objviewer.imageHeight);
                 fprintf(fpWrite, '\n');
                 fprintf(fpWrite,'%s',vartxt);
                 fclose(fpWrite);
