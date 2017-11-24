@@ -19,7 +19,7 @@ function WidgetFolderBrowserTest()
     end
 
     %% set listener callback
-    addlistener(obj, 'event_file', @fcnCallback_testEvent);
+    addlistener(obj, 'file', 'PostSet', @fcnCallback_testEvent);
 
 end
 
