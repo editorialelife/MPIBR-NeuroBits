@@ -47,13 +47,6 @@ classdef WidgetImageBrowser < handle
             
         end
         
-        function delete(obj)
-            
-            delete(obj.viewer);
-            delete(obj.ui);
-            delete(obj.model);
-            
-        end
         
         function obj = read(obj, varfile)
             

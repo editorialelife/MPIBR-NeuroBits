@@ -8,13 +8,21 @@ clear variables
 close all
 
 %% add ImageIO
-addpath(genpath('/Users/tushevg/Developer/Projects/MPIBR-Projects/ImageIO/'));
+%addpath(genpath('/Users/tushevg/Developer/Projects/MPIBR-Projects/ImageIO/'));
 
-obj = WidgetImageBrowser();
+%obj = WidgetImageBrowser();
 
 
-file_name = '/Users/tushevg/Desktop/imgdb/BatchProcessed/160517_UTRProject_Colocalization-CDS-UTR_Calm3_Channel2UTR_Channel3CDS_Dish01-OME_TIFF-Export-01_s5.ome_maxProjection.tif';
-obj.read(file_name);
+fileName = '/Users/tushevg/Desktop/Analysis/Camk2a/160517_UTRProject_Colocalization-CDS-UTR_Camk2a_Channel2UTR_Channel3CDS_Dish01_MIP_01.lsm';
+if exist(fileName, 'file') == 2
+    
+    meta = imfinfo(fileName);
+    tmp = imread(fileName);
+    
+else
+    error('Error::WidgetImageBrowserTest::invalid input file');
+end
+%obj.read(file_name);
 
 %reader = imageIO.TiffReader(file_name);
 

@@ -73,11 +73,7 @@ classdef WidgetImageBrowserViewer < handle
             
         end
         
-        function delete(obj)
-            
-            delete(obj.parent);
-            
-        end
+        
         
         
         function obj = updateCLimit(obj, varclim)

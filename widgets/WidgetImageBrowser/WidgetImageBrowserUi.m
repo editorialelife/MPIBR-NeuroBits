@@ -129,11 +129,7 @@ classdef WidgetImageBrowserUi < handle
             
         end
         
-        function delete(obj)
-            
-            delete(obj.parent);
-            
-        end
+        
         
         
         function obj = uistatus(obj)
