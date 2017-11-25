@@ -57,7 +57,7 @@ classdef NeuroBits < handle
             
             %% initialize FolderBrowser
             obj.widget_FolderBrowser = WidgetFolderBrowser('Parent', obj.ui_layout,...
-                                                           'Extension', '*.tif');
+                                                           'Extension', '*.lsm');
             if ~isa(obj.widget_FolderBrowser, 'WidgetFolderBrowser')
                 error('NeruoBits :: failed to initialize WidgetFolderBrowser');
             end
