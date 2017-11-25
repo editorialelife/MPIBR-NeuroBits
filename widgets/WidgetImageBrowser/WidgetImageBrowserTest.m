@@ -22,6 +22,10 @@ if exist(fileName, 'file') == 2
 else
     error('Error::WidgetImageBrowserTest::invalid input file');
 end
+
+
+
+
 %obj.read(file_name);
 
 %reader = imageIO.TiffReader(file_name);

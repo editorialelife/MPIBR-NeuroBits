@@ -23,12 +23,6 @@ classdef WidgetImageBrowserViewer < handle
         
     end
     
-    events
-        
-        event_closeRequest
-        
-    end
-    
     methods
         
         function obj = WidgetImageBrowserViewer()
@@ -46,8 +40,7 @@ classdef WidgetImageBrowserViewer < handle
                 'NumberTitle', 'off',...
                 'Position', [1, 1,...
                              screenSize + obj.UI_GRID_PADDING,...
-                             screenSize + obj.UI_GRID_PADDING],...
-                'CloseRequestFcn', @obj.onClick_closeRequest);
+                             screenSize + obj.UI_GRID_PADDING]);
             movegui(obj.parent, 'north');
             
             obj.layout = uiextras.HBoxFlex(...
@@ -91,12 +84,10 @@ classdef WidgetImageBrowserViewer < handle
         function obj = updatePreview(obj, img)
             
             obj.vimage.CData = img;
-            
-        end
-        
-        function obj = onClick_closeRequest(obj, ~, ~)
-            
-            notify(obj, 'event_closeRequest');
+            set(obj.vaxes,...
+                'XLim', [1, size(img,2)],...
+                'YLim', [1, size(img,1)]);
+                           
             
         end
         
