@@ -19,7 +19,6 @@ classdef WidgetImageBrowser < handle
             addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
             parse(parserObj, varargin{:});
             
-            
             % create MVC
             obj.ui = WidgetImageBrowserUi(parserObj.Results.Parent);
             if ~isa(obj.ui, 'WidgetImageBrowserUi')
