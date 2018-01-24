@@ -124,6 +124,13 @@ classdef (Abstract = true) ImageIO < handle
         meta = struct(obj);
       end
       
+      %FINDORIGINALMETADATA searches for a field field in the original
+      %metadata and returns all occurences
+      function metadata = findOriginalMetadata(obj, fieldName)
+          metadata = [];
+          metadata = obj.loopOverNestedStructs(metadata, obj.originalMetadata, fieldName);
+      end
+      
       function delete(~)
       end
     end
@@ -134,6 +141,30 @@ classdef (Abstract = true) ImageIO < handle
     
     methods (Access = protected)
       obj = readMetadata(obj, varargin);
+    end
+    
+    methods (Access = private)
+        %LOOPOVERNESTEDSTRUCTS recursively loops over a struct and returns
+        %all sub structures with a given name.
+        function foundField = loopOverNestedStructs(obj, foundField, aStruct, fieldName)
+            fields = fieldnames(aStruct);
+            for idx = 1:length(fields)
+                aField = aStruct.(fields{idx});
+                if strcmp(fields{idx}, fieldName)
+                    try %if structure is of same type it can get appended
+                        foundField = [foundField, aField];
+                    catch
+                        foundField = aField;
+                    end
+                elseif isstruct(aField)
+                    foundField = loopOverNestedStructs(obj, foundField, aField, fieldName);
+                elseif iscell(aField)
+                    for i=1:length(aField)
+                        foundField = loopOverNestedStructs(obj, foundField, aField{i}, fieldName);
+                    end
+                end
+            end
+        end
     end
     
 end
