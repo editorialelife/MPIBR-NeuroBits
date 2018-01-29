@@ -14,7 +14,6 @@ function [ blkData, obj ] = readRawSubblockSegm( obj, varargin )
 %
 % AUTHOR: Stefano Masneri
 % Date: 13.10.2016
-
   p = inputParser;
   p.addParameter('dirEntry', []);
   p.addParameter('idx', [], @(x) (x > 0));
@@ -71,7 +70,7 @@ function [ blkData, obj ] = readRawSubblockSegm( obj, varargin )
   
   % Metadata
   metadata = fread(obj.cziPtr, metadataSize, '*char')';
-  if ~isempty(metadata) && obj.wrongMetadata && ~isempty(k);
+  if ~isempty(metadata) && obj.wrongMetadata && ~isempty(k)
     metadataStruct = xml2struct(metadata);
     stitchBounds = metadataStruct.METADATA.Tags.LastStitchingBounds.Text;
     indX = strfind(stitchBounds, 'StartX');
@@ -89,7 +88,7 @@ function [ blkData, obj ] = readRawSubblockSegm( obj, varargin )
   if nargout == 1
     datatype = [obj.datatype '=>' obj.datatype];
     blkData = fread(obj.cziPtr, dataSize, datatype);
-    blkData = reshape(blkData, obj.pixPerTileRow, obj.pixPerTileCol)';
+    blkData = reshape(blkData, obj.pixPerTileCol, obj.pixPerTileRow)';
   else
     blkData = [];
   end
