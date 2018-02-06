@@ -59,10 +59,10 @@ function obj = readRawMetadataSegm( obj )
     obj.refractiveMedium = microscopeInfo.Objectives.Objective.Immersion.Text;
     if strcmpi(obj.refractiveMedium, 'Air')
       obj.refractiveIndex = 1;
-    elseif strcmpi(obj.refractiveMedium, 'W') || strcmpi(obj.refractionMedium, 'Water')
+    elseif strcmpi(obj.refractiveMedium, 'W') || strcmpi(obj.refractiveMedium, 'Water')
       obj.refractiveIndex = 1.33;
     elseif strcmpi(obj.refractiveMedium, 'Oil')
-      obj.refractiveIndex = 1.5;
+      obj.refractiveIndex = 1.518;
     end
   catch
     disp('Refraction media info not available')
