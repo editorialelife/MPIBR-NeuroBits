@@ -54,7 +54,13 @@ function obj = readRawMetadataSegm( obj )
   catch
     disp('Objective Magnification info not available')
   end
-
+  
+  try
+      obj.objectiveNA = str2double(microscopeInfo.Objectives.Objective.LensNA.Text);
+  catch
+      disp('Objective NA info not available')
+  end
+  
   try
     obj.refractiveMedium = microscopeInfo.Objectives.Objective.Immersion.Text;
     if strcmpi(obj.refractiveMedium, 'Air')
