@@ -86,9 +86,9 @@ end
 
 %objective properties
 try
-  obj.refractiveMedia = char(ome.getObjectiveImmersion(0,0));
+  obj.refractiveMedium = char(ome.getObjectiveImmersion(0,0));
 catch
-  obj.refractiveMedia = 'Unknown';
+  obj.refractiveMedium = 'Unknown';
 end
 try
   obj.NA = double(ome.getObjectiveLensNA(0,0));
