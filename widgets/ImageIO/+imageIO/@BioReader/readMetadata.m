@@ -86,9 +86,9 @@ end
 
 %objective properties
 try
-  obj.refractionMedia = char(ome.getObjectiveImmersion(0,0));
+  obj.refractiveMedia = char(ome.getObjectiveImmersion(0,0));
 catch
-  obj.refractionMedia = 'Unknown';
+  obj.refractiveMedia = 'Unknown';
 end
 try
   obj.NA = double(ome.getObjectiveLensNA(0,0));
@@ -101,9 +101,9 @@ catch
   obj.objectiveName = 'Unknown';
 end
 try
-  obj.refractionIndex = double(ome.getObjectiveSettingsRefractiveIndex(0));
+  obj.refractiveIndex = double(ome.getObjectiveSettingsRefractiveIndex(0));
 catch
-  obj.refractionIndex = NaN;
+  obj.refractiveIndex = NaN;
 end
 try
   obj.objectiveMagnification = double(ome.getObjectiveNominalMagnification(0,0));
