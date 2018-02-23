@@ -227,6 +227,8 @@ try
     obj.numTilesRow = str2double(tileInfo.TilesY.Text);
     obj.numTilesCol = str2double(tileInfo.TilesX.Text);
     if (obj.numTilesRow * obj.numTilesCol) ~= obj.tile
+        obj.numTilesRow=1;
+        obj.numTilesCol=1;
         warning('CZIReader.readRawMetadataSegm: inconsistent tile info, possible errors ahead!')
     end
     obj.tileOverlap = str2double(tileInfo.TileAcquisitionOverlap.Text);
