@@ -8,7 +8,6 @@ classdef WidgetImageBrowser < handle
         
     end
     
-    
     %% --- constructor/controller --- %%
     methods
         
@@ -17,6 +16,7 @@ classdef WidgetImageBrowser < handle
             % parse input
             parserObj = inputParser;
             addParameter(parserObj, 'Parent', [], @(varin) (isempty(varin) || isgraphics(varin)));
+            addParameter(parserObj, 'Axes', [], @(varin) (isempty(varin) || isgraphics(varin)));
             parse(parserObj, varargin{:});
             
             % create MVC
@@ -25,7 +25,11 @@ classdef WidgetImageBrowser < handle
                 error('WidgetImageBrowser: initializing Ui failed!');
             end
             
-            obj.viewer = WidgetImageBrowserViewer();
+            if isempty(parserObj.Results.Axes)
+                obj.viewer = WidgetImageBrowserViewer();
+            else
+                obj.viewer = WidgetImageBrowserViewer(parserObj.Results.Axes);
+            end
             if ~isa(obj.viewer, 'WidgetImageBrowserViewer')
                 error('WidgetImageBrowser: initializing Viewer failed!');
             end
@@ -110,8 +114,7 @@ classdef WidgetImageBrowser < handle
         end
         
         function obj = fcnCallback_changeChannel(obj, ~, ~)
-            
-            obj.model.updateIndexStack(obj.ui.requestStepChannel);
+            obj.model.updateIndexChannel(obj.ui.requestStepChannel);
             if obj.ui.requestProjectionIsKeep
                 obj.model.updateProjection(obj.ui.requestProjectionType());
             else

@@ -97,7 +97,6 @@ classdef WidgetImageBrowserModel < handle
         end
         
         function obj = updateIndexChannel(obj, varstep)
-            
             % varstep value
             if varstep > obj.requestSizeChannel
                 
@@ -144,11 +143,11 @@ classdef WidgetImageBrowserModel < handle
         
         function varnum = requestResolution(obj, vartext)
             
-            xres = obj.imgptr.XResolution;
+            xres = obj.imgptr.width;
             if isempty(xres)
                 xres = 1;
             end
-            yres = obj.imgptr.YResolution;
+            yres = obj.imgptr.height;
             if isempty(yres)
                 yres = 1;
             end
