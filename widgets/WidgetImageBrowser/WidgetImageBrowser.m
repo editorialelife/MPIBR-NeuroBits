@@ -12,6 +12,7 @@ classdef WidgetImageBrowser < handle
     methods
         
         function obj = WidgetImageBrowser(varargin)
+            addpath(genpath('./submodules/'));
             
             % parse input
             parserObj = inputParser;

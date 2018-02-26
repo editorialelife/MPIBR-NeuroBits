@@ -1,0 +1,3 @@
+[submodule "submodules/ImageIO"]
+	path = submodules/ImageIO
+	url = https://github.molgen.mpg.de/MPIBR/ImageIO.git
