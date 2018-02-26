@@ -9,17 +9,15 @@ classdef WidgetFolderBrowser < handle
 % Max-Planck Institute For Brain Research
 %
 
-    properties (SetObservable = true)
-        
-        file
-        
-    end
-    
     properties (Access = private)
         
         ui
         model
         
+    end
+    
+    events
+        event_newFile
     end
     
     
@@ -51,6 +49,8 @@ classdef WidgetFolderBrowser < handle
             addlistener(obj.ui, 'event_filePrevious', @obj.fcnCallback_filePrevious);
             addlistener(obj.ui, 'event_folderLoad', @obj.fcnCallback_folderLoad);
             
+            addlistener(obj.model, 'event_newFile', @obj.fcnCallback_requestNewFile);
+
         end
     end
     
@@ -60,7 +60,6 @@ classdef WidgetFolderBrowser < handle
         function obj = fcnCallback_fileLoad(obj, ~, ~)
             
             obj.model.fileLoad();
-            obj.requestNewFile();
             
         end
         
@@ -68,7 +67,6 @@ classdef WidgetFolderBrowser < handle
         function obj = fcnCallback_fileNext(obj, ~, ~)
             
             obj.model.fileUpdate(1);
-            obj.requestNewFile();
             
         end
         
@@ -76,7 +74,6 @@ classdef WidgetFolderBrowser < handle
         function obj = fcnCallback_filePrevious(obj, ~, ~)
             
             obj.model.fileUpdate(-1);
-            obj.requestNewFile();
             
         end
         
@@ -84,17 +81,17 @@ classdef WidgetFolderBrowser < handle
         function obj = fcnCallback_folderLoad(obj, ~, ~)
             
             obj.model.folderLoad();
-            obj.requestNewFile();
             
         end
         
         %% @ request newfile
-        function obj = requestNewFile(obj)
-            
+        function obj = fcnCallback_requestNewFile(obj, ~, event)
+
             obj.ui.updateFileName(obj.model.fileTag);
             obj.ui.updateFileCounter(obj.model.index, obj.model.listSize);
-            obj.file = obj.model.file();
             
+            userEventData = UserEventData(event.userdata);
+            notify(obj, 'event_newFile', userEventData);
         end
         
     end

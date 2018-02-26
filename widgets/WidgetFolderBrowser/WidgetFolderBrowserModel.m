@@ -18,12 +18,15 @@ classdef WidgetFolderBrowserModel < handle
     end
     
     properties (Dependent)
-        
-        listSize
-        fileTag
         file
-        
+        listSize
+        fileTag        
     end
+    
+    events
+        event_newFile
+    end
+
     
     methods
         
@@ -33,15 +36,25 @@ classdef WidgetFolderBrowserModel < handle
             
         end
         
-        function obj = fileLoad(obj)
+        function obj = fileLoad(varargin)
             
-            [fileName, pathName] = uigetfile(regexp(obj.extension, ',', 'split')', 'Pick a file ...');
+            if nargin==1
+                obj = varargin{1};
+                [fileName, pathName] = uigetfile(regexp(obj.extension, ',', 'split')', 'Pick a file ...');
+                obj.path = pathName(1:end-1); % uigetfile returns pathName with filesep
+            elseif nargin==2 && exist(varargin{2}, 'file') %valid file as second argument
+                [pathstr, name, ext] = fileparts(varargin{2});
+                fileName = [name, ext];
+                obj.path = pathstr;
+            else
+                error('Wrong number of input arguments');
+            end
+            
             if ischar(fileName)
-                
-                obj.path = pathName(1:end-1); % uigetfile retunrns pathName with filesep
                 obj.list = {[pathName, fileName]};
                 obj.index = 1;
-                
+                userEventData = UserEventData([pathName, fileName]);
+                notify(obj, 'event_newFile', userEventData);
             end
             
         end
