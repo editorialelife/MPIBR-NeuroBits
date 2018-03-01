@@ -20,7 +20,6 @@ function [ blkData, obj ] = readRawSubblockSegm( obj, varargin )
   p.parse(varargin{:});
   k = p.Results.idx;
   dirEntry = p.Results.dirEntry;
-
   % Position the file pointer
   if ~isempty(dirEntry)
     fseek(obj.cziPtr, dirEntry.filePosition + 32, 'bof'); % + 32 to ignore header
@@ -30,6 +29,7 @@ function [ blkData, obj ] = readRawSubblockSegm( obj, varargin )
   metadataSize = int32(fread(obj.cziPtr, 1, 'int32'));
   attachSize   = int32(fread(obj.cziPtr, 1, 'int32'));
   dataSize     = int64(fread(obj.cziPtr, 1, 'int64'));
+  
   switch obj.datatype
     case 'int16'
       dataSize = dataSize / 2;
@@ -72,16 +72,20 @@ function [ blkData, obj ] = readRawSubblockSegm( obj, varargin )
   metadata = fread(obj.cziPtr, metadataSize, '*char')';
   if ~isempty(metadata) && obj.wrongMetadata && ~isempty(k)
     metadataStruct = xml2struct(metadata);
-    stitchBounds = metadataStruct.METADATA.Tags.LastStitchingBounds.Text;
-    indX = strfind(stitchBounds, 'StartX');
-    indStop = strfind(stitchBounds, '"');
-    indStop = indStop(indStop > indX);
-    dirEntry.XPos = str2double(stitchBounds(indStop(1)+1 : indStop(2)-1));
-    indY = strfind(stitchBounds, 'StartY');
-    indStop = strfind(stitchBounds, '"');
-    indStop = indStop(indStop > indY);
-    dirEntry.YPos = str2double(stitchBounds(indStop(1)+1 : indStop(2)-1));
-    obj.directoryEntries(k) = dirEntry;
+    try 
+        stitchBounds = metadataStruct.METADATA.Tags.LastStitchingBounds.Text;
+        indX = strfind(stitchBounds, 'StartX');
+        indStop = strfind(stitchBounds, '"');
+        indStop = indStop(indStop > indX);
+        dirEntry.XPos = str2double(stitchBounds(indStop(1)+1 : indStop(2)-1));
+        indY = strfind(stitchBounds, 'StartY');
+        indStop = strfind(stitchBounds, '"');
+        indStop = indStop(indStop > indY);
+        dirEntry.YPos = str2double(stitchBounds(indStop(1)+1 : indStop(2)-1));
+        obj.directoryEntries(k) = dirEntry;
+    catch %stitchBounds not found
+        
+    end
   end
   
   % Data
@@ -96,5 +100,5 @@ function [ blkData, obj ] = readRawSubblockSegm( obj, varargin )
   % Attachments - ignore for the moment
   % fread(obj.cziPtr, attachSize, '*char');
   
-end
+
 

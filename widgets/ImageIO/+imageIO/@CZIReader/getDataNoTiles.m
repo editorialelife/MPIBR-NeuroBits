@@ -70,9 +70,13 @@ for z = stacks
         
         %get directory entry
         dirEntry = obj.directoryEntries(obj.dirEntryIndices{ch, z, t, s});
+        if(size(dirEntry,2)>1) %This is possibly a pseudo-tiled file
+            dirEntry = dirEntry(end); %take the last entry, which is the full (stitched) image
+        end
         tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntry);
         data(:, :, idxCh, idxZ, idxT, idxS) = tmpImg(rows, cols);
         idxS = idxS + 1;
+        
       end
       idxT = idxT + 1;
     end
