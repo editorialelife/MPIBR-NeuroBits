@@ -36,6 +36,7 @@ classdef CZIReader < imageIO.ImageIO
     % multidimensional cell array, where the dimension
     % are specified by time, channel, stack and
     % series
+    isTiled = false;
     wrongMetadata = false;   % set to true if the information acquired from the
     % metadata block and the directory block is
     % contradictory

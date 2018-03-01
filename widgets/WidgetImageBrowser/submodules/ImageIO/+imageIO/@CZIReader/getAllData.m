@@ -63,45 +63,49 @@ else
     
     dirEntry = obj.directoryEntries(k);
     % Get image
-    tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntry);
-    % Get positions (all zero based)
-    C = 1 + dirEntry.C; 
-    Z = 1 + dirEntry.Z;
-    T = 1 + dirEntry.T;
-    S = 1 + dirEntry.S;
-    if isempty(C)
-      C = 1;
-    end
-    if isempty(Z)
-      Z = 1;
-    end
-    if isempty(T)
-      T = 1;
-    end
-    if isempty(S)
-      S = 1;
-    end
-    row = obj.rowIndex(dirEntry.YPos);
-    col = obj.colIndex(dirEntry.XPos);
-    if tileSeparate
-      data(:, :, C, Z, T, S, row, col) = tmpImg;
-    else
-      % Manage overlap
-      if 1 ~= row
-        ovDiffRow = round(obj.tileOverlap * obj.pixPerTileRow);
-      else
-        ovDiffRow = 0;
-      end
-      if 1 ~= col
-        ovDiffCol = round(obj.tileOverlap * obj.pixPerTileCol);
-      else
-        ovDiffCol = 0;
-      end
-      startR = 1 + (row - 1) * (obj.pixPerTileRow - ovDiffRow);
-      startC = 1 + (col - 1) * (obj.pixPerTileCol - ovDiffCol);
-      endR   = startR + obj.pixPerTileRow - 1;
-      endC   = startC + obj.pixPerTileCol - 1;
-      data(startR:endR, startC:endC, C, Z, T, S) = tmpImg;
+    try
+        tmpImg = obj.readRawSubblockSegm('dirEntry', dirEntry);
+
+        % Get positions (all zero based)
+        C = 1 + dirEntry.C; 
+        Z = 1 + dirEntry.Z;
+        T = 1 + dirEntry.T;
+        S = 1 + dirEntry.S;
+        if isempty(C)
+          C = 1;
+        end
+        if isempty(Z)
+          Z = 1;
+        end
+        if isempty(T)
+          T = 1;
+        end
+        if isempty(S)
+          S = 1;
+        end
+        row = obj.rowIndex(dirEntry.YPos);
+        col = obj.colIndex(dirEntry.XPos);
+        if tileSeparate
+          data(:, :, C, Z, T, S, row, col) = tmpImg;
+        else
+          % Manage overlap
+          if 1 ~= row
+            ovDiffRow = round(obj.tileOverlap * obj.pixPerTileRow);
+          else
+            ovDiffRow = 0;
+          end
+          if 1 ~= col
+            ovDiffCol = round(obj.tileOverlap * obj.pixPerTileCol);
+          else
+            ovDiffCol = 0;
+          end
+          startR = 1 + (row - 1) * (obj.pixPerTileRow - ovDiffRow);
+          startC = 1 + (col - 1) * (obj.pixPerTileCol - ovDiffCol);
+          endR   = startR + obj.pixPerTileRow - 1;
+          endC   = startC + obj.pixPerTileCol - 1;
+          data(startR:endR, startC:endC, C, Z, T, S) = tmpImg;
+        end
+    catch %most likely some problem with tiling metadata... ignore this entry
     end
   end
 end
