@@ -192,7 +192,10 @@ classdef TiffWriter < imageIO.ImageIO
     %     tw.write( data, 'close', false );
     %     tw.write( newdata, 'writemode', 'write' )
     %     tw.write( otherdata, 'writemode', 'write' )
+<<<<<<< HEAD
+=======
     %     tw.close();
+>>>>>>> 4af34bfd3352372824e3ff9bd3d1435c593d66e4
     % SEE ALSO:
     %   imwrite, imageIO.TiffWriter.TiffWriter
     
@@ -279,7 +282,7 @@ classdef TiffWriter < imageIO.ImageIO
         end
       else
         try
-          obj.writeSlow(data);
+          obj.writeSlow(writeMode, data);
         catch ME
           error('TiffWriter.writeData: Cannot save file. %s', ME.message)
         end
@@ -289,7 +292,7 @@ classdef TiffWriter < imageIO.ImageIO
     
     
     function data = read(obj, varargin)
-      % Do nothing, it's here because abstarct in superclass
+      % Do nothing, it's here because abstract in superclass
     end
     
   end
@@ -347,7 +350,7 @@ classdef TiffWriter < imageIO.ImageIO
       
     end
     
-    function writeSlow(obj, data)
+    function writeSlow(obj, writeMode, data)
     %WRITESLOW Write data to file using Matlab interface accessing the Tiff
     %library. This method is slower because it doesn't take advantage of
     %the mex files keeping track of the last directory written. It is
@@ -388,26 +391,8 @@ classdef TiffWriter < imageIO.ImageIO
       tagstruct.Software = 'MATLAB';
       tagstruct.XResolution = double(obj.resolution(1));
       tagstruct.YResolution = double(obj.resolution(2));
-      switch p.Results.compression
-        case 'none'
-          tagstruct.Compression = Tiff.Compression.None;
-        case 'lzw'
-          tagstruct.Compression = Tiff.Compression.LZW;
-        case 'jpeg'
-          tagstruct.Compression = Tiff.Compression.JPEG;
-        case 'adobe'
-          tagstruct.Compression = Tiff.Compression.AdobeDeflate;
-        otherwise %paranoia
-          tagstruct.Compression = Tiff.Compression.LZW;
-      end
       
-      % for binary images, compression is either none or PackBits
-      if islogical(data) && ~strcmp('none', p.Results.compression)
-        tagstruct.Compression = Tiff.Compression.PackBits;
-        if strcmp( p.Results.logging, 'on')
-          warning('Compression for binary images set to PackBits');
-        end
-      end
+      tagstruct.Compression = double(obj.compression);
       
       switch class(data)
         case {'uint8', 'uint16', 'uint32', 'logical'}
@@ -433,11 +418,11 @@ classdef TiffWriter < imageIO.ImageIO
       end
       
       try
-        t = Tiff(filename, wrtMode);
+        t = Tiff(obj.fileFullPath, wrtMode);
         % Actually apply this tag to the first image
         t.setTag(tagstruct);
         % Write the first image
-        if numDims == 2 || ( numDims == 3 && p.Results.isRGB && dataSize(3) == 3)
+        if numDims == 2 || ( numDims == 3 && obj.isRGB && dataSize(3) == 3)
           t.write(data);
         elseif numDims == 3
           t.write(data(:,:,1));
