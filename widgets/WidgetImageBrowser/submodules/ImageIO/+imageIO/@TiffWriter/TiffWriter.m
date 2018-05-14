@@ -192,10 +192,7 @@ classdef TiffWriter < imageIO.ImageIO
     %     tw.write( data, 'close', false );
     %     tw.write( newdata, 'writemode', 'write' )
     %     tw.write( otherdata, 'writemode', 'write' )
-<<<<<<< HEAD
-=======
     %     tw.close();
->>>>>>> 4af34bfd3352372824e3ff9bd3d1435c593d66e4
     % SEE ALSO:
     %   imwrite, imageIO.TiffWriter.TiffWriter
     
