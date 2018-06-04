@@ -53,36 +53,44 @@ p.addRequired('file', @(x) ischar(x) && exist(x, 'file'));
 p.addParameter('filePattern', '', @ischar);
 p.addParameter('dimOrder', 'Z', @(x) ischar(x) && length(x) <= 6);
 p.addParameter('overlap', 0, @(x) isscalar(x) && isnumeric(x) && x>= 0 && x < 100);
+p.addParameter('force', false, @(x) isscalar(x) && islogical(x));
+
 p.parse(file, varargin{:})
 filePattern = p.Results.filePattern;
+forceBioReader = p.Results.force;
 dimensionOrder = p.Results.dimOrder;
 overlap = p.Results.overlap;
 
 % check if is directory or file, and in case the file extension
-if isdir(file)
-  imgPtr = imageIO.TiffDirReader(file, filePattern, dimensionOrder, overlap);
-else %ok, which type of file?
-  [~, ~, ext] = fileparts(file);
-  switch ext
-    case '.czi'
-      imgPtr = imageIO.CZIReader(file);
-    case {'.tif', '.tiff'}
-      imgPtr = imageIO.TiffReader(file);
-    case '.exr'
-      error('imageIOPtr: Reading of exr files currently not supported')
-    case '.nd2'
-      imgPtr = imageIO.ND2Reader(file);
-    case '.sif'
-      if strcmpi(computer(), 'MACI')
-        error('imageIOPtr: Reading of sif files currently supported only on windows')
-      else
-        imgPtr = imageIO.SifReader(file);
+if(forceBioReader)
+    disp('imageIOPtr: Forcing reading using BioReader'); 
+    imgPtr = imageIO.BioReader(file);
+else
+    if isdir(file)
+      imgPtr = imageIO.TiffDirReader(file, filePattern, dimensionOrder, overlap);
+    else %ok, which type of file?
+      [~, ~, ext] = fileparts(file);
+      switch ext
+        case '.czi'
+          imgPtr = imageIO.CZIReader(file);
+        case {'.tif', '.tiff'}
+          imgPtr = imageIO.TiffReader(file);
+        case '.exr'
+          error('imageIOPtr: Reading of exr files currently not supported')
+        case '.nd2'
+          imgPtr = imageIO.ND2Reader(file);
+        case '.sif'
+          if strcmpi(computer(), 'MACI')
+            error('imageIOPtr: Reading of sif files currently supported only on windows')
+          else
+            imgPtr = imageIO.SifReader(file);
+          end
+        case '.lsm'
+          imgPtr = imageIO.LSMReader(file);
+        otherwise %assume it could be opened using the BioFormatReader
+          imgPtr = imageIO.BioReader(file);
       end
-    case '.lsm'
-      imgPtr = imageIO.LSMReader(file);
-    otherwise %assume it could be opened using the BioFormatReader
-      imgPtr = imageIO.BioReader(file);
-  end
+    end
 end
 
 end
