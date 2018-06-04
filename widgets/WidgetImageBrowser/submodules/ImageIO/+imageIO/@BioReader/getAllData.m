@@ -15,7 +15,7 @@ if 1 == obj.numTilesRow && 1 == obj.numTilesCol
         progBar.update(currNum/maxNum * 100);
         %set index
         tileIdx = obj.bfPtr.getIndex(s-1, ch-1, t-1) + 1;
-        tmp = bfGetPlane(obj.bfPtr, tileIdx)';
+        tmp = bfGetPlane(obj.bfPtr, tileIdx);
         assert(size(tmp, 1) == obj.pixPerTileRow && size(tmp, 2) == obj.pixPerTileCol);
         data(:, :, ch, s, t) = tmp;
       end
