@@ -1,6 +1,3 @@
-[submodule "widgets/WidgetImageBrowser"]
-	path = widgets/WidgetImageBrowser
-	url = https://github.molgen.mpg.de/MPIBR-WidgetToolbox/WidgetImageBrowser.git
 [submodule "widgets/WidgetNeuroTree"]
 	path = widgets/WidgetNeuroTree
 	url = https://github.molgen.mpg.de/MPIBR-WidgetToolbox/WidgetNeuroTree.git
