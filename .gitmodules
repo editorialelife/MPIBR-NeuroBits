@@ -1,6 +1,3 @@
-[submodule "widgets/ImageIO"]
-	path = widgets/ImageIO
-	url = https://github.molgen.mpg.de/MPIBR/ImageIO.git
 [submodule "submodules/ImageIO"]
 	path = widgets/WidgetImageBrowser/submodules/ImageIO
 	url = https://github.molgen.mpg.de/MPIBR/ImageIO.git
